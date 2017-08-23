@@ -5,6 +5,8 @@ import "./SafeMath.sol";
 contract Event is SafeMath{
     struct Result {
         bytes32 name;
+        uint256 balance;
+        mapping (address => uint256) betBalances;
     }
 
     address owner;
@@ -13,7 +15,6 @@ contract Event is SafeMath{
 
     bytes32 name;
     Result[] public results;
-    bytes32 firstResultName;
     bytes32 secondResultName;
 
     uint256 firstResultBalance;
@@ -29,7 +30,8 @@ contract Event is SafeMath{
 
         for (uint i = 0; i < resultNames.length; i++) {
             results.push(Result({
-                name: resultNames[i]
+                name: resultNames[i],
+                balance: 0
             }));
         }
 
@@ -37,14 +39,7 @@ contract Event is SafeMath{
     }
 
     function getResultName(uint resultOrder) constant public returns (bytes32) {
-    	if (resultOrder != 0 && resultOrder != 1) throw;
-    	if (resultOrder == 0) {
-    		return firstResultName;
-    	} else if (resultOrder == 1) {
-    		return secondResultName;
-    	} else {
-            throw;
-        }
+        return results[resultOrder].name;
     }
 
     function bet(uint resultOrder) public payable {
@@ -101,14 +96,6 @@ contract Event is SafeMath{
     }
 
     function getFinalResultName() constant public returns (bytes32) {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
-        if (finalResultOrder == 0) {
-            return firstResultName;
-        } else if (finalResultOrder == 1) {
-            return secondResultName;
-        } else {
-            throw;
-        }
+        return results[finalResultOrder].name;
     }
 }
