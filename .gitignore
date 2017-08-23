@@ -25,6 +25,10 @@
 .idea/**/gradle.xml
 .idea/**/libraries
 
+# Misc .idea
+.idea/*.iml
+.idea/*.xml
+
 # CMake
 cmake-build-debug/
 
