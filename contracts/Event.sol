@@ -3,11 +3,16 @@ pragma solidity ^0.4.4;
 import "./SafeMath.sol";
 
 contract Event is SafeMath{
+    struct Result {
+        bytes32 name;
+    }
+
     address owner;
 
     uint256 public bettingEndBlock;
 
     bytes32 name;
+    Result[] public results;
     bytes32 firstResultName;
     bytes32 secondResultName;
 
@@ -18,11 +23,15 @@ contract Event is SafeMath{
 
     uint256 finalResultOrder = uint256(-1);
 
-    function Event(bytes32 _name, bytes32 _firstResultName, bytes32 _secondResultName, uint256 _bettingEndBlock) {
+    function Event(bytes32 _name, bytes32[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
-        firstResultName = _firstResultName;
-        secondResultName = _secondResultName;
+
+        for (uint i = 0; i < resultNames.length; i++) {
+            results.push(Result({
+                name: resultNames[i]
+            }));
+        }
 
         bettingEndBlock = _bettingEndBlock;
     }
