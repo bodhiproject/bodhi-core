@@ -15,7 +15,6 @@ contract Event is SafeMath{
 
     bytes32 name;
     Result[] public results;
-    bytes32 secondResultName;
 
     uint256 firstResultBalance;
     uint256 secondResultBalance;
