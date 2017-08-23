@@ -45,23 +45,9 @@ contract Event is SafeMath{
     	if (resultOrder != 0 && resultOrder != 1) throw;
     	if (block.number > bettingEndBlock) throw;
 
-    	if (resultOrder == 0) {
-    		firstResultBalance = safeAdd(firstResultBalance, msg.value);
-    		firstBetBalances[msg.sender] = safeAdd(firstBetBalances[msg.sender], msg.value);
-    	} else if (resultOrder == 1) {
-    		secondResultBalance = safeAdd(secondResultBalance, msg.value);
-    		secondBetBalances[msg.sender] = safeAdd(secondBetBalances[msg.sender], msg.value);
-    	} else {
-            throw;
-        }
-    }
-
-    function revealResult(uint resultOrder) public {
-        if (resultOrder != 0 && resultOrder != 1) throw;
-        if (block.number <= bettingEndBlock) throw;
-        if (owner != msg.sender) throw;
-
-        finalResultOrder = resultOrder;
+        Result storage result = results[resultOrder];
+        result.balance = safeAdd(result.balance, msg.value);
+        result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
     }
 
     function withdrawBet() public {
@@ -86,6 +72,14 @@ contract Event is SafeMath{
         } else {
             throw;
         }
+    }
+
+    function revealResult(uint resultOrder) public {
+        if (resultOrder != 0 && resultOrder != 1) throw;
+        if (block.number <= bettingEndBlock) throw;
+        if (owner != msg.sender) throw;
+
+        finalResultOrder = resultOrder;
     }
 
     function getFinalResultOrder() constant public returns (uint) {
