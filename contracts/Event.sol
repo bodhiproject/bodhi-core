@@ -2,7 +2,7 @@ pragma solidity ^0.4.4;
 
 import "./SafeMath.sol";
 
-contract Event is SafeMath{
+contract Event is SafeMath {
     struct Result {
         bytes32 name;
         uint256 balance;
@@ -13,7 +13,7 @@ contract Event is SafeMath{
     bytes32 name;
     Result[] public results;
     uint256 public bettingEndBlock;
-    uint256 finalResultOrder = uint256(-1);
+    int finalResultOrder = int(-1);
 
     modifier onlyOwner() {
         require(msg.sender == owner);
