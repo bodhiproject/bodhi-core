@@ -15,6 +15,8 @@ contract Event is SafeMath {
     uint256 public bettingEndBlock;
     int finalResultOrder = int(-1);
 
+    event FinalResultSet(uint finalResultOrder);
+
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
@@ -33,6 +35,11 @@ contract Event is SafeMath {
 
     modifier hasEnded() {
         require(block.number >= bettingEndBlock);
+        _;
+    }
+
+    modifier finalResultNotSet() {
+        require(finalResultOrder == -1);
         _;
     }
 
@@ -84,8 +91,15 @@ contract Event is SafeMath {
         msg.sender.transfer(withdrawAmount);
     }
 
-    function revealResult(uint resultOrder) public onlyOwner hasEnded validResultOrder(resultOrder) {
+    function revealResult(uint resultOrder)
+        public
+        onlyOwner
+        hasEnded
+        validResultOrder(resultOrder)
+        finalResultNotSet
+    {
         finalResultOrder = resultOrder;
+        FinalResultSet(finalResultOrder);
     }
 
     function getFinalResultOrder() public finalResultSet constant returns (uint) {
