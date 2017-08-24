@@ -86,8 +86,12 @@ contract Event is SafeMath {
         uint256 betBalance = finalResult.betBalances[msg.sender];
         require(betBalance > 0);
 
+        // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
         finalResult.betBalances[msg.sender] = 0;
-        uint256 withdrawAmount = totalEventBalance * betBalance / finalResult.balance;
+
+        uint256 withdrawAmount = safeDivide(safeMultiply(totalEventBalance, betBalance), finalResult.balance);
+        require(withdrawAmount > 0);
+
         msg.sender.transfer(withdrawAmount);
     }
 
