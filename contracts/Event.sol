@@ -13,18 +13,18 @@ contract Event is SafeMath {
     string name;
     Result[] public results;
     uint256 public bettingEndBlock;
-    int finalResultOrder = int(-1);
+    int finalResultIndex = int(-1);
 
-    event FinalResultSet(uint finalResultOrder);
+    event FinalResultSet(uint finalResultIndex);
 
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
-    modifier validResultOrder(uint resultOrder) {
-        require(resultOrder >= 0);
-        require(resultOrder <= results.length - 1);
+    modifier validResultIndex(uint resultIndex) {
+        require(resultIndex >= 0);
+        require(resultIndex <= results.length - 1);
         _;
     }
 
@@ -39,12 +39,12 @@ contract Event is SafeMath {
     }
 
     modifier finalResultNotSet() {
-        require(finalResultOrder == -1);
+        require(finalResultIndex == -1);
         _;
     }
 
     modifier finalResultSet() {
-        require(finalResultOrder != -1);
+        require(finalResultIndex != -1);
         _;
     }
 
@@ -65,12 +65,12 @@ contract Event is SafeMath {
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultOrder) public validResultOrder constant returns (string) {
-        return results[resultOrder].name;
+    function getResultName(uint resultIndex) public validResultIndex constant returns (string) {
+        return results[resultIndex].name;
     }
 
-    function bet(uint resultOrder) public hasNotEnded payable {
-        Result storage result = results[resultOrder];
+    function bet(uint resultIndex) public hasNotEnded payable {
+        Result storage result = results[resultIndex];
         result.balance = safeAdd(result.balance, msg.value);
         result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
     }
@@ -82,7 +82,7 @@ contract Event is SafeMath {
         }
         require(totalEventBalance > 0);
 
-        Result storage finalResult = results[resultOrder];
+        Result storage finalResult = results[resultIndex];
         uint256 betBalance = finalResult.betBalances[msg.sender];
         require(betBalance > 0);
 
@@ -91,22 +91,22 @@ contract Event is SafeMath {
         msg.sender.transfer(withdrawAmount);
     }
 
-    function revealResult(uint resultOrder)
+    function revealResult(uint resultIndex)
         public
         onlyOwner
         hasEnded
-        validResultOrder(resultOrder)
+        validResultIndex(resultIndex)
         finalResultNotSet
     {
-        finalResultOrder = resultOrder;
-        FinalResultSet(finalResultOrder);
+        finalResultIndex = resultIndex;
+        FinalResultSet(finalResultIndex);
     }
 
-    function getFinalResultOrder() public finalResultSet constant returns (uint) {
-        return finalResultOrder;
+    function getFinalResultIndex() public finalResultSet constant returns (uint) {
+        return finalResultIndex;
     }
 
     function getFinalResultName() public finalResultSet constant returns (string) {
-        return results[finalResultOrder].name;
+        return results[finalResultIndex].name;
     }
 }
