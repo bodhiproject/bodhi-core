@@ -4,13 +4,13 @@ import "./SafeMath.sol";
 
 contract Event is SafeMath {
     struct Result {
-        bytes32 name;
+        string name;
         uint256 balance;
         mapping (address => uint256) betBalances;
     }
 
     address owner;
-    bytes32 name;
+    string name;
     Result[] public results;
     uint256 public bettingEndBlock;
     int finalResultOrder = int(-1);
@@ -48,7 +48,7 @@ contract Event is SafeMath {
         _;
     }
 
-    function Event(bytes32 _name, bytes32[] resultNames, uint256 _bettingEndBlock) {
+    function Event(string _name, string[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
 
@@ -65,7 +65,7 @@ contract Event is SafeMath {
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultOrder) public validResultOrder constant returns (bytes32) {
+    function getResultName(uint resultOrder) public validResultOrder constant returns (string) {
         return results[resultOrder].name;
     }
 
@@ -106,7 +106,7 @@ contract Event is SafeMath {
         return finalResultOrder;
     }
 
-    function getFinalResultName() public finalResultSet constant returns (bytes32) {
+    function getFinalResultName() public finalResultSet constant returns (string) {
         return results[finalResultOrder].name;
     }
 }
