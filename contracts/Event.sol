@@ -15,6 +15,17 @@ contract Event is SafeMath{
     uint256 public bettingEndBlock;
     uint256 finalResultOrder = uint256(-1);
 
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    modifier validResultOrder(uint resultOrder) {
+        require(resultOrder >= 0);
+        require(resultOrder <= results.length - 1);
+        _;
+    }
+
     modifier hasNotEnded() {
         require(block.number < bettingEndBlock);
         _;
@@ -54,9 +65,7 @@ contract Event is SafeMath{
         result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
     }
 
-    function withdrawBet() public {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
+    function withdrawBet() public finalResultSet {
         uint256 totalEventBalance = 0;
         for (uint i = 0; i < results.length; i++) {
             totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
@@ -72,11 +81,7 @@ contract Event is SafeMath{
         msg.sender.transfer(withdrawAmount);
     }
 
-    function revealResult(uint resultOrder) public {
-        if (resultOrder != 0 && resultOrder != 1) throw;
-        if (block.number <= bettingEndBlock) throw;
-        if (owner != msg.sender) throw;
-
+    function revealResult(uint resultOrder) public onlyOwner hasEnded validResultOrder(resultOrder) {
         finalResultOrder = resultOrder;
     }
 
