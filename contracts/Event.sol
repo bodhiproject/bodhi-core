@@ -45,6 +45,9 @@ contract Event is SafeMath{
         owner = msg.sender;
         name = _name;
 
+        // Cannot have a prediction event with only 1 result
+        require(resultNames.length > 1);
+
         for (uint i = 0; i < resultNames.length; i++) {
             results.push(Result({
                 name: resultNames[i],
@@ -55,7 +58,7 @@ contract Event is SafeMath{
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultOrder) public constant returns (bytes32) {
+    function getResultName(uint resultOrder) public validResultOrder constant returns (bytes32) {
         return results[resultOrder].name;
     }
 
