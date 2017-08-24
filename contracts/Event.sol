@@ -15,6 +15,16 @@ contract Event is SafeMath{
     uint256 public bettingEndBlock;
     uint256 finalResultOrder = uint256(-1);
 
+    modifier hasNotEnded() {
+        require(block.number < bettingEndBlock);
+        _;
+    }
+
+    modifier hasEnded() {
+        require(block.number >= bettingEndBlock);
+        _;
+    }
+
     function Event(bytes32 _name, bytes32[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
@@ -29,14 +39,11 @@ contract Event is SafeMath{
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultOrder) constant public returns (bytes32) {
+    function getResultName(uint resultOrder) public constant returns (bytes32) {
         return results[resultOrder].name;
     }
 
-    function bet(uint resultOrder) public payable {
-    	if (resultOrder != 0 && resultOrder != 1) throw;
-    	if (block.number > bettingEndBlock) throw;
-
+    function bet(uint resultOrder) public hasNotEnded payable {
         Result storage result = results[resultOrder];
         result.balance = safeAdd(result.balance, msg.value);
         result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
@@ -68,13 +75,12 @@ contract Event is SafeMath{
         finalResultOrder = resultOrder;
     }
 
-    function getFinalResultOrder() constant public returns (uint) {
+    function getFinalResultOrder() public constant returns (uint) {
         if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
         return finalResultOrder;
     }
 
-    function getFinalResultName() constant public returns (bytes32) {
+    function getFinalResultName() public constant returns (bytes32) {
         return results[finalResultOrder].name;
     }
 }
