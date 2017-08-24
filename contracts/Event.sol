@@ -10,17 +10,9 @@ contract Event is SafeMath{
     }
 
     address owner;
-
-    uint256 public bettingEndBlock;
-
     bytes32 name;
     Result[] public results;
-
-    uint256 firstResultBalance;
-    uint256 secondResultBalance;
-    mapping (address => uint256) firstBetBalances;
-    mapping (address => uint256) secondBetBalances;
-
+    uint256 public bettingEndBlock;
     uint256 finalResultOrder = uint256(-1);
 
     function Event(bytes32 _name, bytes32[] resultNames, uint256 _bettingEndBlock) {
@@ -53,25 +45,19 @@ contract Event is SafeMath{
     function withdrawBet() public {
         if (finalResultOrder != 0 && finalResultOrder != 1) throw;
 
-        uint256 totalEventBalance = safeAdd(firstResultBalance, secondResultBalance);
-
-        uint256 balance;
-        uint256 withdrawBalance;
-        if (finalResultOrder == 0) {
-            balance = firstBetBalances[msg.sender];
-            if (balance == 0) throw;
-
-            withdrawBalance = totalEventBalance * balance / firstResultBalance;
-            if (!msg.sender.send(withdrawBalance)) throw;
-        } else if (finalResultOrder == 1) {
-            balance = secondBetBalances[msg.sender];
-            if (balance == 0) throw;
-
-            withdrawBalance = totalEventBalance * balance / secondResultBalance;
-            if (!msg.sender.send(withdrawBalance)) throw;
-        } else {
-            throw;
+        uint256 totalEventBalance = 0;
+        for (uint i = 0; i < results.length; i++) {
+            totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
         }
+        require(totalEventBalance > 0);
+
+        Result storage finalResult = results[resultOrder];
+        uint256 betBalance = finalResult.betBalances[msg.sender];
+        require(betBalance > 0);
+
+        finalResult.betBalances[msg.sender] = 0;
+        uint256 withdrawAmount = totalEventBalance * betBalance / finalResult.balance;
+        msg.sender.transfer(withdrawAmount);
     }
 
     function revealResult(uint resultOrder) public {
