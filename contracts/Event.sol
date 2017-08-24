@@ -25,6 +25,11 @@ contract Event is SafeMath{
         _;
     }
 
+    modifier finalResultSet() {
+        require(finalResultOrder != -1);
+        _;
+    }
+
     function Event(bytes32 _name, bytes32[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
@@ -75,12 +80,11 @@ contract Event is SafeMath{
         finalResultOrder = resultOrder;
     }
 
-    function getFinalResultOrder() public constant returns (uint) {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
+    function getFinalResultOrder() public finalResultSet constant returns (uint) {
         return finalResultOrder;
     }
 
-    function getFinalResultName() public constant returns (bytes32) {
+    function getFinalResultName() public finalResultSet constant returns (bytes32) {
         return results[finalResultOrder].name;
     }
 }
