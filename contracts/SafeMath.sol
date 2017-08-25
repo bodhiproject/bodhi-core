@@ -1,6 +1,5 @@
 pragma solidity ^0.4.4;
 
-/* taking ideas from FirstBlood token */
 contract SafeMath {
 
     /* function assert(bool assertion) internal { */
@@ -23,7 +22,7 @@ contract SafeMath {
 
     function safeMultiply(uint256 x, uint256 y) internal returns(uint256) {
         uint256 z = x * y;
-        assert((x == 0) || (y == 0) || (z / x == y) || (z / y == x));
+        assert((x == 0) || (z / x == y));
         return z;
     }
 
