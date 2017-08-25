@@ -7,7 +7,7 @@ contract EventCreator {
     function EventCreator() {
     }
     
-    function createEvent(string name, bytes32[] resultNames, uint256 bettingEndBlock)
+    function createTopic(string name, bytes32[] resultNames, uint256 bettingEndBlock)
         returns (Topic tokenAddress)
     {
         // Create a new Token contract and return its address.
