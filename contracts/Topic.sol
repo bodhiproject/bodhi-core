@@ -4,16 +4,17 @@ import "./SafeMath.sol";
 
 contract Topic is SafeMath {
     struct Result {
-        string name;
-        uint256 balance;
-        mapping (address => uint256) betBalances;
+    bytes32 name;
+    uint256 balance;
+    mapping (address => uint256) betBalances;
     }
 
     address owner;
     string name;
     Result[] public results;
     uint256 public bettingEndBlock;
-    int finalResultIndex = int(-1);
+    uint finalResultIndex;
+    bool finalResultSet;
 
     event FinalResultSet(uint _finalResultIndex);
 
@@ -39,33 +40,33 @@ contract Topic is SafeMath {
     }
 
     modifier finalResultNotSet() {
-        require(finalResultIndex == -1);
+        require(!finalResultSet);
         _;
     }
 
-    modifier finalResultSet() {
-        require(finalResultIndex != -1);
+    modifier finalResultIsSet() {
+        require(finalResultSet);
         _;
     }
 
-    function Topic(string _name, string[] resultNames, uint256 _bettingEndBlock) {
+    function Topic(string _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
 
         // Cannot have a prediction topic with only 1 result
-        require(resultNames.length > 1);
+        require(_resultNames.length > 1);
 
-        for (uint i = 0; i < resultNames.length; i++) {
+        for (uint i = 0; i < _resultNames.length; i++) {
             results.push(Result({
-                name: resultNames[i],
-                balance: 0
+            name: _resultNames[i],
+            balance: 0
             }));
         }
 
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultIndex) public validResultIndex constant returns (string) {
+    function getResultName(uint resultIndex) public validResultIndex(resultIndex) constant returns (bytes32) {
         return results[resultIndex].name;
     }
 
@@ -75,14 +76,14 @@ contract Topic is SafeMath {
         result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
     }
 
-    function withdrawBet() public finalResultSet {
+    function withdrawBet() public finalResultIsSet {
         uint256 totalEventBalance = 0;
         for (uint i = 0; i < results.length; i++) {
             totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
         }
         require(totalEventBalance > 0);
 
-        Result storage finalResult = results[resultIndex];
+        Result storage finalResult = results[finalResultIndex];
         uint256 betBalance = finalResult.betBalances[msg.sender];
         require(betBalance > 0);
 
@@ -103,14 +104,15 @@ contract Topic is SafeMath {
         finalResultNotSet
     {
         finalResultIndex = resultIndex;
+        finalResultSet = true;
         FinalResultSet(finalResultIndex);
     }
 
-    function getFinalResultIndex() public finalResultSet constant returns (uint) {
+    function getFinalResultIndex() public finalResultIsSet constant returns (uint) {
         return finalResultIndex;
     }
 
-    function getFinalResultName() public finalResultSet constant returns (string) {
+    function getFinalResultName() public finalResultIsSet constant returns (bytes32) {
         return results[finalResultIndex].name;
     }
 }
