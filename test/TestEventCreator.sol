@@ -10,9 +10,9 @@ contract TestEventCreator {
 
     function beforeEach() {
         resultNames = new bytes32[](3);
-        resultNames.push("first");
-        resultNames.push("second");
-        resultNames.push("third");
+        resultNames[0] = "first";
+        resultNames[1] = "second";
+        resultNames[2] = "third";
 
         EventCreator eventCreator = EventCreator(DeployedAddresses.EventCreator());
         testTopic = eventCreator.createTopic("test", resultNames, 1000000);
