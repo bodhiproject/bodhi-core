@@ -2,104 +2,115 @@ pragma solidity ^0.4.4;
 
 import "./SafeMath.sol";
 
-contract Event is SafeMath{
+contract Event is SafeMath {
+    struct Result {
+        string name;
+        uint256 balance;
+        mapping (address => uint256) betBalances;
+    }
+
     address owner;
-
+    string name;
+    Result[] public results;
     uint256 public bettingEndBlock;
+    int finalResultIndex = int(-1);
 
-    bytes32 name;
-    bytes32 firstResultName;
-    bytes32 secondResultName;
+    event FinalResultSet(uint finalResultIndex);
 
-    uint256 firstResultBalance;
-    uint256 secondResultBalance;
-    mapping (address => uint256) firstBetBalances;
-    mapping (address => uint256) secondBetBalances;
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
 
-    uint256 finalResultOrder = uint256(-1);
+    modifier validResultIndex(uint resultIndex) {
+        require(resultIndex >= 0);
+        require(resultIndex <= results.length - 1);
+        _;
+    }
 
-    function Event(bytes32 _name, bytes32 _firstResultName, bytes32 _secondResultName, uint256 _bettingEndBlock) {
+    modifier hasNotEnded() {
+        require(block.number < bettingEndBlock);
+        _;
+    }
+
+    modifier hasEnded() {
+        require(block.number >= bettingEndBlock);
+        _;
+    }
+
+    modifier finalResultNotSet() {
+        require(finalResultIndex == -1);
+        _;
+    }
+
+    modifier finalResultSet() {
+        require(finalResultIndex != -1);
+        _;
+    }
+
+    function Event(string _name, string[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
-        firstResultName = _firstResultName;
-        secondResultName = _secondResultName;
+
+        // Cannot have a prediction event with only 1 result
+        require(resultNames.length > 1);
+
+        for (uint i = 0; i < resultNames.length; i++) {
+            results.push(Result({
+                name: resultNames[i],
+                balance: 0
+            }));
+        }
 
         bettingEndBlock = _bettingEndBlock;
     }
 
-    function getResultName(uint resultOrder) constant public returns (bytes32) {
-    	if (resultOrder != 0 && resultOrder != 1) throw;
-    	if (resultOrder == 0) {
-    		return firstResultName;
-    	} else if (resultOrder == 1) {
-    		return secondResultName;
-    	} else {
-            throw;
+    function getResultName(uint resultIndex) public validResultIndex constant returns (string) {
+        return results[resultIndex].name;
+    }
+
+    function bet(uint resultIndex) public hasNotEnded payable {
+        Result storage result = results[resultIndex];
+        result.balance = safeAdd(result.balance, msg.value);
+        result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
+    }
+
+    function withdrawBet() public finalResultSet {
+        uint256 totalEventBalance = 0;
+        for (uint i = 0; i < results.length; i++) {
+            totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
         }
+        require(totalEventBalance > 0);
+
+        Result storage finalResult = results[resultIndex];
+        uint256 betBalance = finalResult.betBalances[msg.sender];
+        require(betBalance > 0);
+
+        // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
+        finalResult.betBalances[msg.sender] = 0;
+
+        uint256 withdrawAmount = safeDivide(safeMultiply(totalEventBalance, betBalance), finalResult.balance);
+        require(withdrawAmount > 0);
+
+        msg.sender.transfer(withdrawAmount);
     }
 
-    function bet(uint resultOrder) public payable {
-    	if (resultOrder != 0 && resultOrder != 1) throw;
-    	if (block.number > bettingEndBlock) throw;
-
-    	if (resultOrder == 0) {
-    		firstResultBalance = safeAdd(firstResultBalance, msg.value);
-    		firstBetBalances[msg.sender] = safeAdd(firstBetBalances[msg.sender], msg.value);
-    	} else if (resultOrder == 1) {
-    		secondResultBalance = safeAdd(secondResultBalance, msg.value);
-    		secondBetBalances[msg.sender] = safeAdd(secondBetBalances[msg.sender], msg.value);
-    	} else {
-            throw;
-        }
+    function revealResult(uint resultIndex)
+        public
+        onlyOwner
+        hasEnded
+        validResultIndex(resultIndex)
+        finalResultNotSet
+    {
+        finalResultIndex = resultIndex;
+        FinalResultSet(finalResultIndex);
     }
 
-    function revealResult(uint resultOrder) public {
-        if (resultOrder != 0 && resultOrder != 1) throw;
-        if (block.number <= bettingEndBlock) throw;
-        if (owner != msg.sender) throw;
-
-        finalResultOrder = resultOrder;
+    function getFinalResultIndex() public finalResultSet constant returns (uint) {
+        return finalResultIndex;
     }
 
-    function withdrawBet() public {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
-        uint256 totalEventBalance = safeAdd(firstResultBalance, secondResultBalance);
-
-        uint256 balance;
-        uint256 withdrawBalance;
-        if (finalResultOrder == 0) {
-            balance = firstBetBalances[msg.sender];
-            if (balance == 0) throw;
-
-            withdrawBalance = totalEventBalance * balance / firstResultBalance;
-            if (!msg.sender.send(withdrawBalance)) throw;
-        } else if (finalResultOrder == 1) {
-            balance = secondBetBalances[msg.sender];
-            if (balance == 0) throw;
-
-            withdrawBalance = totalEventBalance * balance / secondResultBalance;
-            if (!msg.sender.send(withdrawBalance)) throw;
-        } else {
-            throw;
-        }
-    }
-
-    function getFinalResultOrder() constant public returns (uint) {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
-        return finalResultOrder;
-    }
-
-    function getFinalResultName() constant public returns (bytes32) {
-        if (finalResultOrder != 0 && finalResultOrder != 1) throw;
-
-        if (finalResultOrder == 0) {
-            return firstResultName;
-        } else if (finalResultOrder == 1) {
-            return secondResultName;
-        } else {
-            throw;
-        }
+    function getFinalResultName() public finalResultSet constant returns (string) {
+        return results[finalResultIndex].name;
     }
 }
