@@ -20,7 +20,7 @@ contract TestEventCreator {
     }
 
     function testOwnerIsSet() {
-        Assert.equal(address(eventCreator), address(testTopic.owner), "Owner's address does not match");
+        Assert.equal(eventCreator, testTopic, "Owner's address does not match");
     }
 
 //    function testResultNamesAreEqualLength() {

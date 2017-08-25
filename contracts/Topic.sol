@@ -9,7 +9,7 @@ contract Topic is SafeMath {
         mapping (address => uint256) betBalances;
     }
 
-    address public owner;
+    address owner;
     string public name;
     Result[] public results;
     uint256 public bettingEndBlock;
