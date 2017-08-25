@@ -8,7 +8,7 @@ contract EventCreator {
     }
     
     function createEvent(string name, string[] resultNames, uint256 bettingEndBlock)
-       returns (Topic tokenAddress)
+        returns (Topic tokenAddress)
     {
         // Create a new Token contract and return its address.
         // From the JavaScript side, the return type is simply
