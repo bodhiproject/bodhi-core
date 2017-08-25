@@ -2,7 +2,7 @@ pragma solidity ^0.4.4;
 
 import "./SafeMath.sol";
 
-contract Event is SafeMath {
+contract Topic is SafeMath {
     struct Result {
         string name;
         uint256 balance;
@@ -48,11 +48,11 @@ contract Event is SafeMath {
         _;
     }
 
-    function Event(string _name, string[] resultNames, uint256 _bettingEndBlock) {
+    function Topic(string _name, string[] resultNames, uint256 _bettingEndBlock) {
         owner = msg.sender;
         name = _name;
 
-        // Cannot have a prediction event with only 1 result
+        // Cannot have a prediction topic with only 1 result
         require(resultNames.length > 1);
 
         for (uint i = 0; i < resultNames.length; i++) {

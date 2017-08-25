@@ -1,12 +1,12 @@
 var SafeMath = artifacts.require("./SafeMath.sol");
-var Event = artifacts.require("./Event.sol");
+var Topic = artifacts.require("./Topic.sol");
 var EventCreator = artifacts.require("./EventCreator.sol");
 
 module.exports = function(deployer) {
 	deployer.deploy(SafeMath);
-	deployer.link(SafeMath, Event);
-	deployer.deploy(Event);
-	deployer.link(Event, EventCreator);
+	deployer.link(SafeMath, Topic);
+	deployer.deploy(Topic);
+	deployer.link(Topic, EventCreator);
 	deployer.deploy(EventCreator);
 };
 
