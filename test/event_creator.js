@@ -1,4 +1,4 @@
-var EventCreator = artifacts.require("./EventCreator.sol");
+const EventCreator = artifacts.require("./EventCreator.sol");
 
 contract('EventCreator', function(accounts) {
   it("should assert true", function(done) {

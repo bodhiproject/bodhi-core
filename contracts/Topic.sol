@@ -15,7 +15,7 @@ contract Topic is SafeMath {
     uint256 public bettingEndBlock;
     int finalResultIndex = int(-1);
 
-    event FinalResultSet(uint finalResultIndex);
+    event FinalResultSet(uint _finalResultIndex);
 
     modifier onlyOwner() {
         require(msg.sender == owner);
