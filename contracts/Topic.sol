@@ -10,7 +10,7 @@ contract Topic is SafeMath {
     }
 
     address owner;
-    string name;
+    string public name;
     Result[] public results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
