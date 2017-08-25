@@ -9,7 +9,7 @@ contract Topic is SafeMath {
         mapping (address => uint256) betBalances;
     }
 
-    address owner;
+    address public owner;
     string public name;
     Result[] public results;
     uint256 public bettingEndBlock;
@@ -49,8 +49,8 @@ contract Topic is SafeMath {
         _;
     }
 
-    function Topic(string _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
-        owner = msg.sender;
+    function Topic(address _owner, string _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
+        owner = _owner;
         name = _name;
 
         // Cannot have a prediction topic with only 1 result

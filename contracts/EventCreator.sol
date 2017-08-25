@@ -10,10 +10,6 @@ contract EventCreator {
     function createTopic(string name, bytes32[] resultNames, uint256 bettingEndBlock)
         returns (Topic tokenAddress)
     {
-        // Create a new Token contract and return its address.
-        // From the JavaScript side, the return type is simply
-        // "address", as this is the closest type available in
-        // the ABI.
-        return new Topic(name, resultNames, bettingEndBlock);
+        return new Topic(msg.sender, name, resultNames, bettingEndBlock);
     }
 }

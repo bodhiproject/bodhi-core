@@ -5,6 +5,7 @@ import "truffle/DeployedAddresses.sol";
 import "../contracts/EventCreator.sol";
 
 contract TestEventCreator {
+    EventCreator eventCreator;
     Topic testTopic;
     bytes32[] resultNames;
 
@@ -14,13 +15,13 @@ contract TestEventCreator {
         resultNames[1] = "second";
         resultNames[2] = "third";
 
-        EventCreator eventCreator = EventCreator(DeployedAddresses.EventCreator());
+        eventCreator = EventCreator(DeployedAddresses.EventCreator());
         testTopic = eventCreator.createTopic("test", resultNames, 1000000);
     }
 
-//    function testOwnerIsSet() {
-//        Assert.equal(tx.origin, testTopic.owner, "Owner's address does not match");
-//    }
+    function testOwnerIsSet() {
+        Assert.equal(address(eventCreator), address(testTopic.owner), "Owner's address does not match");
+    }
 
 //    function testResultNamesAreEqualLength() {
 //        Assert.equal(testTopic.results.length, 3, "Result names length is not equal");
