@@ -4,9 +4,9 @@ import "./SafeMath.sol";
 
 contract Topic is SafeMath {
     struct Result {
-    bytes32 name;
-    uint256 balance;
-    mapping (address => uint256) betBalances;
+        bytes32 name;
+        uint256 balance;
+        mapping (address => uint256) betBalances;
     }
 
     address owner;
