@@ -9,8 +9,8 @@ contract Topic is SafeMath {
         mapping (address => uint256) betBalances;
     }
 
-    address owner;
-    string public name;
+    address public owner;
+    bytes32 public name;
     Result[] public results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
@@ -49,7 +49,7 @@ contract Topic is SafeMath {
         _;
     }
 
-    function Topic(address _owner, string _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
+    function Topic(address _owner, bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
         owner = _owner;
         name = _name;
 

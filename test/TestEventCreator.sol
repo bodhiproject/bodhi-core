@@ -7,30 +7,32 @@ import "../contracts/EventCreator.sol";
 contract TestEventCreator {
     EventCreator eventCreator;
     Topic testTopic;
+    bytes32 testTopicName;
     bytes32[] resultNames;
 
     function beforeEach() {
+        testTopicName = "test";
+
         resultNames = new bytes32[](3);
         resultNames[0] = "first";
         resultNames[1] = "second";
         resultNames[2] = "third";
 
         eventCreator = EventCreator(DeployedAddresses.EventCreator());
-        testTopic = eventCreator.createTopic("test", resultNames, 1000000);
+        testTopic = eventCreator.createTopic(testTopicName, resultNames, 1000000);
     }
 
     function testOwnerIsSet() {
-        Assert.equal(eventCreator, testTopic, "Owner's address does not match");
+//        EventCreator ec = EventCreator(DeployedAddresses.EventCreator());
+//        Topic topic = eventCreator.createTopic("test", resultNames, 1000000);
+        address eventCreatorOwner = eventCreator.owner();
+        address testTopicOwner = testTopic.owner();
+        Assert.equal(eventCreatorOwner, testTopicOwner, "Owner's address does not match");
     }
 
-//    function testResultNamesAreEqualLength() {
-//        Assert.equal(testTopic.results.length, 3, "Result names length is not equal");
-//    }
-
-//    function testTopicNameIsSet() {
-//        bytes32 topicName = bytes32(testTopic.getTopicName());
-//        Assert.equal(topicName, "test", "Topic name does not match.");
-//    }
+    function testTopicNameIsSet() {
+        Assert.equal(testTopic.name(), testTopicName, "Topic name does not match.");
+    }
 
     function testResultNamesAreSet() {
         Assert.equal(testTopic.getResultName(0), resultNames[0], "First result name does not match.");
