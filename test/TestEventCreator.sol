@@ -8,23 +8,26 @@ contract TestEventCreator {
     EventCreator eventCreator;
     Topic testTopic;
     bytes32 testTopicName;
-    bytes32[] resultNames;
+    bytes32[] testResultNames;
+    uint256 testBettingEndBlock;
 
     function beforeEach() {
         testTopicName = "test";
 
-        resultNames = new bytes32[](3);
-        resultNames[0] = "first";
-        resultNames[1] = "second";
-        resultNames[2] = "third";
+        testResultNames = new bytes32[](3);
+        testResultNames[0] = "first";
+        testResultNames[1] = "second";
+        testResultNames[2] = "third";
+
+        testBettingEndBlock = 1000000;
 
         eventCreator = EventCreator(DeployedAddresses.EventCreator());
-        testTopic = eventCreator.createTopic(testTopicName, resultNames, 1000000);
+        testTopic = eventCreator.createTopic(testTopicName, testResultNames, testBettingEndBlock);
     }
 
     function testOwnerIsSet() {
 //        EventCreator ec = EventCreator(DeployedAddresses.EventCreator());
-//        Topic topic = eventCreator.createTopic("test", resultNames, 1000000);
+//        Topic topic = eventCreator.createTopic("test", testResultNames, 1000000);
         address eventCreatorOwner = eventCreator.owner();
         address testTopicOwner = testTopic.owner();
         Assert.equal(eventCreatorOwner, testTopicOwner, "Owner's address does not match");
@@ -35,8 +38,12 @@ contract TestEventCreator {
     }
 
     function testResultNamesAreSet() {
-        Assert.equal(testTopic.getResultName(0), resultNames[0], "First result name does not match.");
-        Assert.equal(testTopic.getResultName(1), resultNames[1], "Second result name does not match.");
-        Assert.equal(testTopic.getResultName(2), resultNames[2], "Third result name does not match.");
+        Assert.equal(testTopic.getResultName(0), testResultNames[0], "First result name does not match.");
+        Assert.equal(testTopic.getResultName(1), testResultNames[1], "Second result name does not match.");
+        Assert.equal(testTopic.getResultName(2), testResultNames[2], "Third result name does not match.");
+    }
+
+    function testBettingEndBlockIsSet() {
+        Assert.equal(testTopic.bettingEndBlock(), testBettingEndBlock, "Betting end block does not match.");
     }
 }
