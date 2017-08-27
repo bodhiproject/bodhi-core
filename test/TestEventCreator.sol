@@ -26,11 +26,7 @@ contract TestEventCreator {
     }
 
     function testOwnerIsSet() {
-//        EventCreator ec = EventCreator(DeployedAddresses.EventCreator());
-//        Topic topic = eventCreator.createTopic("test", testResultNames, 1000000);
-        address eventCreatorOwner = eventCreator.owner();
-        address testTopicOwner = testTopic.owner();
-        Assert.equal(eventCreatorOwner, testTopicOwner, "Owner's address does not match");
+        Assert.equal(eventCreator.owner(), testTopic.owner(), "Owner's address does not match");
     }
 
     function testTopicNameIsSet() {
