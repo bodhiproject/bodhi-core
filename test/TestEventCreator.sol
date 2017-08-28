@@ -44,10 +44,11 @@ contract TestEventCreator {
     }
 
     function testOwnerCanSetFinalResult() {
+        // Mock timestamp
         testTopic.setTesting(true);
         testTopic.setTime(10000);
-        testTopic.revealResult(uint(1));
 
+        testTopic.revealResult(uint(1));
         Assert.equal(testTopic.getFinalResultIndex(), 1, "Final result index does not match.");
         Assert.equal(testTopic.getFinalResultName(), testResultNames[1], "Final result index does not match.");
     }
