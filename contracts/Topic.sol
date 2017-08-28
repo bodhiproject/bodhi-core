@@ -70,6 +70,10 @@ contract Topic is SafeMath, Testable {
         TopicCreated(name);
     }
 
+    function getOwner() public constant returns (address) {
+        return owner;
+    }
+
     function getResultName(uint resultIndex) public validResultIndex(resultIndex) constant returns (bytes32) {
         return results[resultIndex].name;
     }
