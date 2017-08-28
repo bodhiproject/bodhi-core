@@ -1,9 +1,8 @@
 pragma solidity ^0.4.4;
 
 import "./SafeMath.sol";
-import "./Testable.sol";
 
-contract Topic is SafeMath, Testable {
+contract Topic is SafeMath {
     struct Result {
         bytes32 name;
         uint256 balance;
@@ -21,7 +20,7 @@ contract Topic is SafeMath, Testable {
     event FinalResultSet(uint _finalResultIndex);
 
     modifier onlyOwner() {
-        require(tx.origin == owner);
+        require(msg.sender == owner);
         _;
     }
 
@@ -32,12 +31,12 @@ contract Topic is SafeMath, Testable {
     }
 
     modifier hasNotEnded() {
-        require(currentTime() < bettingEndBlock);
+        require(block.number < bettingEndBlock);
         _;
     }
 
     modifier hasEnded() {
-        require(currentTime() >= bettingEndBlock);
+        require(block.number >= bettingEndBlock);
         _;
     }
 

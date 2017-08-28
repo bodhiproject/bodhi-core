@@ -6,7 +6,7 @@ contract('Topic', function(accounts) {
 		_owner: accounts[0],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
-		_bettingEndBlock: 1000
+		_bettingEndBlock: 10000
 	};
 
 	let testTopic;
@@ -46,17 +46,14 @@ contract('Topic', function(accounts) {
     	});
     });
 
-    // it("allows users to bet if before the betting end block has been reached", async function() {
-    // 	console.log("balance: " + web3.eth.getBalance(accounts[1]));
+    it("allows users to bet if before the betting end block has been reached", async function() {
+		var initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
+		var betAmount = web3.toWei(1, 'ether');
 
-    // 	var betAmount = web3.toWei(30, 'ether');
-    // 	await testTopic.bet(0, { from: accounts[1], value: betAmount })
-    // 	.then(function() {
-    // 		console.log("then function hit");
-    // 		console.log("after bet balance: " + web3.eth.getBalance(accounts[1]));
-
-    // 		var results = await testTopic.results();
-    // 		console.log("bet balance: " + results[0].betBalances(accounts[1]));
-    // 	});
-    // });
+		testTopic.bet(0, { from: accounts[1], value: betAmount }).then(function() {
+			var newBalance = web3.eth.getBalance(testTopic.address).toNumber();
+			var difference = newBalance - initialBalance;
+			assert.equal(difference, betAmount, "Bet amount does not match new balance.");
+		});
+    });
 });
