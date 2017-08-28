@@ -123,4 +123,8 @@ contract Topic is SafeMath, Testable {
     function getFinalResultName() public finalResultIsSet constant returns (bytes32) {
         return results[finalResultIndex].name;
     }
+
+    function destroy() onlyOwner {
+        suicide(owner);
+    }
 }
