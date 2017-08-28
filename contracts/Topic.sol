@@ -1,8 +1,9 @@
 pragma solidity ^0.4.4;
 
 import "./SafeMath.sol";
+import "./Testable.sol";
 
-contract Topic is SafeMath {
+contract Topic is SafeMath, Testable {
     struct Result {
         bytes32 name;
         uint256 balance;
@@ -16,10 +17,11 @@ contract Topic is SafeMath {
     uint finalResultIndex;
     bool finalResultSet;
 
+    event TopicCreated(bytes32 _name);
     event FinalResultSet(uint _finalResultIndex);
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(tx.origin == owner);
         _;
     }
 
@@ -30,12 +32,12 @@ contract Topic is SafeMath {
     }
 
     modifier hasNotEnded() {
-        require(block.number < bettingEndBlock);
+        require(currentTime() < bettingEndBlock);
         _;
     }
 
     modifier hasEnded() {
-        require(block.number >= bettingEndBlock);
+        require(currentTime() >= bettingEndBlock);
         _;
     }
 
@@ -64,6 +66,8 @@ contract Topic is SafeMath {
         }
 
         bettingEndBlock = _bettingEndBlock;
+
+        TopicCreated(name);
     }
 
     function getResultName(uint resultIndex) public validResultIndex(resultIndex) constant returns (bytes32) {

@@ -19,7 +19,7 @@ contract TestEventCreator {
         testResultNames[1] = "second";
         testResultNames[2] = "third";
 
-        testBettingEndBlock = 1000000;
+        testBettingEndBlock = 1000;
 
         eventCreator = EventCreator(DeployedAddresses.EventCreator());
         testTopic = eventCreator.createTopic(testTopicName, testResultNames, testBettingEndBlock);
@@ -41,5 +41,14 @@ contract TestEventCreator {
 
     function testBettingEndBlockIsSet() {
         Assert.equal(testTopic.bettingEndBlock(), testBettingEndBlock, "Betting end block does not match.");
+    }
+
+    function testOwnerCanSetFinalResult() {
+        testTopic.setTesting(true);
+        testTopic.setTime(10000);
+        testTopic.revealResult(uint(1));
+
+        Assert.equal(testTopic.getFinalResultIndex(), 1, "Final result index does not match.");
+        Assert.equal(testTopic.getFinalResultName(), testResultNames[1], "Final result index does not match.");
     }
 }
