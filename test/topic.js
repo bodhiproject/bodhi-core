@@ -15,17 +15,13 @@ contract('Topic', function(accounts) {
 
 	let testTopic;
 
-	// Setup 
+	// Setup/Teardown
 	beforeEach(async function() {
-   		testTopic = await Topic.new(...Object.values(testTopicParams));
-   		testTopic.allEvents().watch((error, response) => {
-    		if (error) {
-    			console.log("Event Error: " + error);
-    		} else {
-    			console.log("Event Triggered: " + JSON.stringify(response.event));
-    			console.log("Args: " + JSON.stringify(response.args));
-    		}
-    	});
+		testTopic = await Topic.new(...Object.values(testTopicParams));
+		await blockHeightManager.snapshot;
+	});
+	afterEach(function() {
+		blockHeightManager.revert;
 	});
 
   	it("sets the first account as the contract creator", async function() {
@@ -55,6 +51,17 @@ contract('Topic', function(accounts) {
     });
 
     it("allows users to bet if before the betting end block has been reached", async function() {
+		testTopic.BetAccepted().watch((error, response) => {
+    		if (error) {
+    			console.log("Event Error: " + error);
+    		} else {
+    			console.log("Event Triggered: " + JSON.stringify(response.event));
+    			console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
+    			console.log("betAmount: " + JSON.stringify(response.args._betAmount));
+    			console.log("betBalance: " + JSON.stringify(response.args._betBalance));
+    		}
+    	});
+
 		let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
@@ -73,20 +80,19 @@ contract('Topic', function(accounts) {
  
     it("does not allow users to bet if the betting end block has been reached", async function() {
     	var currentBlock = web3.eth.blockNumber;
-    	console.log("current block: " + currentBlock);
     	await blockHeightManager.mineTo(1001);
-
     	currentBlock = web3.eth.blockNumber;
-    	console.log("after advancing block: " + currentBlock);	
-
     	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
 
-		expect(function() {
-			testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-		}).to.throw();
+		// await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
+		// assert.fail(0, 1, "Exception not thrown");
+
+		// expect(function() {
+		// 	testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		// }).to.throw();
 
 		// try {
 	 //        testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })

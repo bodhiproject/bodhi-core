@@ -36,23 +36,6 @@ function BlockHeightManager(web3) {
     return this.mine(height - currentHeight);
   }
 
-  this.revertTo = (blockNumber) => {
-    return new Promise((resolve, reject) => {
-      web3.currentProvider.sendAsync({
-        jsonrpc: '2.0',
-        method: 'evm_revert',
-        id: new Date().getTime(),
-        params: [blockNumber]
-      }, (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-
-        return resolve();
-      });
-    });
-  }
-
   this.revert = () => {
     return new Promise((resolve, reject) => {
       web3.currentProvider.sendAsync({
