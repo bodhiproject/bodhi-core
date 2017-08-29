@@ -102,11 +102,12 @@ contract Topic is SafeMath {
     }
 
     function bet(uint resultIndex) public hasNotEnded payable {
-        Result storage result = results[resultIndex];
-        result.balance = safeAdd(result.balance, msg.value);
-        result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
+        Result storage updatedResult = results[resultIndex];
+        updatedResult.balance = safeAdd(updatedResult.balance, msg.value);
+        updatedResult.betBalances[msg.sender] = safeAdd(updatedResult.betBalances[msg.sender], msg.value);
+        results[resultIndex] = updatedResult;
 
-        BetAccepted(msg.sender, resultIndex, msg.value, result.betBalances[msg.sender]);
+        BetAccepted(msg.sender, resultIndex, msg.value, results[resultIndex].betBalances[msg.sender]);
     }
 
     function withdrawBet() public finalResultIsSet {

@@ -1,7 +1,11 @@
 const web3 = global.web3;
 const Topic = artifacts.require("./Topic.sol");
+const assert = require('chai').assert;
+const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('Topic', function(accounts) {
+	const blockHeightManager = new BlockHeightManager(web3);
+
 	const testTopicParams = {
 		_owner: accounts[0],
 		_name: "test",
@@ -31,6 +35,7 @@ contract('Topic', function(accounts) {
 
 	let testTopic;
 
+	// Setup 
 	beforeEach(async function() {
    		testTopic = await Topic.new(...Object.values(testTopicParams));
    		testTopic.allEvents().watch((error, response) => {
@@ -44,38 +49,29 @@ contract('Topic', function(accounts) {
 	});
 
   	it("sets the first account as the contract creator", async function() {
-  		testTopic.owner.call()
-  		.then(function(owner) {
-  			assert.equal(owner, accounts[0], "Topic owner does not match.");
-  		});
+  		let owner = await testTopic.owner.call();
+		assert.equal(owner, accounts[0], "Topic owner does not match.");
     });
 
     it("sets the topic name correctly", async function() {
-    	testTopic.name.call()
-    	.then(function(name) {
-    		assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
-    	});
+    	let name = await testTopic.name.call();
+    	assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
     });
 
     it("sets the topic result names correctly", async function() {
-    	var resultNames = testTopicParams._resultNames;
-		testTopic.getResultName(0)
-		.then(function(result1) {
-			assert.equal(web3.toUtf8(result1), resultNames[0], "Result name 1 does not match.");
-			return testTopic.getResultName(1);
-		}).then(function(result2) {
-			assert.equal(web3.toUtf8(result2), resultNames[1], "Result name 2 does not match.");
-			return testTopic.getResultName(2);
-		}).then(function(result3) {
-			assert.equal(web3.toUtf8(result3), resultNames[2], "Result name 3 does not match.");
-		});
+    	let resultName1 = await testTopic.getResultName(0);
+    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
+
+		let resultName2 = await testTopic.getResultName(1);
+		assert.equal(web3.toUtf8(resultName2), testTopicParams._resultNames[1], "Result name 2 does not match.");
+
+		let resultName3 = await testTopic.getResultName(2);
+		assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
     });
 
     it("sets the topic betting end block correctly", async function() {
-    	testTopic.bettingEndBlock.call()
-    	.then(function(bettingEndBlock) {
-    		assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
-    	});
+    	let bettingEndBlock = await testTopic.bettingEndBlock.call();
+		await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
     });
 
     it("allows users to bet if before the betting end block has been reached", async function() {
@@ -83,35 +79,39 @@ contract('Topic', function(accounts) {
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
 
-		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-		.then(function() {
-			let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
-			let difference = newBalance - initialBalance;
-			assert.equal(difference, betAmount, "New result balance does not match added bet.");
+		await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
+		let difference = newBalance - initialBalance;
+		assert.equal(difference, betAmount, "New result balance does not match added bet.");
 
-			return testTopic.getResultBalance(betResultIndex);
-		}).then(function(resultBalance) {
-			assert.equal(resultBalance, betAmount, "Result balance does not match.");
-			return testTopic.getBetBalance(betResultIndex);
-		}).then(function(betBalance) {
-			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
-		});
+		let resultBalance = await testTopic.getResultBalance(betResultIndex);
+		assert.equal(resultBalance, betAmount, "Result balance does not match.");
+
+		let betBalance = await testTopic.getBetBalance(betResultIndex);
+		assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
     });
  
-    it("does not allow users to bet if the betting end block has been reached", async function() {
-    	console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
-    	await increaseTime(86400 * 3);
-    	console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);	
+  //   it("does not allow users to bet if the betting end block has been reached", async function() {
+  //   	var currentBlock = web3.eth.blockNumber;
+  //   	console.log("current block: " + currentBlock);
+  //   	await blockHeightManager.mineTo(1001);
 
-		let betAmount = web3.toWei(1, 'ether');
-		let betResultIndex = 0;
+  //   	currentBlock = web3.eth.blockNumber;
+  //   	console.log("after advancing block: " + currentBlock);	
 
-		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-		.catch(assert.fail)
-		.then(function() {
-			return testTopic.getResultBalance(betResultIndex);
-		}).then(function(resultBalance) {
-			assert.notEqual(resultBalance.toString(), betAmount, "Result balance shouldn't match the bet amount");
-		});
-    });
+  //   	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+
+		// let betAmount = web3.toWei(1, 'ether');
+		// let betResultIndex = 0;
+        	
+		// assert(testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount }))
+		// .to.fail("Betting past betting end block did not fail as expected.");
+
+		// try {
+	 //        testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+	 //        assert.fail();
+		// } catch(e) {
+	 //        assert.match(e.toString(), /invalid opcode/);
+	 //    }
+  //   });
 });
