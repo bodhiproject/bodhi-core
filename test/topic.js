@@ -87,18 +87,11 @@ contract('Topic', function(accounts) {
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
 
-		// await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
-		// assert.fail(0, 1, "Exception not thrown");
-
-		// expect(function() {
-		// 	testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-		// }).to.throw();
-
-		// try {
-	 //        testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-	 //        assert.fail();
-		// } catch(e) {
-	 //        assert.match(e.toString(), /invalid opcode/);
-	 //    }
+		try {
+	        await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+	        assert.fail();
+		} catch(e) {
+	        assert.match(e.message, /invalid opcode/);
+	    }
     });
 });
