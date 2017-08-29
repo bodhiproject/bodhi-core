@@ -9,25 +9,38 @@ contract('Topic', function(accounts) {
 		_bettingEndBlock: 1000
 	};
 
-	// const SECONDS_IN_DAY = 86400;
-	// const timeTravel = function(seconds) {
-	// 	return new Promise((resolve, reject) => {
- //    		web3.currentProvider.sendAsync({
- //      			jsonrpc: "2.0",
- //      			method: "evm_increaseTime",
- //      			params: [seconds], // 86400 is num seconds in day
- //      			id: new Date().getTime()
- //    		}, (error, result) => {
- //      			if (error) return reject(err) 
- //      			return resolve(result)
- //    		});
- //  		})
-	// }
+	const increaseTime = function(seconds) {
+		return new Promise((resolve, reject) => {
+			web3.currentProvider.sendAsync({
+				jsonrpc: "2.0",
+				method: "evm_increaseTime",
+				params: [seconds], // 86400 is num seconds in day
+				id: new Date().getTime(),
+			}, error1 => {
+				if (error1) return reject(error1);
+				
+				web3.currentProvider.sendAsync({
+        			jsonrpc: "2.0",
+        			method: "evm_mine",
+      			}, (error2, result2) => {
+        			return error2 ? reject(error2) : resolve(result2);
+      			});
+		    });
+		});
+	};
 
 	let testTopic;
 
 	beforeEach(async function() {
    		testTopic = await Topic.new(...Object.values(testTopicParams));
+   		testTopic.allEvents().watch((error, response) => {
+    		if (error) {
+    			console.log("Event Error: " + error);
+    		} else {
+    			console.log("Event Triggered: " + JSON.stringify(response.event));
+    			console.log("Args: " + JSON.stringify(response.args));
+    		}
+    	});
 	});
 
   	it("sets the first account as the contract creator", async function() {
@@ -66,18 +79,6 @@ contract('Topic', function(accounts) {
     });
 
     it("allows users to bet if before the betting end block has been reached", async function() {
-    	// TODO: Remove after testing done
-    	testTopic.allEvents().watch((error, response) => {
-    		if (error) {
-    			console.log("Error: " + error);
-    		} else {
-    			console.log("BetAccepted better: " + response.args._better);
-    			console.log("BetAccepted resultIndex: " + response.args._resultIndex);
-    			console.log("BetAccepted betAmount: " + response.args._betAmount);
-    			console.log("BetAccepted betBalance: " + response.args._betBalance);
-    		}
-    	});
-
 		let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
@@ -97,14 +98,20 @@ contract('Topic', function(accounts) {
 		});
     });
  
-  //   it("does not allow users to bet if the betting end block has been reached", async function() {
-  //   	await timeTravel(86400 * 10);
-  //   	// await mineBlock();
+    it("does not allow users to bet if the betting end block has been reached", async function() {
+    	console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
+    	await increaseTime(86400 * 3);
+    	console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);	
 
-		// let betAmount = web3.toWei(1, 'ether');
-		// let betResultIndex = 0;
+		let betAmount = web3.toWei(1, 'ether');
+		let betResultIndex = 0;
 
-		// testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-		// .then(assert.fail);
-  //   });
+		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		.catch(assert.fail)
+		.then(function() {
+			return testTopic.getResultBalance(betResultIndex);
+		}).then(function(resultBalance) {
+			assert.notEqual(resultBalance.toString(), betAmount, "Result balance shouldn't match the bet amount");
+		});
+    });
 });
