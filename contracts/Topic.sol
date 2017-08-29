@@ -17,6 +17,7 @@ contract Topic is SafeMath {
     bool finalResultSet;
 
     event TopicCreated(bytes32 _name);
+    event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event FinalResultSet(uint _finalResultIndex);
 
     modifier onlyOwner() {
@@ -73,14 +74,39 @@ contract Topic is SafeMath {
         return owner;
     }
 
-    function getResultName(uint resultIndex) public validResultIndex(resultIndex) constant returns (bytes32) {
+    function getResultName(uint resultIndex) 
+        public 
+        validResultIndex(resultIndex) 
+        constant 
+        returns (bytes32) 
+    {
         return results[resultIndex].name;
+    }
+
+    function getResultBalance(uint resultIndex) 
+        public 
+        validResultIndex(resultIndex) 
+        constant 
+        returns (uint256) 
+    {
+        return results[resultIndex].balance;
+    }
+
+    function getBetBalance(uint resultIndex) 
+        public 
+        validResultIndex(resultIndex) 
+        constant 
+        returns (uint256) 
+    {
+        return results[resultIndex].betBalances[msg.sender];
     }
 
     function bet(uint resultIndex) public hasNotEnded payable {
         Result storage result = results[resultIndex];
         result.balance = safeAdd(result.balance, msg.value);
         result.betBalances[msg.sender] = safeAdd(result.betBalances[msg.sender], msg.value);
+
+        BetAccepted(msg.sender, resultIndex, msg.value, result.betBalances[msg.sender]);
     }
 
     function withdrawBet() public finalResultIsSet {

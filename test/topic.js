@@ -6,7 +6,7 @@ contract('Topic', function(accounts) {
 		_owner: accounts[0],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
-		_bettingEndBlock: 10000
+		_bettingEndBlock: 1000
 	};
 
 	let testTopic;
@@ -47,13 +47,33 @@ contract('Topic', function(accounts) {
     });
 
     it("allows users to bet if before the betting end block has been reached", async function() {
-		var initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
-		var betAmount = web3.toWei(1, 'ether');
+    	// TODO: Remove after testing done
+    	testTopic.allEvents().watch((error, response) => {
+    		if (error) {
+    			console.log("Error: " + error);
+    		} else {
+    			console.log("BetAccepted better: " + response.args._better);
+    			console.log("BetAccepted resultIndex: " + response.args._resultIndex);
+    			console.log("BetAccepted betAmount: " + response.args._betAmount);
+    			console.log("BetAccepted betBalance: " + response.args._betBalance);
+    		}
+    	});
 
-		testTopic.bet(0, { from: accounts[1], value: betAmount }).then(function() {
-			var newBalance = web3.eth.getBalance(testTopic.address).toNumber();
-			var difference = newBalance - initialBalance;
-			assert.equal(difference, betAmount, "Bet amount does not match new balance.");
+		let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
+		let betAmount = web3.toWei(1, 'ether');
+		let betResultIndex = 0;
+
+		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount }).then(function() {
+			let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
+			let difference = newBalance - initialBalance;
+			assert.equal(difference, betAmount, "New result balance does not match added bet.");
+
+			return testTopic.getResultBalance(betResultIndex);
+		}).then(function(resultBalance) {
+			assert.equal(resultBalance, betAmount, "Result balance does not match.");
+			return testTopic.getBetBalance(betResultIndex);
+		}).then(function(betBalance) {
+			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
 		});
     });
 });
