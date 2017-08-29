@@ -9,6 +9,21 @@ contract('Topic', function(accounts) {
 		_bettingEndBlock: 1000
 	};
 
+	// const SECONDS_IN_DAY = 86400;
+	// const timeTravel = function(seconds) {
+	// 	return new Promise((resolve, reject) => {
+ //    		web3.currentProvider.sendAsync({
+ //      			jsonrpc: "2.0",
+ //      			method: "evm_increaseTime",
+ //      			params: [seconds], // 86400 is num seconds in day
+ //      			id: new Date().getTime()
+ //    		}, (error, result) => {
+ //      			if (error) return reject(err) 
+ //      			return resolve(result)
+ //    		});
+ //  		})
+	// }
+
 	let testTopic;
 
 	beforeEach(async function() {
@@ -16,20 +31,23 @@ contract('Topic', function(accounts) {
 	});
 
   	it("sets the first account as the contract creator", async function() {
-  		testTopic.owner.call().then(function(owner) {
+  		testTopic.owner.call()
+  		.then(function(owner) {
   			assert.equal(owner, accounts[0], "Topic owner does not match.");
   		});
     });
 
     it("sets the topic name correctly", async function() {
-    	testTopic.name.call().then(function(name) {
+    	testTopic.name.call()
+    	.then(function(name) {
     		assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
     	});
     });
 
     it("sets the topic result names correctly", async function() {
     	var resultNames = testTopicParams._resultNames;
-		testTopic.getResultName(0).then(function(result1) {
+		testTopic.getResultName(0)
+		.then(function(result1) {
 			assert.equal(web3.toUtf8(result1), resultNames[0], "Result name 1 does not match.");
 			return testTopic.getResultName(1);
 		}).then(function(result2) {
@@ -41,7 +59,8 @@ contract('Topic', function(accounts) {
     });
 
     it("sets the topic betting end block correctly", async function() {
-    	testTopic.bettingEndBlock.call().then(function(bettingEndBlock) {
+    	testTopic.bettingEndBlock.call()
+    	.then(function(bettingEndBlock) {
     		assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
     	});
     });
@@ -63,7 +82,8 @@ contract('Topic', function(accounts) {
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
 
-		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount }).then(function() {
+		testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		.then(function() {
 			let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
 			let difference = newBalance - initialBalance;
 			assert.equal(difference, betAmount, "New result balance does not match added bet.");
@@ -76,4 +96,15 @@ contract('Topic', function(accounts) {
 			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
 		});
     });
+ 
+  //   it("does not allow users to bet if the betting end block has been reached", async function() {
+  //   	await timeTravel(86400 * 10);
+  //   	// await mineBlock();
+
+		// let betAmount = web3.toWei(1, 'ether');
+		// let betResultIndex = 0;
+
+		// testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		// .then(assert.fail);
+  //   });
 });
