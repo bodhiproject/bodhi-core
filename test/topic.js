@@ -13,26 +13,6 @@ contract('Topic', function(accounts) {
 		_bettingEndBlock: 1000
 	};
 
-	const increaseTime = function(seconds) {
-		return new Promise((resolve, reject) => {
-			web3.currentProvider.sendAsync({
-				jsonrpc: "2.0",
-				method: "evm_increaseTime",
-				params: [seconds], // 86400 is num seconds in day
-				id: new Date().getTime(),
-			}, error1 => {
-				if (error1) return reject(error1);
-				
-				web3.currentProvider.sendAsync({
-        			jsonrpc: "2.0",
-        			method: "evm_mine",
-      			}, (error2, result2) => {
-        			return error2 ? reject(error2) : resolve(result2);
-      			});
-		    });
-		});
-	};
-
 	let testTopic;
 
 	// Setup 
@@ -91,21 +71,22 @@ contract('Topic', function(accounts) {
 		assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
     });
  
-  //   it("does not allow users to bet if the betting end block has been reached", async function() {
-  //   	var currentBlock = web3.eth.blockNumber;
-  //   	console.log("current block: " + currentBlock);
-  //   	await blockHeightManager.mineTo(1001);
+    it("does not allow users to bet if the betting end block has been reached", async function() {
+    	var currentBlock = web3.eth.blockNumber;
+    	console.log("current block: " + currentBlock);
+    	await blockHeightManager.mineTo(1001);
 
-  //   	currentBlock = web3.eth.blockNumber;
-  //   	console.log("after advancing block: " + currentBlock);	
+    	currentBlock = web3.eth.blockNumber;
+    	console.log("after advancing block: " + currentBlock);	
 
-  //   	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
-		// let betAmount = web3.toWei(1, 'ether');
-		// let betResultIndex = 0;
-        	
-		// assert(testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount }))
-		// .to.fail("Betting past betting end block did not fail as expected.");
+		let betAmount = web3.toWei(1, 'ether');
+		let betResultIndex = 0;
+
+		expect(function() {
+			testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		}).to.throw();
 
 		// try {
 	 //        testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
@@ -113,5 +94,5 @@ contract('Topic', function(accounts) {
 		// } catch(e) {
 	 //        assert.match(e.toString(), /invalid opcode/);
 	 //    }
-  //   });
+    });
 });
