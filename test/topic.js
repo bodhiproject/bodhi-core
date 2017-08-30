@@ -18,36 +18,37 @@ contract('Topic', function(accounts) {
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
 
-  	it("sets the first account as the contract creator", async function() {
-  		testTopic = await Topic.new(...Object.values(testTopicParams));
-  		let owner = await testTopic.owner.call();
-		assert.equal(owner, accounts[0], "Topic owner does not match.");
-    });
+  	describe("New Topic", async function() {
+  		before(async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
+  		});
 
-    it("sets the topic name correctly", async function() {
-    	testTopic = await Topic.new(...Object.values(testTopicParams));
-    	let name = await testTopic.name.call();
-    	assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
-    });
+  		it("sets the first account as the contract creator", async function() {
+	  		let owner = await testTopic.owner.call();
+			assert.equal(owner, accounts[0], "Topic owner does not match.");
+	    });
 
-    it("sets the topic result names correctly", async function() {
-    	testTopic = await Topic.new(...Object.values(testTopicParams));
+	    it("sets the topic name correctly", async function() {
+	    	let name = await testTopic.name.call();
+	    	assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
+	    });
 
-    	let resultName1 = await testTopic.getResultName(0);
-    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
+	    it("sets the topic result names correctly", async function() {
+	    	let resultName1 = await testTopic.getResultName(0);
+	    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
 
-		let resultName2 = await testTopic.getResultName(1);
-		assert.equal(web3.toUtf8(resultName2), testTopicParams._resultNames[1], "Result name 2 does not match.");
+			let resultName2 = await testTopic.getResultName(1);
+			assert.equal(web3.toUtf8(resultName2), testTopicParams._resultNames[1], "Result name 2 does not match.");
 
-		let resultName3 = await testTopic.getResultName(2);
-		assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
-    });
+			let resultName3 = await testTopic.getResultName(2);
+			assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
+	    });
 
-    it("sets the topic betting end block correctly", async function() {
-    	testTopic = await Topic.new(...Object.values(testTopicParams));
-    	let bettingEndBlock = await testTopic.bettingEndBlock.call();
-		await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
-    });
+	    it("sets the topic betting end block correctly", async function() {
+	    	let bettingEndBlock = await testTopic.bettingEndBlock.call();
+			await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
+	    });
+  	});
 
     it("allows users to bet if the betting end block has not been reached", async function() {
 		testTopic = await Topic.new(...Object.values(testTopicParams));
