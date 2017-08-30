@@ -15,26 +15,24 @@ contract('Topic', function(accounts) {
 
 	let testTopic;
 
-	// Setup/Teardown
-	beforeEach(async function() {
-		testTopic = await Topic.new(...Object.values(testTopicParams));
-		await blockHeightManager.snapshot;
-	});
-	afterEach(function() {
-		blockHeightManager.revert;
-	});
+	beforeEach(blockHeightManager.snapshot);
+  	afterEach(blockHeightManager.revert);
 
   	it("sets the first account as the contract creator", async function() {
+  		testTopic = await Topic.new(...Object.values(testTopicParams));
   		let owner = await testTopic.owner.call();
 		assert.equal(owner, accounts[0], "Topic owner does not match.");
     });
 
     it("sets the topic name correctly", async function() {
+    	testTopic = await Topic.new(...Object.values(testTopicParams));
     	let name = await testTopic.name.call();
     	assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
     });
 
     it("sets the topic result names correctly", async function() {
+    	testTopic = await Topic.new(...Object.values(testTopicParams));
+
     	let resultName1 = await testTopic.getResultName(0);
     	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
 
@@ -46,11 +44,14 @@ contract('Topic', function(accounts) {
     });
 
     it("sets the topic betting end block correctly", async function() {
+    	testTopic = await Topic.new(...Object.values(testTopicParams));
     	let bettingEndBlock = await testTopic.bettingEndBlock.call();
 		await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
     });
 
-    it("allows users to bet if before the betting end block has been reached", async function() {
+    it("allows users to bet if the betting end block has not been reached", async function() {
+		testTopic = await Topic.new(...Object.values(testTopicParams));
+
 		testTopic.BetAccepted().watch((error, response) => {
     		if (error) {
     			console.log("Event Error: " + error);
@@ -66,7 +67,7 @@ contract('Topic', function(accounts) {
 		let betAmount = web3.toWei(1, 'ether');
 		let betResultIndex = 0;
 
-		await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
 		let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
 		let difference = newBalance - initialBalance;
 		assert.equal(difference, betAmount, "New result balance does not match added bet.");
@@ -79,6 +80,8 @@ contract('Topic', function(accounts) {
     });
  
     it("does not allow users to bet if the betting end block has been reached", async function() {
+    	testTopic = await Topic.new(...Object.values(testTopicParams));
+
     	var currentBlock = web3.eth.blockNumber;
     	await blockHeightManager.mineTo(1001);
     	currentBlock = web3.eth.blockNumber;

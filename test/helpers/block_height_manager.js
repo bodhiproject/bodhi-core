@@ -1,6 +1,7 @@
+const web3 = global.web3;
 const bluebird = require('bluebird');
 
-function BlockHeightManager(web3) {
+function BlockHeightManager() {
   let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
   let snapshotId;
 
