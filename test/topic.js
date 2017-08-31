@@ -50,55 +50,57 @@ contract('Topic', function(accounts) {
 	    });
   	});
 
-    it("allows users to bet if the betting end block has not been reached", async function() {
-		testTopic = await Topic.new(...Object.values(testTopicParams));
+  	describe("Betting", async function() {
+  		it("allows users to bet if the betting end block has not been reached", async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
 
-		testTopic.BetAccepted().watch((error, response) => {
-    		if (error) {
-    			console.log("Event Error: " + error);
-    		} else {
-    			console.log("Event Triggered: " + JSON.stringify(response.event));
-    			console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
-    			console.log("betAmount: " + JSON.stringify(response.args._betAmount));
-    			console.log("betBalance: " + JSON.stringify(response.args._betBalance));
-    		}
-    	});
+			testTopic.BetAccepted().watch((error, response) => {
+	    		if (error) {
+	    			console.log("Event Error: " + error);
+	    		} else {
+	    			console.log("Event Triggered: " + JSON.stringify(response.event));
+	    			console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
+	    			console.log("betAmount: " + JSON.stringify(response.args._betAmount));
+	    			console.log("betBalance: " + JSON.stringify(response.args._betBalance));
+	    		}
+	    	});
 
-		let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
-		let betAmount = web3.toWei(1, 'ether');
-		let betResultIndex = 0;
+			let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
+			let betAmount = web3.toWei(1, 'ether');
+			let betResultIndex = 0;
 
-		await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
-		let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
-		let difference = newBalance - initialBalance;
-		assert.equal(difference, betAmount, "New result balance does not match added bet.");
+			await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
+			let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
+			let difference = newBalance - initialBalance;
+			assert.equal(difference, betAmount, "New result balance does not match added bet.");
 
-		let resultBalance = await testTopic.getResultBalance(betResultIndex);
-		assert.equal(resultBalance, betAmount, "Result balance does not match.");
+			let resultBalance = await testTopic.getResultBalance(betResultIndex);
+			assert.equal(resultBalance, betAmount, "Result balance does not match.");
 
-		let betBalance = await testTopic.getBetBalance(betResultIndex);
-		assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
-    });
- 
-    it("does not allow users to bet if the betting end block has been reached", async function() {
-    	testTopic = await Topic.new(...Object.values(testTopicParams));
+			let betBalance = await testTopic.getBetBalance(betResultIndex);
+			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
+	    });
+	 
+	    it("does not allow users to bet if the betting end block has been reached", async function() {
+	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
-    	await blockHeightManager.mineTo(1001);
-    	let currentBlock = web3.eth.blockNumber;
-    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+	    	await blockHeightManager.mineTo(1001);
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
-		let betAmount = web3.toWei(1, 'ether');
-		let betResultIndex = 0;
+			let betAmount = web3.toWei(1, 'ether');
+			let betResultIndex = 0;
 
-		try {
-	        await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
-	        assert.fail();
-		} catch(e) {
-	        assert.match(e.message, /invalid opcode/);
-	    }
-    });
+			try {
+		        await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+	    });
+  	});
 
-    describe("Revealing results", async function() {
+    describe("Revealing Results", async function() {
     	it("allows the owner to reveal the result if the betting end block has been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 

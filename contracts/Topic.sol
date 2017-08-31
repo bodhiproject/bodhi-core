@@ -11,7 +11,7 @@ contract Topic is SafeMath {
 
     address public owner;
     bytes32 public name;
-    Result[] public results;
+    Result[] results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
     bool public finalResultSet;
@@ -110,7 +110,7 @@ contract Topic is SafeMath {
         BetAccepted(msg.sender, resultIndex, msg.value, results[resultIndex].betBalances[msg.sender]);
     }
 
-    function withdrawBet() public finalResultIsSet {
+    function withdrawBet() public hasEnded finalResultIsSet {
         uint256 totalEventBalance = 0;
         for (uint i = 0; i < results.length; i++) {
             totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
