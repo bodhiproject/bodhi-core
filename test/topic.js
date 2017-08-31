@@ -54,7 +54,7 @@ contract('Topic', function(accounts) {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
 
-			testTopic.BetAccepted().watch((error, response) => {
+			let watcher = testTopic.BetAccepted().watch((error, response) => {
 	    		if (error) {
 	    			console.log("Event Error: " + error);
 	    		} else {
@@ -79,6 +79,8 @@ contract('Topic', function(accounts) {
 
 			let betBalance = await testTopic.getBetBalance(betResultIndex, { from: accounts[1] });
 			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
+
+			watcher.stopWatching();
 	    });
 	 
 	    it("does not allow users to bet if the betting end block has been reached", async function() {
@@ -143,29 +145,29 @@ contract('Topic', function(accounts) {
 	    });
     });
 
-   //  describe("Withdraw", async function() {
-   //  	it("allows the better to withdraw their winnings if it has ended and the result was revealed", async function() {
-   //  		testTopic = await Topic.new(...Object.values(testTopicParams));
+    describe("Withdraw", async function() {
+    	it("allows the better to withdraw their winnings if it has ended and the result was revealed", async function() {
+    		testTopic = await Topic.new(...Object.values(testTopicParams));
 
-   //  		let betAmount = web3.toWei(.5, 'ether');
-			// let betResultIndex = 1;
-			// await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
-			// // await testTopic.bet(betResultIndex, { from: accounts[2], value: betAmount });
+    		let betAmount = web3.toWei(.5, 'ether');
+			let betResultIndex = 1;
+			await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
+			// await testTopic.bet(betResultIndex, { from: accounts[2], value: betAmount });
 
-			// let resultBalance = await testTopic.getResultBalance(betResultIndex);
-			// assert.equal(resultBalance, betAmount, "Result balance does not match.");
+			let resultBalance = await testTopic.getResultBalance(betResultIndex);
+			assert.equal(resultBalance, betAmount, "Result balance does not match.");
 
-			// await blockHeightManager.mineTo(500);
-	  //   	let currentBlock = web3.eth.blockNumber;
-	  //   	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);   
+			await blockHeightManager.mineTo(500);
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);   
 	    	
-	  //   	let finalResultIndex = 1;
-	  //   	await testTopic.revealResult(finalResultIndex);
+	    	let finalResultIndex = 1;
+	    	await testTopic.revealResult(finalResultIndex);
 
-	  //   	let finalResultSet = await testTopic.finalResultSet.call();
-	  //   	assert.isTrue(finalResultSet, "Final result should be set.");
+	    	let finalResultSet = await testTopic.finalResultSet.call();
+	    	assert.isTrue(finalResultSet, "Final result should be set.");
 
 
-   //  	});
-   //  });
+    	});
+    });
 });
