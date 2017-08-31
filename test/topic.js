@@ -121,5 +121,23 @@ contract('Topic', function(accounts) {
 	    	let finalResultName = await testTopic.getFinalResultName();
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], "Final result index does not match.");
 	    });
+
+	    it("does not allow the owner to reveal the result if the betting end block has not been reached", async function() {
+	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isBelow(currentBlock, testTopicParams._bettingEndBlock);
+
+	    	var finalResultSet = await testTopic.finalResultSet.call();
+	    	assert.isFalse(finalResultSet, "Final result should not be set.");
+	    	
+	    	try {
+	    		let testFinalResultIndex = 2;
+		        await testTopic.revealResult(testFinalResultIndex);
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+	    });
     });
 });
