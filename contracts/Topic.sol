@@ -110,7 +110,7 @@ contract Topic is SafeMath {
         BetAccepted(msg.sender, resultIndex, msg.value, results[resultIndex].betBalances[msg.sender]);
     }
 
-    function withdrawBet() public hasEnded finalResultIsSet {
+    function withdrawWinnings() public hasEnded finalResultIsSet {
         uint256 totalEventBalance = 0;
         for (uint i = 0; i < results.length; i++) {
             totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
