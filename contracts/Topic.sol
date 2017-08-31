@@ -14,7 +14,7 @@ contract Topic is SafeMath {
     Result[] public results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
-    bool finalResultSet;
+    bool public finalResultSet;
 
     event TopicCreated(bytes32 _name);
     event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);

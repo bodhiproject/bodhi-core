@@ -83,9 +83,8 @@ contract('Topic', function(accounts) {
     it("does not allow users to bet if the betting end block has been reached", async function() {
     	testTopic = await Topic.new(...Object.values(testTopicParams));
 
-    	var currentBlock = web3.eth.blockNumber;
     	await blockHeightManager.mineTo(1001);
-    	currentBlock = web3.eth.blockNumber;
+    	let currentBlock = web3.eth.blockNumber;
     	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
 		let betAmount = web3.toWei(1, 'ether');
@@ -97,5 +96,30 @@ contract('Topic', function(accounts) {
 		} catch(e) {
 	        assert.match(e.message, /invalid opcode/);
 	    }
+    });
+
+    describe("Revealing results", async function() {
+    	it("allows the owner to reveal the result if the betting end block has been reached", async function() {
+	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+
+	    	await blockHeightManager.mineTo(1000);
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+
+	    	var finalResultSet = await testTopic.finalResultSet.call();
+	    	assert.isFalse(finalResultSet, "Final result should not be set.");
+
+	    	let testFinalResultIndex = 2;
+	    	await testTopic.revealResult(testFinalResultIndex);
+
+	    	finalResultSet = await testTopic.finalResultSet.call();
+	    	assert.isTrue(finalResultSet, "Final result should be set.");
+
+	    	let finalResultIndex = await testTopic.getFinalResultIndex();
+	    	assert.equal(finalResultIndex, testFinalResultIndex, "Final result index does not match.");
+
+	    	let finalResultName = await testTopic.getFinalResultName();
+	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], "Final result index does not match.");
+	    });
     });
 });
