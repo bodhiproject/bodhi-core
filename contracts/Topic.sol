@@ -111,11 +111,11 @@ contract Topic is SafeMath {
     }
 
     function withdrawWinnings() public hasEnded finalResultIsSet {
-        uint256 totalEventBalance = 0;
+        uint256 totalTopicBalance = 0;
         for (uint i = 0; i < results.length; i++) {
-            totalEventBalance = safeAdd(results[i].balance, totalEventBalance);
+            totalTopicBalance = safeAdd(results[i].balance, totalTopicBalance);
         }
-        require(totalEventBalance > 0);
+        require(totalTopicBalance > 0);
 
         Result storage finalResult = results[finalResultIndex];
         uint256 betBalance = finalResult.betBalances[msg.sender];
@@ -124,7 +124,7 @@ contract Topic is SafeMath {
         // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
         finalResult.betBalances[msg.sender] = 0;
 
-        uint256 withdrawAmount = safeDivide(safeMultiply(totalEventBalance, betBalance), finalResult.balance);
+        uint256 withdrawAmount = safeDivide(safeMultiply(totalTopicBalance, betBalance), finalResult.balance);
         require(withdrawAmount > 0);
 
         msg.sender.transfer(withdrawAmount);
