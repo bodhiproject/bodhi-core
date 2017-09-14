@@ -170,9 +170,9 @@ contract('Topic', function(accounts) {
 			var balance = web3.eth.getBalance(account1);
 			console.log("initial account1 balance: " + balance.toString());
 
-			await testTopic.bet(betResultIndex, { from: account1, value: betAmount })
+			await testTopic.bet(betResultIndex, { from: account1, value: betAmount, gas: 100000 })
 			.then(async function() {
-				await testTopic.bet(betResultIndex, { from: account2, value: betAmount });
+				await testTopic.bet(betResultIndex, { from: account2, value: betAmount, gas: 100000 });
 			});
 
 			let resultBalance = await testTopic.getResultBalance(betResultIndex);
@@ -206,7 +206,7 @@ contract('Topic', function(accounts) {
 			var balance = web3.eth.getBalance(account1);
 			console.log("balance: " + balance.toString());
 
-	    	var expectedAccountBalance = balance.plus(expectedWithdrawAmount);
+	    	var expectedAccountBalance = balance.add(expectedWithdrawAmount);
 	    	console.log("expectedAccountBalance: " + expectedAccountBalance.toString());
 
 	    	await testTopic.withdrawWinnings({ from: account1, gas: 50000 });
