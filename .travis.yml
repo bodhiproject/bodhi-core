@@ -15,7 +15,7 @@ addons:
     - g++-4.8
 
 install:
-  - npm install -g ethereumjs-testrpc
+  - npm install -g ethereumjs-testrpc@4.1.1
   - npm install -g truffle
   - npm install
 
