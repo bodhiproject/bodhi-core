@@ -10,7 +10,7 @@ contract('Topic', function(accounts) {
 		_owner: accounts[0],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
-		_bettingEndBlock: 500
+		_bettingEndBlock: 100
 	};
 
 	let testTopic;
@@ -87,7 +87,7 @@ contract('Topic', function(accounts) {
 	    it("does not allow users to bet if the betting end block has been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
-	    	await blockHeightManager.mineTo(500);
+	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
@@ -107,7 +107,7 @@ contract('Topic', function(accounts) {
     	it("allows the owner to reveal the result if the betting end block has been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
-	    	await blockHeightManager.mineTo(500);
+	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
@@ -167,18 +167,20 @@ contract('Topic', function(accounts) {
     		let betAmount = web3.toWei(1, "ether");
 			let betResultIndex = 1;
 
-			var balance = web3.eth.getBalance(account1);
-			console.log("initial account1 balance: " + balance.toString());
-
-			await testTopic.bet(betResultIndex, { from: account1, value: betAmount, gas: 100000 })
+			await testTopic.bet(betResultIndex, { from: account1, value: betAmount })
 			.then(async function() {
-				await testTopic.bet(betResultIndex, { from: account2, value: betAmount, gas: 100000 });
+				await testTopic.bet(betResultIndex, { from: account2, value: betAmount });
 			});
 
-			let resultBalance = await testTopic.getResultBalance(betResultIndex);
-			assert.equal(resultBalance.toString(), betAmount * 2, "Result balance does not match.");
+			var resultBalance = web3.toBigNumber(await testTopic.getResultBalance(betResultIndex));
+			var expectedResultBalance = web3.toBigNumber(betAmount * 2);
+			assert.equal(resultBalance.toString(), expectedResultBalance.toString(), "Result balance does not match.");
 
-			await blockHeightManager.mineTo(500);
+			let totalTopicBalance = web3.toBigNumber(await testTopic.getTotalTopicBalance());
+			let expectedTotalTopicBalance = web3.toBigNumber(betAmount * 2);
+			assert.equal(totalTopicBalance.toString(), expectedTotalTopicBalance.toString(), "Total topic balance does not match.");
+
+			await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);   
 	    	
@@ -196,22 +198,15 @@ contract('Topic', function(accounts) {
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], "Final result index does not match.");
 
 	    	// Withdraw winnings: accounts[1]
-	    	let totalTopicBalance = betAmount * 2;
-			console.log("totalTopicBalance: " + totalTopicBalance.toString());
+	    	var expectedWithdrawAmount = totalTopicBalance * betAmount / resultBalance;
 
-	    	var accountBetBalance = await testTopic.getBetBalance(testFinalResultIndex, { from: account1 })
-	    	var expectedWithdrawAmount = (totalTopicBalance * accountBetBalance) / resultBalance;
-			console.log("expectedWithdrawAmount: " + expectedWithdrawAmount.toString());
+	    	await testTopic.withdrawWinnings({ from: account1 });
+	    	var accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, { from: account1 }));
+	    	assert.equal(accountBetBalance.toString(), 0, "Account1 bet balance should be 0.");
 
-			var balance = web3.eth.getBalance(account1);
-			console.log("balance: " + balance.toString());
-
-	    	var expectedAccountBalance = balance.add(expectedWithdrawAmount);
-	    	console.log("expectedAccountBalance: " + expectedAccountBalance.toString());
-
-	    	await testTopic.withdrawWinnings({ from: account1, gas: 50000 });
-	    	balance = web3.eth.getBalance(account1);
-	    	assert.equal(balance.toString(), expectedAccountBalance.toString(), "Account1 balance does not match.");
+	    	resultBalance = web3.toBigNumber(await testTopic.getResultBalance(betResultIndex));
+	    	expectedResultBalance = resultBalance - expectedWithdrawAmount;
+	    	assert.equal(resultBalance.toString(), expectedResultBalance.toString(), "Result balance does not match.");
 
 	    	// watcher.stopWatching();
     	});

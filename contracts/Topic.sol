@@ -20,6 +20,7 @@ contract Topic {
 
     event TopicCreated(bytes32 _name);
     event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
+    event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint _finalResultIndex);
 
     modifier onlyOwner() {
@@ -72,10 +73,6 @@ contract Topic {
         TopicCreated(name);
     }
 
-    function getOwner() public constant returns (address) {
-        return owner;
-    }
-
     function getResultName(uint resultIndex) 
         public 
         validResultIndex(resultIndex) 
@@ -103,6 +100,14 @@ contract Topic {
         return results[resultIndex].betBalances[msg.sender];
     }
 
+    function getTotalTopicBalance() public constant returns (uint256) {
+        uint256 totalTopicBalance = 0;
+        for (uint i = 0; i < results.length; i++) {
+            totalTopicBalance = results[i].balance.add(totalTopicBalance);
+        }
+        return totalTopicBalance;
+    }
+
     function bet(uint resultIndex) public hasNotEnded payable {
         Result storage updatedResult = results[resultIndex];
         updatedResult.balance = updatedResult.balance.add(msg.value);
@@ -113,10 +118,7 @@ contract Topic {
     }
 
     function withdrawWinnings() public hasEnded finalResultIsSet {
-        uint256 totalTopicBalance = 0;
-        for (uint i = 0; i < results.length; i++) {
-            totalTopicBalance = results[i].balance.add(totalTopicBalance);
-        }
+        uint256 totalTopicBalance = getTotalTopicBalance();
         require(totalTopicBalance > 0);
 
         Result storage finalResult = results[finalResultIndex];
@@ -130,6 +132,8 @@ contract Topic {
         require(withdrawAmount > 0);
 
         msg.sender.transfer(withdrawAmount);
+
+        WinningsWithdrawn(withdrawAmount);
     }
 
     function revealResult(uint resultIndex)
