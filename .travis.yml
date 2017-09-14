@@ -1,0 +1,23 @@
+language: node_js
+
+node_js:
+  - "7"
+
+env:
+  - CXX=g++-4.8
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
+
+install:
+  - npm install -g ethereumjs-testrpc@4.1.1
+  - npm install -g truffle
+  - npm install
+
+script:
+  - testrpc & truffle test
