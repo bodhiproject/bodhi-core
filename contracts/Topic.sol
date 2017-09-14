@@ -1,8 +1,10 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.11;
 
 import "./SafeMath.sol";
 
-contract Topic is SafeMath {
+contract Topic {
+    using SafeMath for uint256;
+
     struct Result {
         bytes32 name;
         uint256 balance;
@@ -103,8 +105,8 @@ contract Topic is SafeMath {
 
     function bet(uint resultIndex) public hasNotEnded payable {
         Result storage updatedResult = results[resultIndex];
-        updatedResult.balance = safeAdd(updatedResult.balance, msg.value);
-        updatedResult.betBalances[msg.sender] = safeAdd(updatedResult.betBalances[msg.sender], msg.value);
+        updatedResult.balance = updatedResult.balance.add(msg.value);
+        updatedResult.betBalances[msg.sender] = updatedResult.betBalances[msg.sender].add(msg.value);
         results[resultIndex] = updatedResult;
 
         BetAccepted(msg.sender, resultIndex, msg.value, results[resultIndex].betBalances[msg.sender]);
@@ -113,7 +115,7 @@ contract Topic is SafeMath {
     function withdrawWinnings() public hasEnded finalResultIsSet {
         uint256 totalTopicBalance = 0;
         for (uint i = 0; i < results.length; i++) {
-            totalTopicBalance = safeAdd(results[i].balance, totalTopicBalance);
+            totalTopicBalance = results[i].balance.add(totalTopicBalance);
         }
         require(totalTopicBalance > 0);
 
@@ -124,7 +126,7 @@ contract Topic is SafeMath {
         // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
         finalResult.betBalances[msg.sender] = 0;
 
-        uint256 withdrawAmount = safeDivide(safeMultiply(totalTopicBalance, betBalance), finalResult.balance);
+        uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(finalResult.balance);
         require(withdrawAmount > 0);
 
         msg.sender.transfer(withdrawAmount);
