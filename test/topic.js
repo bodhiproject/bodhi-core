@@ -50,6 +50,32 @@ contract('Topic', function(accounts) {
 	    });
   	});
 
+  	describe("GetResultName:", async function() {
+  		before(async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
+  		});
+
+  		it("gets the correct result names", async function() {
+  			let resultName1 = await testTopic.getResultName(0);
+	    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
+
+			let resultName2 = await testTopic.getResultName(1);
+			assert.equal(web3.toUtf8(resultName2), testTopicParams._resultNames[1], "Result name 2 does not match.");
+
+			let resultName3 = await testTopic.getResultName(2);
+			assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
+  		});
+
+  		it("throws if using an invalid result index", async function() {
+  			try {
+				let resultName3 = await testTopic.getResultName(3);
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+  		});
+  	});
+
   	describe("Betting:", async function() {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
