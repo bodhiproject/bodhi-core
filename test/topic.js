@@ -126,6 +126,33 @@ contract('Topic', function(accounts) {
   		});
   	});
 
+  	describe("GetTotalTopicBalance:", async function() {
+  		it("returns the correct total topic balance", async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
+
+			let account1 = accounts[1];
+    		let account1BetAmount = web3.toBigNumber(web3.toWei(1, "ether"));
+
+    		let account2 = accounts[2];
+    		let account2BetAmount = web3.toBigNumber(web3.toWei(2, "ether"));
+
+    		let account3 = accounts[3];
+    		let account3BetAmount = web3.toBigNumber(web3.toWei(3, "ether"));
+
+			let totalTopicBalance = account1BetAmount.add(account2BetAmount).add(account3BetAmount);
+
+			await testTopic.bet(0, { from: account1, value: account1BetAmount })
+			.then(async function() {
+				await testTopic.bet(1, { from: account2, value: account2BetAmount });
+			}).then(async function() {
+				await testTopic.bet(2, { from: account3, value: account3BetAmount });
+			});
+
+			let actualTotalTopicBalance = web3.toBigNumber(await testTopic.getTotalTopicBalance());
+			assert.equal(actualTotalTopicBalance.toString(), totalTopicBalance.toString(), "Total topic balance does not match.");
+	    });
+  	});
+
   	describe("Betting:", async function() {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
