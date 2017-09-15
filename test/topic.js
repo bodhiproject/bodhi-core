@@ -150,34 +150,27 @@ contract('Topic', function(accounts) {
     	it("allows the better to withdraw their winnings if it has ended and the result was revealed", async function() {
     		testTopic = await Topic.new(...Object.values(testTopicParams));
 
-    		// let watcher = testTopic.BetAccepted().watch((error, response) => {
-	    	// 	if (error) {
-	    	// 		console.log("Event Error: " + error);
-	    	// 	} else {
-	    	// 		console.log("Event Triggered: " + JSON.stringify(response.event));
-	    	// 		console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
-	    	// 		console.log("betAmount: " + JSON.stringify(response.args._betAmount));
-	    	// 		console.log("betBalance: " + JSON.stringify(response.args._betBalance));
-	    	// 	}
-	    	// });
-
     		// Set bets
     		let account1 = accounts[1];
-    		let account2 = accounts[2];
-    		let betAmount = web3.toWei(1, "ether");
-			let betResultIndex = 1;
+    		let account1BetAmount = web3.toBigNumber(web3.toWei(1, "ether"));
 
-			await testTopic.bet(betResultIndex, { from: account1, value: betAmount })
+    		let account2 = accounts[2];
+    		let account2BetAmount = web3.toBigNumber(web3.toWei(1, "ether"));
+
+			let betResultIndex = 1;
+			let totalBetAmount = account1BetAmount.add(account2BetAmount);
+
+			await testTopic.bet(betResultIndex, { from: account1, value: account1BetAmount })
 			.then(async function() {
-				await testTopic.bet(betResultIndex, { from: account2, value: betAmount });
+				await testTopic.bet(betResultIndex, { from: account2, value: account2BetAmount });
 			});
 
 			var resultBalance = web3.toBigNumber(await testTopic.getResultBalance(betResultIndex));
-			var expectedResultBalance = web3.toBigNumber(betAmount * 2);
+			let expectedResultBalance = web3.toBigNumber(totalBetAmount);
 			assert.equal(resultBalance.toString(), expectedResultBalance.toString(), "Result balance does not match.");
 
 			let totalTopicBalance = web3.toBigNumber(await testTopic.getTotalTopicBalance());
-			let expectedTotalTopicBalance = web3.toBigNumber(betAmount * 2);
+			let expectedTotalTopicBalance = web3.toBigNumber(totalBetAmount);
 			assert.equal(totalTopicBalance.toString(), expectedTotalTopicBalance.toString(), "Total topic balance does not match.");
 
 			await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
@@ -198,17 +191,15 @@ contract('Topic', function(accounts) {
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], "Final result index does not match.");
 
 	    	// Withdraw winnings: accounts[1]
-	    	var expectedWithdrawAmount = totalTopicBalance * betAmount / resultBalance;
-
+	    	var expectedWithdrawAmount = totalTopicBalance * account1BetAmount / resultBalance;
 	    	await testTopic.withdrawWinnings({ from: account1 });
 	    	var accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, { from: account1 }));
 	    	assert.equal(accountBetBalance.toString(), 0, "Account1 bet balance should be 0.");
 
-	    	resultBalance = web3.toBigNumber(await testTopic.getResultBalance(betResultIndex));
-	    	expectedResultBalance = resultBalance - expectedWithdrawAmount;
-	    	assert.equal(resultBalance.toString(), expectedResultBalance.toString(), "Result balance does not match.");
-
-	    	// watcher.stopWatching();
+	    	expectedWithdrawAmount = totalTopicBalance * account2BetAmount / resultBalance;
+	    	await testTopic.withdrawWinnings({ from: account2 });
+	    	accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, { from: account2 }));
+	    	assert.equal(accountBetBalance.toString(), 0, "Account2 bet balance should be 0.");
     	});
     });
 });
