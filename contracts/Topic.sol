@@ -28,14 +28,15 @@ contract Topic {
         _;
     }
 
-    modifier validResultIndex(uint resultIndex) {
-        require(resultIndex >= 0);
-        require(resultIndex <= results.length - 1);
+    modifier validResultIndex(uint _resultIndex) {
+        require(_resultIndex >= 0);
+        require(_resultIndex <= results.length - 1);
         _;
     }
 
-    modifier hasNotEnded() {
+    modifier validBet() {
         require(block.number < bettingEndBlock);
+        require(msg.value > 0);
         _;
     }
 
@@ -59,7 +60,7 @@ contract Topic {
         name = _name;
 
         // Cannot have a prediction topic with only 1 result
-//        require(_resultNames.length > 1);
+        // require(_resultNames.length > 1);
 
         for (uint i = 0; i < _resultNames.length; i++) {
             results.push(Result({
@@ -73,31 +74,31 @@ contract Topic {
         TopicCreated(name);
     }
 
-    function getResultName(uint resultIndex) 
+    function getResultName(uint _resultIndex) 
         public 
-        validResultIndex(resultIndex) 
+        validResultIndex(_resultIndex) 
         constant 
         returns (bytes32) 
     {
-        return results[resultIndex].name;
+        return results[_resultIndex].name;
     }
 
-    function getResultBalance(uint resultIndex) 
+    function getResultBalance(uint _resultIndex) 
         public 
-        validResultIndex(resultIndex) 
+        validResultIndex(_resultIndex) 
         constant 
         returns (uint256) 
     {
-        return results[resultIndex].balance;
+        return results[_resultIndex].balance;
     }
 
-    function getBetBalance(uint resultIndex) 
+    function getBetBalance(uint _resultIndex) 
         public 
-        validResultIndex(resultIndex) 
+        validResultIndex(_resultIndex) 
         constant 
         returns (uint256) 
     {
-        return results[resultIndex].betBalances[msg.sender];
+        return results[_resultIndex].betBalances[msg.sender];
     }
 
     function getTotalTopicBalance() public constant returns (uint256) {
@@ -108,13 +109,13 @@ contract Topic {
         return totalTopicBalance;
     }
 
-    function bet(uint resultIndex) public hasNotEnded payable {
-        Result storage updatedResult = results[resultIndex];
+    function bet(uint _resultIndex) public validBet payable {
+        Result storage updatedResult = results[_resultIndex];
         updatedResult.balance = updatedResult.balance.add(msg.value);
         updatedResult.betBalances[msg.sender] = updatedResult.betBalances[msg.sender].add(msg.value);
-        results[resultIndex] = updatedResult;
+        results[_resultIndex] = updatedResult;
 
-        BetAccepted(msg.sender, resultIndex, msg.value, results[resultIndex].betBalances[msg.sender]);
+        BetAccepted(msg.sender, _resultIndex, msg.value, results[_resultIndex].betBalances[msg.sender]);
     }
 
     function withdrawWinnings() public hasEnded finalResultIsSet {
@@ -136,23 +137,33 @@ contract Topic {
         WinningsWithdrawn(withdrawAmount);
     }
 
-    function revealResult(uint resultIndex)
+    function revealResult(uint _resultIndex)
         public
         onlyOwner
         hasEnded
-        validResultIndex(resultIndex)
+        validResultIndex(_resultIndex)
         finalResultNotSet
     {
-        finalResultIndex = resultIndex;
+        finalResultIndex = _resultIndex;
         finalResultSet = true;
         FinalResultSet(finalResultIndex);
     }
 
-    function getFinalResultIndex() public finalResultIsSet constant returns (uint) {
+    function getFinalResultIndex() 
+        public 
+        finalResultIsSet 
+        constant 
+        returns (uint) 
+    {
         return finalResultIndex;
     }
 
-    function getFinalResultName() public finalResultIsSet constant returns (bytes32) {
+    function getFinalResultName() 
+        public 
+        finalResultIsSet 
+        constant 
+        returns (bytes32) 
+    {
         return results[finalResultIndex].name;
     }
 
