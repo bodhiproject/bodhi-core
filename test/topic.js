@@ -51,11 +51,9 @@ contract('Topic', function(accounts) {
   	});
 
   	describe("GetResultName:", async function() {
-  		before(async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
-  		});
+  		it("returns the correct result name for valid result index", async function() {
+  			testTopic = await Topic.new(...Object.values(testTopicParams));
 
-  		it("gets the correct result names", async function() {
   			let resultName1 = await testTopic.getResultName(0);
 	    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
 
@@ -67,8 +65,35 @@ contract('Topic', function(accounts) {
   		});
 
   		it("throws if using an invalid result index", async function() {
+  			testTopic = await Topic.new(...Object.values(testTopicParams));
+
   			try {
 				let resultName3 = await testTopic.getResultName(3);
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+  		});
+  	});
+
+  	describe("GetResultBalance:", async function() {
+  		it("returns the correct result balance", async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
+
+			let betResultIndex = 0;
+			let better = accounts[1];
+			let betAmount = web3.toWei(1, 'ether');
+			await testTopic.bet(betResultIndex, { from: better, value: betAmount });
+
+			let actualResultBalance = await testTopic.getResultBalance(betResultIndex);
+			assert.equal(actualResultBalance, betAmount, "Result balance does not match.");
+	    });
+
+	    it("throws if using an invalid result index", async function() {
+  			testTopic = await Topic.new(...Object.values(testTopicParams));
+
+  			try {
+				await testTopic.getResultBalance(3);
 		        assert.fail();
 			} catch(e) {
 		        assert.match(e.message, /invalid opcode/);
