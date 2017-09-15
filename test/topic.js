@@ -101,6 +101,31 @@ contract('Topic', function(accounts) {
   		});
   	});
 
+  	describe("GetBetBalance:", async function() {
+  		it("returns the correct bet balance", async function() {
+			testTopic = await Topic.new(...Object.values(testTopicParams));
+
+			let betResultIndex = 0;
+			let better = accounts[1];
+			let betAmount = web3.toWei(1, 'ether');
+			await testTopic.bet(betResultIndex, { from: better, value: betAmount });
+
+			let actualBetBalance = web3.toBigNumber(await testTopic.getBetBalance(betResultIndex, { from: better }));
+			assert.equal(actualBetBalance.toString(), betAmount.toString(), "Bet balance does not match.");
+	    });
+
+	    it("throws if using an invalid result index", async function() {
+  			testTopic = await Topic.new(...Object.values(testTopicParams));
+
+  			try {
+				await testTopic.getBetBalance(3);
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+  		});
+  	});
+
   	describe("Betting:", async function() {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
