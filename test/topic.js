@@ -14,7 +14,6 @@ contract('Topic', function(accounts) {
 	};
 
 	let testTopic;
-	let testSafeMath;
 
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
@@ -91,11 +90,28 @@ contract('Topic', function(accounts) {
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
 
-			let betAmount = web3.toWei(1, 'ether');
-			let betResultIndex = 0;
-
 			try {
-		        await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount })
+				let betResultIndex = 1;
+	    		let better = accounts[1];
+	    		let betAmount = 0;
+		        await testTopic.bet(betResultIndex, { from: better, value: betAmount })
+		        assert.fail();
+			} catch(e) {
+		        assert.match(e.message, /invalid opcode/);
+		    }
+	    });
+
+	    it("throws on a bet of 0", async function() {
+	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isBelow(currentBlock, testTopicParams._bettingEndBlock, "Current block has reached bettingEndBlock.");
+
+	    	try {
+	    		let betResultIndex = 1;
+	    		let better = accounts[1];
+	    		let betAmount = 0;
+		        await testTopic.bet(betResultIndex, { from: better, value: betAmount })
 		        assert.fail();
 			} catch(e) {
 		        assert.match(e.message, /invalid opcode/);
