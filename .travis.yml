@@ -17,6 +17,7 @@ addons:
 install:
   - npm install -g ethereumjs-testrpc@4.1.1
   - npm install -g truffle
+  - npm install bluebird
   - npm install chai
   - npm install
 
