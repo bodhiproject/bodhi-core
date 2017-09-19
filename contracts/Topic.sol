@@ -60,7 +60,7 @@ contract Topic {
         name = _name;
 
         // Cannot have a prediction topic with only 1 result
-        // require(_resultNames.length > 1);
+        require(_resultNames.length > 1);
 
         for (uint i = 0; i < _resultNames.length; i++) {
             results.push(Result({
