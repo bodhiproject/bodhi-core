@@ -2,11 +2,11 @@ pragma solidity ^0.4.11;
 
 import "./Topic.sol";
 
-contract EventCreator {
+contract EventFactory {
 
     address public owner;
 
-    function EventCreator() {
+    function EventFactory() {
         owner = msg.sender;
     }
     

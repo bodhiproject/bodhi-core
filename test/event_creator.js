@@ -1,5 +1,5 @@
-const EventCreator = artifacts.require("./EventCreator.sol");
+const EventFactory = artifacts.require("./EventFactory.sol");
 
-contract('EventCreator', function(accounts) {
+contract('EventFactory', function(accounts) {
 
 });
