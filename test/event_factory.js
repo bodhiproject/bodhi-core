@@ -1,14 +1,15 @@
 const EventFactory = artifacts.require("./EventFactory.sol");
+const Topic = artifacts.require("./Topic.sol");
 const BlockHeightManager = require('./helpers/block_height_manager');
-const utils = require('./helpers/utils')
+const Utils = require('./helpers/utils');
 const web3 = global.web3;
 const assert = require('chai').assert;
 
 contract('EventFactory', function(accounts) {
 	const blockHeightManager = new BlockHeightManager(web3);
 	const testTopicParams = {
-		_name: "test",
-		_resultNames: ["first", "second", "third"],
+		_name: 'test',
+		_resultNames: ['first', 'second', 'third'],
 		_bettingEndBlock: 100
 	};
 
@@ -20,32 +21,22 @@ contract('EventFactory', function(accounts) {
   	afterEach(blockHeightManager.revert);
 
   	beforeEach(async function() {
-  		eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
-  		
-  		let txn = await eventFactory.createTopic(...Object.values(testTopicParams), { from: accounts[1] });
-  		
+  		return await EventFactory.deployed({ from: eventFactoryCreator })
+  		.then(async function(factory) {
+  			eventFactory = factory;
+  			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: accounts[1] })
+	  		.then(async function(transaction) {
+	  			topic = await Topic.at(Utils.getAddressFromTransaction(transaction));
+	  		});
+  		});
   	});
 
   	describe('New Topic:', async function() {
   		it('initializes all the values of the new topic correctly', async function() {
-  			eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
-  			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: accounts[1] })
-  			.then(function(txn) {
-  				console.log(txn);
-  				topic = Topic.at(txn);
-  				assert.equal(topic.owner.call(), accounts[1], "Topic owner does not match.");
-  			});
-
-  	// 		return EventFactory.deployed({ from: eventFactoryCreator })
-			// .then(function(_eventFactory) {
-			// 	eventFactory = _eventFactory;
-			// 	return eventFactory.createTopic(...Object.values(testTopicParams), { from: accounts[1] })
-			// 	.then(function(txn) {
-			// 		console.log("createTopic transaction hash: " + txn);
-			// 		assert.equal(txn, accounts[1]);
-			// 		return web3.eth.getTransactionReceipt(txn);
-			// 	})
-			// });
+  			console.log(topic);
+  			var actualOwner = await topic.owner.call();
+  			console.log(actualOwner);
+  			assert.equal(actualOwner, accounts[0], 'Topic owner does not match.');
   		});
   	});
 });
