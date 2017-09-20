@@ -1,11 +1,12 @@
-function getAddressFromTransaction(transaction) {
+function getParamFromTransaction(transaction, paramName) {
     assert.isObject(transaction);
 
     let logs = transaction.logs;
-    let address = logs[0].address;
-    return address;
+    assert.equal(logs.length, 1, 'Too many logs found.');
+
+    return logs[0].args[paramName];
 }
 
 Object.assign(exports, {
-    getAddressFromTransaction,
+    getParamFromTransaction,
 });

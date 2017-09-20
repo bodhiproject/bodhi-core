@@ -16,6 +16,7 @@ contract('EventFactory', function(accounts) {
 	let eventFactory;
 	let eventFactoryCreator = accounts[0];
 	let topic;
+	let topicCreator = accounts[1];
 
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
@@ -24,19 +25,16 @@ contract('EventFactory', function(accounts) {
   		return await EventFactory.deployed({ from: eventFactoryCreator })
   		.then(async function(factory) {
   			eventFactory = factory;
-  			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: accounts[1] })
+  			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator })
 	  		.then(async function(transaction) {
-	  			topic = await Topic.at(Utils.getAddressFromTransaction(transaction));
+	  			topic = await Topic.at(Utils.getParamFromTransaction(transaction, "_topic"));
 	  		});
   		});
   	});
 
   	describe('New Topic:', async function() {
   		it('initializes all the values of the new topic correctly', async function() {
-  			console.log(topic);
-  			var actualOwner = await topic.owner.call();
-  			console.log(actualOwner);
-  			assert.equal(actualOwner, accounts[0], 'Topic owner does not match.');
+  			assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');  			
   		});
   	});
 });
