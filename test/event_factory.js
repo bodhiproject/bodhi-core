@@ -34,7 +34,12 @@ contract('EventFactory', function(accounts) {
 
   	describe('New Topic:', async function() {
   		it('initializes all the values of the new topic correctly', async function() {
-  			assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');  			
+  			assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
+  			assert.equal(web3.toUtf8(await topic.name.call()), testTopicParams._name, 'Topic name does not match.');
+  			assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], "Result name 1 does not match.");
+			assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1], "Result name 2 does not match.");
+			assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2], "Result name 3 does not match.");
+			assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
   		});
   	});
 });
