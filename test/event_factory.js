@@ -1,5 +1,6 @@
 const EventFactory = artifacts.require("./EventFactory.sol");
 const BlockHeightManager = require('./helpers/block_height_manager');
+const utils = require('./helpers/utils')
 const web3 = global.web3;
 const assert = require('chai').assert;
 
