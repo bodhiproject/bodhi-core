@@ -8,7 +8,7 @@ contract('Topic', function(accounts) {
 
 	const testTopicParams = {
         _owner: accounts[0],
-        _resultSetter: accounts[0],
+        _resultSetter: accounts[1],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
 		_bettingEndBlock: 100
@@ -109,7 +109,7 @@ contract('Topic', function(accounts) {
   	});
 
     describe("Revealing Results:", async function() {
-    	it("allows the owner to reveal the result if the betting end block has been reached", async function() {
+    	it("allows the resultSetter to reveal the result if the bettingEndBlock has been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
 	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
@@ -120,7 +120,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let testFinalResultIndex = 2;
-	    	await testTopic.revealResult(testFinalResultIndex);
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -144,7 +144,7 @@ contract('Topic', function(accounts) {
 	    	
 	    	try {
 	    		let testFinalResultIndex = 2;
-		        await testTopic.revealResult(testFinalResultIndex);
+		        await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 		        assert.fail();
 			} catch(e) {
 		        assert.match(e.message, /invalid opcode/);
@@ -187,7 +187,7 @@ contract('Topic', function(accounts) {
 	    	
 	    	// Reveal result
 	    	let testFinalResultIndex = 1;
-	    	await testTopic.revealResult(testFinalResultIndex);
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	let finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -328,7 +328,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let expectedFinalResultIndex = 1;
-	    	await testTopic.revealResult(expectedFinalResultIndex);
+	    	await testTopic.revealResult(expectedFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -364,7 +364,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let finalResultIndex = 0;
-	    	await testTopic.revealResult(finalResultIndex);
+	    	await testTopic.revealResult(finalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
