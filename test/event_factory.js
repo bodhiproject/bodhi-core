@@ -22,14 +22,9 @@ contract('EventFactory', function(accounts) {
 	afterEach(blockHeightManager.revert);
 
 	beforeEach(async function() {
-		return await EventFactory.deployed({ from: eventFactoryCreator })
-		.then(async function(factory) {
-			eventFactory = factory;
-			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator })
-			.then(async function(transaction) {
-				topic = await Topic.at(Utils.getParamFromTransaction(transaction, '_topic'));
-			});
-		});
+		eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
+		let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
+		topic = await Topic.at(Utils.getParamFromTransaction(transaction, '_topic'));
 	});
 
 	describe('Topic:', async function() {
