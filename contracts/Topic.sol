@@ -12,6 +12,7 @@ contract Topic {
     }
 
     address public owner;
+    address public resultSetter;
     bytes32 public name;
     Result[] results;
     uint256 public bettingEndBlock;
@@ -55,12 +56,19 @@ contract Topic {
         _;
     }
 
-    function Topic(address _owner, bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock) {
+    function Topic(
+        address _owner, 
+        bytes32 _name, 
+        bytes32[] _resultNames, 
+        uint256 _bettingEndBlock) 
+    {
+        require(_owner != 0);
+        require(_name.length > 0);
+        require(_resultNames.length > 1);
+        require(_bettingEndBlock > block.number);
+
         owner = _owner;
         name = _name;
-
-        // Cannot have a prediction topic with only 1 result
-        require(_resultNames.length > 1);
 
         for (uint i = 0; i < _resultNames.length; i++) {
             results.push(Result({
