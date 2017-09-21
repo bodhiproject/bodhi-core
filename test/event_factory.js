@@ -82,5 +82,26 @@ contract('EventFactory', function(accounts) {
 			betBalance = await topic.getBetBalance(betResultIndex, { from: better2 });
 			assert.equal(betBalance.toString(), betAmount2.toString(), 'Better2 bet balance does not match.');
 	    });
+
+	    it('allows the owner to reveal the result if the betting end block has been reached', async function() {
+	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+	    	assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock, 'Block is not at bettingEndBlock');
+
+	    	var finalResultSet = await topic.finalResultSet.call();
+	    	assert.isFalse(finalResultSet, 'Final result should not be set.');
+
+	    	let testFinalResultIndex = 2;
+	    	await topic.revealResult(testFinalResultIndex, { from: topicCreator });
+
+	    	finalResultSet = await topic.finalResultSet.call();
+	    	assert.isTrue(finalResultSet, 'Final result should be set.');
+
+	    	let finalResultIndex = await topic.getFinalResultIndex();
+	    	assert.equal(finalResultIndex, testFinalResultIndex, 'Final result index does not match.');
+
+	    	let finalResultName = await topic.getFinalResultName();
+	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
+	    		'Final result name does not match.');
+	    });
 	});
 });
