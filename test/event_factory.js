@@ -6,7 +6,7 @@ const web3 = global.web3;
 const assert = require('chai').assert;
 
 contract('EventFactory', function(accounts) {
-	const blockHeightManager = new BlockHeightManager(web3);
+    const blockHeightManager = new BlockHeightManager(web3);
 	const testTopicParams = {
 		_name: 'test',
 		_resultNames: ['first', 'second', 'third'],

@@ -4,15 +4,14 @@ import "./Topic.sol";
 
 /// @title Event Factory contract - allows creation of individual prediction events
 contract EventFactory {
-
-	mapping (bytes32 => Topic) public topics;
+    mapping (bytes32 => Topic) public topics;
 
 	// Events
-	event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
+    event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
     
     function createTopic(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
-    	public
+        public
         returns (Topic tokenAddress)
     {
     	bytes32 topicHash = getTopicHash(_name, _resultNames, _bettingEndBlock);
@@ -26,7 +25,7 @@ contract EventFactory {
         return topic;
     }
 
-	function doesTopicExist(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
+    function doesTopicExist(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
         public
         constant
         returns (bool)
