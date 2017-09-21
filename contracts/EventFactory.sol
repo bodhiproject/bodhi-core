@@ -10,7 +10,11 @@ contract EventFactory {
     event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
     
-    function createTopic(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
+    function createTopic(
+        address _resultSetter, 
+        bytes32 _name, 
+        bytes32[] _resultNames, 
+        uint256 _bettingEndBlock)
         public
         returns (Topic tokenAddress) 
     {
@@ -18,7 +22,7 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        Topic topic = new Topic(msg.sender, _name, _resultNames, _bettingEndBlock);
+        Topic topic = new Topic(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
 
         TopicCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);

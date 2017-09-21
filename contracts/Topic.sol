@@ -29,6 +29,11 @@ contract Topic {
         _;
     }
 
+    modifier onlyResultSetter() {
+        require(msg.sender == resultSetter);
+        _;
+    }
+
     modifier validResultIndex(uint _resultIndex) {
         require(_resultIndex >= 0);
         require(_resultIndex <= results.length - 1);
@@ -58,16 +63,19 @@ contract Topic {
 
     function Topic(
         address _owner, 
+        address _resultSetter, 
         bytes32 _name, 
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock) 
     {
         require(_owner != 0);
+        require(_resultSetter != 0);
         require(_name.length > 0);
         require(_resultNames.length > 1);
         require(_bettingEndBlock > block.number);
 
         owner = _owner;
+        resultSetter = _resultSetter;
         name = _name;
 
         for (uint i = 0; i < _resultNames.length; i++) {
@@ -93,7 +101,7 @@ contract Topic {
 
     function revealResult(uint _resultIndex)
         public
-        onlyOwner
+        onlyResultSetter
         hasEnded
         validResultIndex(_resultIndex)
         finalResultNotSet

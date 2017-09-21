@@ -8,6 +8,7 @@ const assert = require('chai').assert;
 contract('EventFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const testTopicParams = {
+        _resultSetter: accounts[1],
         _name: 'test',
         _resultNames: ['first', 'second', 'third'],
         _bettingEndBlock: 100

@@ -7,7 +7,8 @@ contract('Topic', function(accounts) {
 	const blockHeightManager = new BlockHeightManager(web3);
 
 	const testTopicParams = {
-		_owner: accounts[0],
+        _owner: accounts[0],
+        _resultSetter: accounts[0],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
 		_bettingEndBlock: 100
