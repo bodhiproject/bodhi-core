@@ -93,16 +93,16 @@ contract('EventFactory', function(accounts) {
 	    	let testFinalResultIndex = 2;
 	    	await topic.revealResult(testFinalResultIndex, { from: topicCreator });
 
-	    	finalResultSet = await topic.finalResultSet.call();
-	    	assert.isTrue(finalResultSet, 'Final result should be set.');
+			finalResultSet = await topic.finalResultSet.call();
+			assert.isTrue(finalResultSet, 'Final result should be set.');
 
-	    	let finalResultIndex = await topic.getFinalResultIndex();
-	    	assert.equal(finalResultIndex, testFinalResultIndex, 'Final result index does not match.');
+			let finalResultIndex = await topic.getFinalResultIndex();
+			assert.equal(finalResultIndex, testFinalResultIndex, 'Final result index does not match.');
 
-	    	let finalResultName = await topic.getFinalResultName();
-	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
-	    		'Final result name does not match.');
-	    });
+			let finalResultName = await topic.getFinalResultName();
+			assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
+				'Final result name does not match.');
+		});
 
 	    it('allows withdrawing of winnings if it has ended and the result was revealed', async function() {
     		// Set bets
