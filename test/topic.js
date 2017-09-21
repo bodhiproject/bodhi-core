@@ -130,10 +130,10 @@ contract('Topic', function(accounts) {
 
 	    	let finalResultName = await testTopic.getFinalResultName();
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
-	    		"Final result index does not match.");
+	    		"Final result name does not match.");
 	    });
 
-	    it("does not allow the owner to reveal the result if the betting end block has not been reached", async function() {
+	    it("does not allow the resultSetter to reveal the result if the bettingEndBlock has not been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
 	    	let currentBlock = web3.eth.blockNumber;
@@ -150,6 +150,39 @@ contract('Topic', function(accounts) {
 		        assert.match(e.message, /invalid opcode/);
 		    }
 	    });
+
+        it("only allows the resultSetter to reveal the result", async function() {
+            testTopic = await Topic.new(...Object.values(testTopicParams));
+
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock);
+
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+            
+            let testFinalResultIndex = 2;
+            try {
+                await testTopic.revealResult(testFinalResultIndex, { from: accounts[0] });
+                assert.fail("Account 0 should not be able to set the result.");
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+
+            try {
+                await testTopic.revealResult(testFinalResultIndex, { from: accounts[2] });
+                assert.fail("Account 2 should not be able to set the result.");
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+
+            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+            assert.isTrue(await testTopic.finalResultSet.call(), "Final result should set.");
+            assert.equal(await testTopic.getFinalResultIndex(), testFinalResultIndex, 
+                "Final result index does not match.");
+            assert.equal(web3.toUtf8(await testTopic.getFinalResultName()), 
+                testTopicParams._resultNames[testFinalResultIndex], "Final result name does not match.");
+        });
     });
 
     describe("Withdrawing:", async function() {
