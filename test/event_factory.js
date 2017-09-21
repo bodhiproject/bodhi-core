@@ -27,19 +27,35 @@ contract('EventFactory', function(accounts) {
   			eventFactory = factory;
   			return await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator })
 	  		.then(async function(transaction) {
-	  			topic = await Topic.at(Utils.getParamFromTransaction(transaction, "_topic"));
+	  			topic = await Topic.at(Utils.getParamFromTransaction(transaction, '_topic'));
 	  		});
   		});
   	});
 
-  	describe('New Topic:', async function() {
+  	describe('Topic:', async function() {
   		it('initializes all the values of the new topic correctly', async function() {
   			assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
   			assert.equal(web3.toUtf8(await topic.name.call()), testTopicParams._name, 'Topic name does not match.');
-  			assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], "Result name 1 does not match.");
-			assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1], "Result name 2 does not match.");
-			assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2], "Result name 3 does not match.");
-			assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock, "Topic betting end block does not match.");
+  			assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0],
+  			    'Result name 1 does not match.');
+			assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1],
+			    'Result name 2 does not match.');
+			assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2],
+			    'Result name 3 does not match.');
+			assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock,
+			    'Topic betting end block does not match.');
+  		});
+
+  		it('does not allow recreating the same topic twice', async function() {
+  		    let topicExists = await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
+  		        testTopicParams._bettingEndBlock);
+            assert.isTrue(topicExists, 'Topic should already exist.');
+
+  		    try {
+  		        await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
   		});
   	});
 });
