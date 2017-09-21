@@ -4,11 +4,11 @@ import "./Topic.sol";
 
 /// @title Event Factory contract - allows creation of individual prediction events
 contract EventFactory {
-	mapping (bytes32 => Topic) public topics;
+    mapping (bytes32 => Topic) public topics;
 
-	// Events
-	event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
-		uint256 _bettingEndBlock);
+    // Events
+    event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
+    	uint256 _bettingEndBlock);
     
     function createTopic(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
         public
