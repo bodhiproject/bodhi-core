@@ -83,7 +83,7 @@ contract('EventFactory', function(accounts) {
 			assert.equal(betBalance.toString(), betAmount2.toString(), 'Better2 bet balance does not match.');
 	    });
 
-	    it('allows the owner to reveal the result if the betting end block has been reached', async function() {
+	    it('allows the owner to reveal the result if the bettingEndBlock has been reached', async function() {
 	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock, 'Block is not at bettingEndBlock');
 
@@ -103,5 +103,62 @@ contract('EventFactory', function(accounts) {
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
 	    		'Final result name does not match.');
 	    });
+
+	    it('allows withdrawing of winnings if it has ended and the result was revealed', async function() {
+    		// Set bets
+    		let better1 = accounts[2];
+    		let betAmount1 = web3.toBigNumber(web3.toWei(1, 'ether'));
+
+    		let better2 = accounts[3];
+    		let betAmount2 = web3.toBigNumber(web3.toWei(2, 'ether'));
+
+			let betResultIndex = 1;
+			let totalBetAmount = betAmount1.add(betAmount2);
+
+			await topic.bet(betResultIndex, { from: better1, value: betAmount1 })
+			.then(async function() {
+				await topic.bet(betResultIndex, { from: better2, value: betAmount2 });
+			});
+
+			var resultBalance = web3.toBigNumber(await topic.getResultBalance(betResultIndex));
+			let expectedResultBalance = web3.toBigNumber(totalBetAmount);
+			assert.equal(resultBalance.toString(), expectedResultBalance.toString(), 
+				'Result balance does not match.');
+
+			let totalTopicBalance = web3.toBigNumber(await topic.getTotalTopicBalance());
+			let expectedTotalTopicBalance = web3.toBigNumber(totalBetAmount);
+			assert.equal(totalTopicBalance.toString(), expectedTotalTopicBalance.toString(), 
+				'Total topic balance does not match.');
+
+			await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+	    	let currentBlock = web3.eth.blockNumber;
+	    	assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);   
+	    	
+	    	// Reveal result
+	    	let testFinalResultIndex = 1;
+	    	await topic.revealResult(testFinalResultIndex, { from: topicCreator });
+
+	    	let finalResultSet = await topic.finalResultSet.call();
+	    	assert.isTrue(finalResultSet, 'Final result should be set.');
+
+	    	let finalResultIndex = await topic.getFinalResultIndex();
+	    	assert.equal(finalResultIndex, testFinalResultIndex, 'Final result index does not match.');
+
+	    	let finalResultName = await topic.getFinalResultName();
+	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
+	    		'Final result index does not match.');
+
+	    	// Withdraw winnings: accounts[1]
+	    	var expectedWithdrawAmount = totalTopicBalance * betAmount1 / resultBalance;
+	    	await topic.withdrawWinnings({ from: better1 });
+	    	var accountBetBalance = web3.toBigNumber(await topic.getBetBalance(testFinalResultIndex, { from: better1 }));
+	    	assert.equal(accountBetBalance.toString(), 0, "Account1 bet balance should be 0.");
+
+	    	// Withdraw winnings: a
+	    	expectedWithdrawAmount = totalTopicBalance * betAmount2 / resultBalance;
+	    	await topic.withdrawWinnings({ from: better2 });
+	    	accountBetBalance = web3.toBigNumber(await topic.getBetBalance(testFinalResultIndex, { from: better2 }));
+	    	assert.equal(accountBetBalance.toString(), 0, "Account2 bet balance should be 0.");
+    	});
 	});
 });
