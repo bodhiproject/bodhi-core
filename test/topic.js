@@ -55,17 +55,6 @@ contract('Topic', function(accounts) {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
 
-			let watcher = testTopic.BetAccepted().watch((error, response) => {
-	    		if (error) {
-	    			console.log("Event Error: " + error);
-	    		} else {
-	    			console.log("Event Triggered: " + JSON.stringify(response.event));
-	    			console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
-	    			console.log("betAmount: " + JSON.stringify(response.args._betAmount));
-	    			console.log("betBalance: " + JSON.stringify(response.args._betBalance));
-	    		}
-	    	});
-
 			let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 			let betAmount = web3.toWei(1, 'ether');
 			let betResultIndex = 0;
@@ -80,8 +69,6 @@ contract('Topic', function(accounts) {
 
 			let betBalance = await testTopic.getBetBalance(betResultIndex, { from: accounts[1] });
 			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
-
-			watcher.stopWatching();
 	    });
 	 
 	    it("does not allow users to bet if the betting end block has been reached", async function() {
