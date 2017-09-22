@@ -20,15 +20,28 @@ contract Oracle {
         _;
     }
 
-    /// @notice Current owner of Oracle can assign a new Oracle.
-    function replaceOwner(address _newOwner) public onlyOwner validAddress(_newOwner) {
+    modifier finalResultNotSet() {
         require(!finalResultSet);
+        _;
+    }
+
+    function Oracle(address _owner) public validAddress(_owner) {
+
+    }
+
+    /// @notice Current owner of Oracle can assign a new Oracle.
+    function replaceOwner(address _newOwner) 
+        public 
+        onlyOwner 
+        validAddress(_newOwner) 
+        finalResultNotSet 
+    {
         owner = _newOwner;
         OracleOwnerReplaced(_newOwner);
     }
 
     /// @dev Abstract function that Oracles should implement. Should check if _finalResultIndex is valid.
-    function setFinalResult(uint _finalResultIndex) public onlyOwner;
+    function setFinalResult(uint _finalResultIndex) public onlyOwner finalResultNotSet;
 
     /// @notice Check to see if the Oracle has set the final result.
     /// @return Boolean if final result is set by Oracle.
