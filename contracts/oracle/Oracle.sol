@@ -26,7 +26,7 @@ contract Oracle {
     }
 
     function Oracle(address _owner) public validAddress(_owner) {
-
+        owner = _owner;
     }
 
     /// @notice Current owner of Oracle can assign a new Oracle.
