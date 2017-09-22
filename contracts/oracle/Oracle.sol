@@ -2,42 +2,40 @@ pragma solidity ^0.4.15;
 
 /// @title Base Oracle contract
 contract Oracle {
-    address public owner;
+    struct Participant {
+        address participant;
+        uint256 stakeContributed;
+        bool didSetResult;
+        uint resultIndex;
+    }
+
+    // Block number when Oracle staking ends
+    uint256 public stakingEndBlock;
+
+    // Block number when Event betting ends
+    uint256 public bettingEndBlock;
+
+    // Block number when Oracle participants can no longer set decision
+    uint256 public decisionEndBlock;
+
     bool public finalResultSet;
     uint public finalResultIndex;
 
-    // Events
-    event OracleOwnerReplaced(address indexed _newOwner);
-
     // Modifiers
-    modifier onlyOwner() {
-        require(msg.sender == owner);
+    modifier hasNotEnded() {
+        require(block.number < decisionEndBlock);
         _;
     }
 
-    modifier validAddress(address _address) {
-        require(_address != 0x0);
-        _;
-    }
-
-    modifier finalResultNotSet() {
-        require(!finalResultSet);
-        _;
-    }
-
-    function Oracle(address _owner) public validAddress(_owner) {
-        owner = _owner;
-    }
-
-    /// @notice Current owner of Oracle can assign a new Oracle.
-    function replaceOwner(address _newOwner) 
+    function Oracle(
+        uint256 _stakingEndBlock, 
+        uint256 _bettingEndBlock, 
+        uint256 _decisionEndBlock) 
         public 
-        onlyOwner 
-        validAddress(_newOwner) 
-        finalResultNotSet 
     {
-        owner = _newOwner;
-        OracleOwnerReplaced(_newOwner);
+        stakingEndBlock = _stakingEndBlock;
+        bettingEndBlock = _bettingEndBlock;
+        decisionEndBlock = _decisionEndBlock;
     }
 
     /// @dev Abstract function that Oracles should implement. Should check if _finalResultIndex is valid.
