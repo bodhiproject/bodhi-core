@@ -3,7 +3,6 @@ pragma solidity ^0.4.15;
 /// @title Base Oracle contract
 contract Oracle {
     struct Participant {
-        address participant;
         uint256 stakeContributed;
         bool didSetResult;
         uint resultIndex;
@@ -21,8 +20,15 @@ contract Oracle {
     bool public finalResultSet;
     uint public finalResultIndex;
 
+    mapping(address => Participant) private participants;
+
     // Modifiers
-    modifier hasNotEnded() {
+    modifier beforeStakingEndBlock() {
+        require(block.number < stakingEndBlock);
+        _;
+    }
+
+    modifier beforeDecisionEndBlock() {
         require(block.number < decisionEndBlock);
         _;
     }
