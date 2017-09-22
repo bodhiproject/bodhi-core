@@ -8,11 +8,12 @@ contract TopicOracle is Oracle {
     uint256 public bettingEndBlock;
 
     function TopicOracle(
-        address _owner, 
         bytes32 _name, 
         bytes32[] _resultNames, 
-        uint256 _bettingEndBlock) 
-        Oracle(_owner)
+        uint256 _bettingEndBlock,
+        uint256 _stakingEndBlock,
+        uint256 _decisionEndBlock) 
+        Oracle(_stakingEndBlock, _bettingEndBlock, _decisionEndBlock)
         public
     {
         require(_name.length > 0);
@@ -26,9 +27,5 @@ contract TopicOracle is Oracle {
         }
 
         bettingEndBlock = _bettingEndBlock;
-    }
-
-    function setFinalResult(uint _finalResultIndex) public onlyOwner finalResultNotSet {
-
     }
 }
