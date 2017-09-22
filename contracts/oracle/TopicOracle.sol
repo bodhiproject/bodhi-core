@@ -1,8 +1,10 @@
 pragma solidity ^0.4.15;
 
+import "./Oracle.sol";
+
 contract TopicOracle is Oracle {
     bytes32 public name;
-    Result[] results;
+    bytes32[] public resultNames;
     uint256 public bettingEndBlock;
 
     function TopicOracle(
@@ -20,9 +22,13 @@ contract TopicOracle is Oracle {
         name = _name;
 
         for (uint i = 0; i < _resultNames.length; i++) {
-            results.push(Result({ name: _resultNames[i], balance: 0 }));
+            resultNames.push(_resultNames[i]);
         }
 
         bettingEndBlock = _bettingEndBlock;
+    }
+
+    function setFinalResult(uint _finalResultIndex) public onlyOwner finalResultNotSet {
+
     }
 }

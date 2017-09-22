@@ -7,7 +7,7 @@ contract Oracle {
     uint public finalResultIndex;
 
     // Events
-    OracleOwnerReplaced(address indexed _newOwner);
+    event OracleOwnerReplaced(address indexed _newOwner);
 
     // Modifiers
     modifier onlyOwner() {
@@ -41,7 +41,7 @@ contract Oracle {
     }
 
     /// @dev Abstract function that Oracles should implement. Should check if _finalResultIndex is valid.
-    function setFinalResult(uint _finalResultIndex) public onlyOwner finalResultNotSet;
+    function setFinalResult(uint _finalResultIndex) public;
 
     /// @notice Check to see if the Oracle has set the final result.
     /// @return Boolean if final result is set by Oracle.
