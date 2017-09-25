@@ -26,7 +26,8 @@ contract Oracle {
     // Events
     event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _stakingEndBlock, uint256 _decisionEndBlock);
-    event OracleParticipantVoted(address _participant, uint8 _resultIndex);
+    event StakeContributed(address _participant, uint256 _stakeContributed);
+    event ParticipantVoted(address _participant, uint8 _resultIndex);
 
     // Modifiers
     modifier validResultIndex(uint _resultIndex) {
@@ -85,6 +86,20 @@ contract Oracle {
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _stakingEndBlock, _decisionEndBlock);
     }
 
+    /// @notice Exchange BOT to get a stake in the Oracle and become an Oracle participant.
+    function stakeOracle() 
+        public 
+        payable 
+        beforeStakingEndBlock 
+    {
+        require(msg.value > 0);
+
+        Participant storage participant = participants[msg.sender];
+        participant.stakeContributed = participant.stakeContributed.add(msg.value);
+
+        StakeContributed(msg.sender, participant.stakeContributed);
+    }
+
     /// @notice Oracle participants can vote on the result before the decisionEndBlock.
     function voteResult(uint8 _eventResultIndex)
         public 
@@ -98,7 +113,7 @@ contract Oracle {
         participants[msg.sender].resultIndex = _eventResultIndex;
         votedResultCount[_eventResultIndex] += 1;
 
-        OracleParticipantVoted(msg.sender, _eventResultIndex);
+        ParticipantVoted(msg.sender, _eventResultIndex);
     }
 
     /// @notice Gets the stake contributed by the Oracle participant.
