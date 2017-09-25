@@ -48,6 +48,11 @@ contract Oracle {
         _;
     }
 
+    modifier afterDecisionEndBlock() {
+        require(block.number >= decisionEndBlock);
+        _;
+    }
+
     modifier isParticipant() {
         require(participants[msg.sender].stakeContributed > 0);
         _;
@@ -76,8 +81,8 @@ contract Oracle {
         decisionEndBlock = _decisionEndBlock;
     }
 
-    /// @notice Oracle participants can vote on the result before the decisionEndBlock
-    function voteResult(uint _eventResultIndex) 
+    /// @notice Oracle participants can vote on the result before the decisionEndBlock.
+    function voteResult(uint _eventResultIndex)
         public 
         isParticipant
         afterBettingEndBlock
@@ -92,9 +97,22 @@ contract Oracle {
         OracleParticipantVoted(_eventResultIndex, votedResultCount[_eventResultIndex]);
     }
 
-    /// @notice Gets the final result index set by Oracle.
-    /// @return The index of the final result set by Oracle.
-    function getOracleResultIndex() public constant returns (uint) {
+    /// @notice Gets the final result index set by the Oracle participants.
+    /// @return The index of the final result set by Oracle participants.
+    function getFinalResultIndex() 
+        public 
+        afterDecisionEndBlock
+        constant 
+        returns (uint16) 
+    {
+        uint16 finalResultIndex = 0;
+        uint16 winningIndexCount = 0;
+        for (uint16 i = 0; i < votedResultCount.length; i++) {
+            if (votedResultCount[i] > winningIndexCount) {
+                finalResultIndex = i;
+            }
+        }
+
         return finalResultIndex;
     }
 }
