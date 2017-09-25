@@ -26,7 +26,7 @@ contract Oracle {
     // Events
     event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _stakingEndBlock, uint256 _decisionEndBlock);
-    event OracleParticipantVoted(uint _resultIndex, uint16 _totalResultIndexVotes);
+    event OracleParticipantVoted(address _participant, uint8 _resultIndex);
 
     // Modifiers
     modifier validResultIndex(uint _resultIndex) {
@@ -98,7 +98,7 @@ contract Oracle {
         participants[msg.sender].resultIndex = _eventResultIndex;
         votedResultCount[_eventResultIndex] += 1;
 
-        OracleParticipantVoted(_eventResultIndex, votedResultCount[_eventResultIndex]);
+        OracleParticipantVoted(msg.sender, _eventResultIndex);
     }
 
     /// @notice Gets the stake contributed by the Oracle participant.
