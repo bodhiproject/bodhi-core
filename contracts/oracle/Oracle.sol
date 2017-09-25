@@ -30,32 +30,6 @@ contract Oracle {
     event ParticipantVoted(address _participant, uint8 _resultIndex);
 
     // Modifiers
-    modifier validResultIndex(uint _resultIndex) {
-        require(_resultIndex >= 0);
-        require(_resultIndex <= eventResultNames.length - 1);
-        _;
-    }
-
-    modifier beforeStakingEndBlock() {
-        require(block.number < stakingEndBlock);
-        _;
-    }
-
-    modifier afterBettingEndBlock() {
-        require(block.number >= eventBettingEndBlock);
-        _;
-    }
-
-    modifier beforeDecisionEndBlock() {
-        require(block.number < decisionEndBlock);
-        _;
-    }
-
-    modifier afterDecisionEndBlock() {
-        require(block.number >= decisionEndBlock);
-        _;
-    }
-
     modifier isParticipant() {
         require(participants[msg.sender].stakeContributed > 0);
         _;
@@ -87,11 +61,8 @@ contract Oracle {
     }
 
     /// @notice Exchange BOT to get a stake in the Oracle and become an Oracle participant.
-    function stakeOracle() 
-        public 
-        payable 
-        beforeStakingEndBlock 
-    {
+    function stakeOracle() public payable beforeStakingEndBlock {
+        require(block.number < stakingEndBlock);
         require(msg.value > 0);
 
         Participant storage participant = participants[msg.sender];
@@ -101,13 +72,11 @@ contract Oracle {
     }
 
     /// @notice Oracle participants can vote on the result before the decisionEndBlock.
-    function voteResult(uint8 _eventResultIndex)
-        public 
-        isParticipant
-        afterBettingEndBlock
-        beforeDecisionEndBlock 
-        validResultIndex
-    {
+    function voteResult(uint8 _eventResultIndex) public isParticipant {
+        require(block.number >= eventBettingEndBlock);
+        require(block.number < decisionEndBlock);
+        require(_eventResultIndex >= 0);
+        require(_eventResultIndex <= eventResultNames.length - 1);
         require(!participants[msg.sender].didSetResult);
 
         participants[msg.sender].resultIndex = _eventResultIndex;
@@ -118,21 +87,13 @@ contract Oracle {
 
     /// @notice Gets the stake contributed by the Oracle participant.
     /// @return The amount of stake contributed by the Oracle participant.
-    function getStakeContributed() 
-        public 
-        constant 
-        returns(uint256) 
-    {
+    function getStakeContributed() public constant returns(uint256) {
         return participants[msg.sender].stakeContributed;
     }
 
     /// @notice Shows if the Oracle participant has voted yet.
     /// @return Flag that shows if the Oracle participant has voted yet.
-    function didSetResult() 
-        public 
-        constant 
-        returns(bool) 
-    {
+    function didSetResult() public constant returns(bool) {
         return participants[msg.sender].didSetResult;
     }
 
@@ -150,12 +111,9 @@ contract Oracle {
 
     /// @notice Gets the final result index set by the Oracle participants.
     /// @return The index of the final result set by Oracle participants.
-    function getFinalResultIndex() 
-        public 
-        afterDecisionEndBlock
-        constant 
-        returns (uint16) 
-    {
+    function getFinalResultIndex() public constant returns (uint16) {
+        require(block.number >= decisionEndBlock);
+
         uint16 finalResultIndex = 0;
         uint16 winningIndexCount = 0;
         for (uint16 i = 0; i < votedResultCount.length; i++) {
