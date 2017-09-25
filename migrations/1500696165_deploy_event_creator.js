@@ -1,4 +1,4 @@
-var SafeMath = artifacts.require("./SafeMath.sol");
+var SafeMath = artifacts.require("./libs/SafeMath.sol");
 var Topic = artifacts.require("./Topic.sol");
 var EventFactory = artifacts.require("./EventFactory.sol");
 

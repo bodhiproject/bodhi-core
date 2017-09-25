@@ -1,7 +1,11 @@
 pragma solidity ^0.4.15;
 
+import "../libs/SafeMath.sol";
+
 /// @title Base Oracle contract
 contract Oracle {
+    using SafeMath for uint256;
+
     struct Participant {
         uint256 stakeContributed;
         bool didSetResult;
@@ -45,15 +49,15 @@ contract Oracle {
     {
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
-        require(_decisionEndBlock > _bettingEndBlock);
+        require(_decisionEndBlock > _eventBettingEndBlock);
 
-        name = _name;
+        eventName = _eventName;
 
-        for (uint i = 0; i < _resultNames.length; i++) {
-            resultNames.push(_resultNames[i]);
+        for (uint i = 0; i < _eventResultNames.length; i++) {
+            eventResultNames.push(_eventResultNames[i]);
         }
 
-        bettingEndBlock = _bettingEndBlock;
+        eventBettingEndBlock = _eventBettingEndBlock;
         stakingEndBlock = _stakingEndBlock;
         decisionEndBlock = _decisionEndBlock;
 
@@ -61,7 +65,7 @@ contract Oracle {
     }
 
     /// @notice Exchange BOT to get a stake in the Oracle and become an Oracle participant.
-    function stakeOracle() public payable beforeStakingEndBlock {
+    function stakeOracle() public payable {
         require(block.number < stakingEndBlock);
         require(msg.value > 0);
 

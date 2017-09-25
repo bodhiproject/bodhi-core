@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 
-import "./SafeMath.sol";
+import "./libs/SafeMath.sol";
 
 contract Topic {
     using SafeMath for uint256;
