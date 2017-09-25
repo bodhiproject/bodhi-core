@@ -8,17 +8,18 @@ contract Oracle {
         uint resultIndex;
     }
 
+    bytes32 public eventName;
+    bytes32[] public eventResultNames;
+    uint256 public eventBettingEndBlock;
+
     // Block number when Oracle staking ends
     uint256 public stakingEndBlock;
-
-    // Block number when Event betting ends
-    uint256 public bettingEndBlock;
 
     // Block number when Oracle participants can no longer set decision
     uint256 public decisionEndBlock;
 
-    bool public finalResultSet;
-    uint public finalResultIndex;
+    uint256 public totalStakeContributed;
+    uint16[] public votedResultCount;
 
     mapping(address => Participant) private participants;
 
@@ -34,13 +35,25 @@ contract Oracle {
     }
 
     function Oracle(
+        bytes32 _eventName, 
+        bytes32[] _eventResultNames, 
+        uint256 _eventBettingEndBlock,
         uint256 _stakingEndBlock, 
-        uint256 _bettingEndBlock, 
         uint256 _decisionEndBlock) 
         public 
     {
-        stakingEndBlock = _stakingEndBlock;
+        require(_eventName.length > 0);
+        require(_eventResultNames.length > 1);
+        require(_decisionEndBlock > _bettingEndBlock);
+
+        name = _name;
+
+        for (uint i = 0; i < _resultNames.length; i++) {
+            resultNames.push(_resultNames[i]);
+        }
+
         bettingEndBlock = _bettingEndBlock;
+        stakingEndBlock = _stakingEndBlock;
         decisionEndBlock = _decisionEndBlock;
     }
 
