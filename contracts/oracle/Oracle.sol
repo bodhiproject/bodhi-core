@@ -24,6 +24,8 @@ contract Oracle {
     mapping(address => Participant) private participants;
 
     // Events
+    event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
+        uint256 _stakingEndBlock, uint256 _decisionEndBlock);
     event OracleParticipantVoted(uint _resultIndex, uint16 _totalResultIndexVotes);
 
     // Modifiers
@@ -79,6 +81,8 @@ contract Oracle {
         bettingEndBlock = _bettingEndBlock;
         stakingEndBlock = _stakingEndBlock;
         decisionEndBlock = _decisionEndBlock;
+
+        OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _stakingEndBlock, _decisionEndBlock);
     }
 
     /// @notice Oracle participants can vote on the result before the decisionEndBlock.
