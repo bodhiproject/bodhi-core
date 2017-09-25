@@ -23,14 +23,33 @@ contract Oracle {
 
     mapping(address => Participant) private participants;
 
+    // Events
+    event OracleParticipantVoted(uint _resultIndex, uint16 _totalResultIndexVotes);
+
     // Modifiers
+    modifier validResultIndex(uint _resultIndex) {
+        require(_resultIndex >= 0);
+        require(_resultIndex <= eventResultNames.length - 1);
+        _;
+    }
+
     modifier beforeStakingEndBlock() {
         require(block.number < stakingEndBlock);
         _;
     }
 
+    modifier afterBettingEndBlock() {
+        require(block.number >= eventBettingEndBlock);
+        _;
+    }
+
     modifier beforeDecisionEndBlock() {
         require(block.number < decisionEndBlock);
+        _;
+    }
+
+    modifier isParticipant() {
+        require(participants[msg.sender].stakeContributed > 0);
         _;
     }
 
@@ -57,18 +76,25 @@ contract Oracle {
         decisionEndBlock = _decisionEndBlock;
     }
 
-    /// @dev Abstract function that Oracles should implement. Should check if _finalResultIndex is valid.
-    function setFinalResult(uint _finalResultIndex) public;
+    /// @notice Oracle participants can vote on the result before the decisionEndBlock
+    function voteResult(uint _eventResultIndex) 
+        public 
+        isParticipant
+        afterBettingEndBlock
+        beforeDecisionEndBlock 
+        validResultIndex
+    {
+        require(!participants[msg.sender].didSetResult);
 
-    /// @notice Check to see if the Oracle has set the final result.
-    /// @return Boolean if final result is set by Oracle.
-    function isFinalResultSet() public constant returns (bool) {
-        return finalResultSet;
+        participants[msg.sender].resultIndex = _eventResultIndex;
+        votedResultCount[_eventResultIndex] += 1;
+
+        OracleParticipantVoted(_eventResultIndex, votedResultCount[_eventResultIndex]);
     }
 
     /// @notice Gets the final result index set by Oracle.
     /// @return The index of the final result set by Oracle.
-    function getFinalResultIndex() public constant returns (uint) {
+    function getOracleResultIndex() public constant returns (uint) {
         return finalResultIndex;
     }
 }
