@@ -5,7 +5,7 @@ contract Oracle {
     struct Participant {
         uint256 stakeContributed;
         bool didSetResult;
-        uint resultIndex;
+        uint8 resultIndex;
     }
 
     bytes32 public eventName;
@@ -82,7 +82,7 @@ contract Oracle {
     }
 
     /// @notice Oracle participants can vote on the result before the decisionEndBlock.
-    function voteResult(uint _eventResultIndex)
+    function voteResult(uint8 _eventResultIndex)
         public 
         isParticipant
         afterBettingEndBlock
@@ -95,6 +95,38 @@ contract Oracle {
         votedResultCount[_eventResultIndex] += 1;
 
         OracleParticipantVoted(_eventResultIndex, votedResultCount[_eventResultIndex]);
+    }
+
+    /// @notice Gets the stake contributed by the Oracle participant.
+    /// @return The amount of stake contributed by the Oracle participant.
+    function getStakeContributed() 
+        public 
+        constant 
+        returns(uint256) 
+    {
+        return participants[msg.sender].stakeContributed;
+    }
+
+    /// @notice Shows if the Oracle participant has voted yet.
+    /// @return Flag that shows if the Oracle participant has voted yet.
+    function didSetResult() 
+        public 
+        constant 
+        returns(bool) 
+    {
+        return participants[msg.sender].didSetResult;
+    }
+
+    /// @notice Gets the result index the Oracle participant previously voted on.
+    /// @return The voted result index.
+    function getVotedResultIndex() 
+        public 
+        isParticipant 
+        constant 
+        returns(uint8) 
+    {
+        require(participants[msg.sender].didSetResult);
+        return participants[msg.sender].resultIndex;
     }
 
     /// @notice Gets the final result index set by the Oracle participants.
