@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 
-import "./libs/SafeMath.sol";
+import "../libs/SafeMath.sol";
 
-contract Topic {
+contract TopicEvent {
     using SafeMath for uint256;
 
     struct Result {
@@ -61,7 +61,7 @@ contract Topic {
         _;
     }
 
-    function Topic(
+    function TopicEvent(
         address _owner, 
         address _resultSetter, 
         bytes32 _name, 

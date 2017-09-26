@@ -1,13 +1,13 @@
 pragma solidity ^0.4.11;
 
-import "./Topic.sol";
+import "./TopicEvent.sol";
 
 /// @title Event Factory contract - allows creation of individual prediction events
 contract EventFactory {
-    mapping (bytes32 => Topic) public topics;
+    mapping (bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _creator, Topic _topic, bytes32 _name, bytes32[] _resultNames,
+    event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes32 _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
     
     function createTopic(
@@ -16,13 +16,13 @@ contract EventFactory {
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock)
         public
-        returns (Topic tokenAddress) 
+        returns (TopicEvent tokenAddress) 
     {
         bytes32 topicHash = getTopicHash(_name, _resultNames, _bettingEndBlock);
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        Topic topic = new Topic(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
+        TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
 
         TopicCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);
