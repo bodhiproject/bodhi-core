@@ -105,11 +105,7 @@ contract Oracle {
 
     /// @notice Gets the result index the Oracle participant previously voted on.
     /// @return The voted result index.
-    function getVotedResultIndex() 
-        public 
-        constant 
-        returns(uint8) 
-    {
+    function getVotedResultIndex() public constant returns(uint8) {
         require(participants[msg.sender].didSetResult);
         return participants[msg.sender].resultIndex;
     }
