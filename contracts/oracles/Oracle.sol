@@ -12,12 +12,21 @@ contract Oracle {
         uint8 resultIndex;
     }
 
+    // Number of decimals of token used to create Oracle
+    uint256 public constant nativeDecimals = 18;
+
+    // Number of decimals for BOT
+    uint256 public constant botDecimals = 8;
+
+    // Minimum amount needed to create Oracle
+    uint256 public constant minReward = 1 * (10**nativeDecimals); 
+
+    // Maximum amount of BOT voting allowed
+    uint256 public constant maxContribution = 100 * (10**botDecimals);
+
     bytes32 public eventName;
     bytes32[] public eventResultNames;
     uint256 public eventBettingEndBlock;
-
-    // Block number when Oracle staking ends
-    uint256 public stakingEndBlock;
 
     // Block number when Oracle participants can no longer set decision
     uint256 public decisionEndBlock;
