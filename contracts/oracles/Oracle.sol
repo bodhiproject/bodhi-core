@@ -48,6 +48,11 @@ contract Oracle {
         _;
     }
 
+    /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
+    /// @param _eventName The name of the Event this Oracle will arbitrate.
+    /// @param _eventResultNames The result options of the Event.
+    /// @param _eventBettingEndBlock The block when Event betting ended.
+    /// @param _decisionEndBlock The block when Oracle voting will end.
     function Oracle(
         bytes32 _eventName, 
         bytes32[] _eventResultNames, 
