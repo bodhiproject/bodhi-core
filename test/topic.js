@@ -7,7 +7,8 @@ contract('Topic', function(accounts) {
 	const blockHeightManager = new BlockHeightManager(web3);
 
 	const testTopicParams = {
-		_owner: accounts[0],
+        _owner: accounts[0],
+        _resultSetter: accounts[1],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
 		_bettingEndBlock: 100
@@ -55,17 +56,6 @@ contract('Topic', function(accounts) {
   		it("allows users to bet if the betting end block has not been reached", async function() {
 			testTopic = await Topic.new(...Object.values(testTopicParams));
 
-			let watcher = testTopic.BetAccepted().watch((error, response) => {
-	    		if (error) {
-	    			console.log("Event Error: " + error);
-	    		} else {
-	    			console.log("Event Triggered: " + JSON.stringify(response.event));
-	    			console.log("resultIndex: " + JSON.stringify(response.args._resultIndex));
-	    			console.log("betAmount: " + JSON.stringify(response.args._betAmount));
-	    			console.log("betBalance: " + JSON.stringify(response.args._betBalance));
-	    		}
-	    	});
-
 			let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 			let betAmount = web3.toWei(1, 'ether');
 			let betResultIndex = 0;
@@ -80,8 +70,6 @@ contract('Topic', function(accounts) {
 
 			let betBalance = await testTopic.getBetBalance(betResultIndex, { from: accounts[1] });
 			assert.equal(betBalance.toString(), betAmount, "Bet balance does not match.");
-
-			watcher.stopWatching();
 	    });
 	 
 	    it("does not allow users to bet if the betting end block has been reached", async function() {
@@ -121,7 +109,7 @@ contract('Topic', function(accounts) {
   	});
 
     describe("Revealing Results:", async function() {
-    	it("allows the owner to reveal the result if the betting end block has been reached", async function() {
+    	it("allows the resultSetter to reveal the result if the bettingEndBlock has been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
 	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
@@ -132,7 +120,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let testFinalResultIndex = 2;
-	    	await testTopic.revealResult(testFinalResultIndex);
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -142,10 +130,10 @@ contract('Topic', function(accounts) {
 
 	    	let finalResultName = await testTopic.getFinalResultName();
 	    	assert.equal(web3.toUtf8(finalResultName), testTopicParams._resultNames[testFinalResultIndex], 
-	    		"Final result index does not match.");
+	    		"Final result name does not match.");
 	    });
 
-	    it("does not allow the owner to reveal the result if the betting end block has not been reached", async function() {
+	    it("does not allow the resultSetter to reveal the result if the bettingEndBlock has not been reached", async function() {
 	    	testTopic = await Topic.new(...Object.values(testTopicParams));
 
 	    	let currentBlock = web3.eth.blockNumber;
@@ -156,12 +144,45 @@ contract('Topic', function(accounts) {
 	    	
 	    	try {
 	    		let testFinalResultIndex = 2;
-		        await testTopic.revealResult(testFinalResultIndex);
+		        await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 		        assert.fail();
 			} catch(e) {
 		        assert.match(e.message, /invalid opcode/);
 		    }
 	    });
+
+        it("only allows the resultSetter to reveal the result", async function() {
+            testTopic = await Topic.new(...Object.values(testTopicParams));
+
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock);
+
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+            
+            let testFinalResultIndex = 2;
+            try {
+                await testTopic.revealResult(testFinalResultIndex, { from: accounts[0] });
+                assert.fail("Account 0 should not be able to set the result.");
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+
+            try {
+                await testTopic.revealResult(testFinalResultIndex, { from: accounts[2] });
+                assert.fail("Account 2 should not be able to set the result.");
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+            assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
+
+            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+            assert.isTrue(await testTopic.finalResultSet.call(), "Final result should set.");
+            assert.equal(await testTopic.getFinalResultIndex(), testFinalResultIndex, 
+                "Final result index does not match.");
+            assert.equal(web3.toUtf8(await testTopic.getFinalResultName()), 
+                testTopicParams._resultNames[testFinalResultIndex], "Final result name does not match.");
+        });
     });
 
     describe("Withdrawing:", async function() {
@@ -199,7 +220,7 @@ contract('Topic', function(accounts) {
 	    	
 	    	// Reveal result
 	    	let testFinalResultIndex = 1;
-	    	await testTopic.revealResult(testFinalResultIndex);
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	let finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -340,7 +361,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let expectedFinalResultIndex = 1;
-	    	await testTopic.revealResult(expectedFinalResultIndex);
+	    	await testTopic.revealResult(expectedFinalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -376,7 +397,7 @@ contract('Topic', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let finalResultIndex = 0;
-	    	await testTopic.revealResult(finalResultIndex);
+	    	await testTopic.revealResult(finalResultIndex, { from: testTopicParams._resultSetter });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
