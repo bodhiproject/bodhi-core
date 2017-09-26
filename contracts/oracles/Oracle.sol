@@ -39,14 +39,7 @@ contract Oracle {
     // Events
     event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _baseRewardAmount);
-    event StakeContributed(address _participant, uint256 _stakeContributed);
-    event ParticipantVoted(address _participant, uint8 _resultIndex);
-
-    // Modifiers
-    modifier isParticipant() {
-        require(participants[msg.sender].stakeContributed > 0);
-        _;
-    }
+    event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
 
     /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
     /// @param _eventName The name of the Event this Oracle will arbitrate.
@@ -61,7 +54,7 @@ contract Oracle {
         public
         payable
     {
-        require(msg.value >= minReward);
+        require(msg.value >= minBaseReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
@@ -78,28 +71,24 @@ contract Oracle {
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, msg.value);
     }
 
-    /// @notice Exchange BOT to get a stake in the Oracle and become an Oracle participant.
-    function stakeOracle() public payable {
+    /// @notice Vote an Event result which requires BOT payment.
+    /// @param _eventResultIndex The Event result which is being voted on.
+    function voteResult(uint8 _eventResultIndex) public payable {
         require(msg.value > 0);
-
-        Participant storage participant = participants[msg.sender];
-        participant.stakeContributed = participant.stakeContributed.add(msg.value);
-
-        StakeContributed(msg.sender, participant.stakeContributed);
-    }
-
-    /// @notice Oracle participants can vote on the result before the decisionEndBlock.
-    function voteResult(uint8 _eventResultIndex) public isParticipant {
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);
         require(_eventResultIndex >= 0);
         require(_eventResultIndex <= eventResultNames.length - 1);
         require(!participants[msg.sender].didSetResult);
 
-        participants[msg.sender].resultIndex = _eventResultIndex;
+        Participant storage participant = participants[msg.sender];
+        participant.stakeContributed = participant.stakeContributed.add(msg.value);
+        participant.resultIndex = _eventResultIndex;
+        participant.didSetResult = true;
+
         votedResultCount[_eventResultIndex] += 1;
 
-        ParticipantVoted(msg.sender, _eventResultIndex);
+        ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
     }
 
     /// @notice Gets the stake contributed by the Oracle participant.
@@ -118,7 +107,6 @@ contract Oracle {
     /// @return The voted result index.
     function getVotedResultIndex() 
         public 
-        isParticipant 
         constant 
         returns(uint8) 
     {
