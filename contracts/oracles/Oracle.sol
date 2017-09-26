@@ -19,7 +19,7 @@ contract Oracle {
     uint256 public constant botDecimals = 8;
 
     // Minimum amount needed to create Oracle
-    uint256 public constant minReward = 1 * (10**nativeDecimals); 
+    uint256 public constant minBaseReward = 1 * (10**nativeDecimals); 
 
     // Maximum amount of BOT staking contributions allowed
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals);
@@ -38,7 +38,7 @@ contract Oracle {
 
     // Events
     event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
-        uint256 _decisionEndBlock);
+        uint256 _decisionEndBlock, uint256 _baseRewardAmount);
     event StakeContributed(address _participant, uint256 _stakeContributed);
     event ParticipantVoted(address _participant, uint8 _resultIndex);
 
@@ -53,8 +53,10 @@ contract Oracle {
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock) 
-        public 
+        public
+        payable
     {
+        require(msg.value >= minReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
@@ -68,7 +70,7 @@ contract Oracle {
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
 
-        OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock);
+        OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, msg.value);
     }
 
     /// @notice Exchange BOT to get a stake in the Oracle and become an Oracle participant.
