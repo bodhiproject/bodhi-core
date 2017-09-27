@@ -164,4 +164,42 @@ contract('Oracle', function(accounts) {
             }
         });
     });
+
+    describe("getArbitrationOptionBlocks", async function() {
+        it("returns the correct number of blocks", async function() {
+            var averageBlockTime = 10;
+            var arbitrationOptionMinutes = 100;
+            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
+                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
+
+            averageBlockTime = 7;
+            arbitrationOptionMinutes = 12345;
+            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
+                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
+
+            averageBlockTime = 13;
+            arbitrationOptionMinutes = 42176;
+            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
+                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
+
+            averageBlockTime = 3;
+            arbitrationOptionMinutes = 1;
+            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
+                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
+
+            averageBlockTime = 5;
+            arbitrationOptionMinutes = 0;
+            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
+                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
+        });
+
+        it("throws if averageBlockTime is 0", async function() {
+            try {
+                await oracle.getArbitrationOptionBlocks(0, 100);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+    });
 });
