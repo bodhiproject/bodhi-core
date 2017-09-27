@@ -21,14 +21,28 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), 
-            { from: accounts[0], value: 10e18 });
+        oracle = await Oracle.new(...Object.values(testOracleParams), { from: accounts[0], value: 10e18 });
     });
 
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
-                "Event name does not match.");
+                "eventName does not match.");
+            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(0)), testOracleParams._eventResultNames[0], 
+                "eventResultName 1 does not match.");
+            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(1)), testOracleParams._eventResultNames[1], 
+                "eventResultName 2 does not match.");
+            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(2)), testOracleParams._eventResultNames[2], 
+                "eventResultName 3 does not match.");
+            assert.equal(await oracle.eventBettingEndBlock.call(), testOracleParams._eventBettingEndBlock, 
+                "eventBettingEndBlock does not match.");
+            assert.equal(await oracle.decisionEndBlock.call(), testOracleParams._decisionEndBlock, 
+                "decisionEndBlock does not match.");
+
+            let arbitrationBlocks = testOracleParams._arbitrationOptionMinutes / testOracleParams._averageBlockTime;
+            let expectedArbitrationOptionEndBlock = testOracleParams._decisionEndBlock + arbitrationBlocks;
+            assert.equal(await oracle.arbitrationOptionEndBlock.call(), expectedArbitrationOptionEndBlock, 
+                "arbitrationEndBlock does not match.");
         });
     });
 });
