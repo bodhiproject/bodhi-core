@@ -18,7 +18,7 @@ contract Oracle {
     uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
-    bytes32 public eventName;
+    bytes public eventName;
     bytes32[] public eventResultNames;
     uint256 public eventBettingEndBlock;
 
@@ -31,7 +31,7 @@ contract Oracle {
     mapping(address => Participant) private participants;
 
     // Events
-    event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
     event EarningsWithdrawn(uint256 _amountWithdrawn);
@@ -42,7 +42,7 @@ contract Oracle {
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
     function Oracle(
-        bytes32 _eventName, 
+        bytes _eventName, 
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
@@ -52,7 +52,7 @@ contract Oracle {
         payable
     {
         require(msg.value >= minBaseReward);
-        require(_eventName != 0);
+        require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_averageBlockTime > 0);

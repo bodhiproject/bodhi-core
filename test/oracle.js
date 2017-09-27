@@ -45,7 +45,21 @@ contract('Oracle', function(accounts) {
                 "arbitrationEndBlock does not match");
         });
 
-        it("throws if the minimum base reward is not enough", async function() {
+        it("can handle a long eventName", async function() {
+            let params = {
+                _eventName: "This is a super long event name that is longer than 32 bytes. It should still work.",
+                _eventResultNames: ["first", "second", "third"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 120,
+                _averageBlockTime: 10,
+                _arbitrationOptionMinutes: 1440
+            };
+
+            let o = await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+            assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
+        });
+
+        it("throws if the baseReward is not enough", async function() {
             let invalidMinBaseReward = web3.toBigNumber(10e16);
             assert.isBelow(invalidMinBaseReward.toNumber(), 
                 web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
@@ -59,7 +73,7 @@ contract('Oracle', function(accounts) {
             }
         });
 
-        it("throws if the event name is empty", async function() {
+        it("throws if the eventName is empty", async function() {
             let params = {
                 _eventName: "",
                 _eventResultNames: ["first", "second", "third"],
@@ -69,6 +83,78 @@ contract('Oracle', function(accounts) {
                 _arbitrationOptionMinutes: 1440
             };
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
+
+            try {
+                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if the eventResultNames array is not greater than 1", async function() {
+            let params = {
+                _eventName: "test",
+                _eventResultNames: ["first"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 120,
+                _averageBlockTime: 10,
+                _arbitrationOptionMinutes: 1440
+            };
+
+            try {
+                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if the decisionEndBlock is not greater than eventBettingEndBlock", async function() {
+            let params = {
+                _eventName: "test",
+                _eventResultNames: ["first", "second", "third"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 99,
+                _averageBlockTime: 10,
+                _arbitrationOptionMinutes: 1440
+            };
+
+            try {
+                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if the averageBlockTime is not greater than 0", async function() {
+            let params = {
+                _eventName: "test",
+                _eventResultNames: ["first", "second", "third"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 120,
+                _averageBlockTime: 0,
+                _arbitrationOptionMinutes: 1440
+            };
+
+            try {
+                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if the _arbitrationOptionMinutes is not greater than 0", async function() {
+            let params = {
+                _eventName: "test",
+                _eventResultNames: ["first", "second", "third"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 120,
+                _averageBlockTime: 10,
+                _arbitrationOptionMinutes: 0
+            };
 
             try {
                 await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
