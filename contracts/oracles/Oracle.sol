@@ -10,6 +10,7 @@ contract Oracle {
         uint256 stakeContributed;
         bool didSetResult;
         uint8 resultIndex;
+        bool didWithdrawEarnings;
     }
 
     uint256 public constant nativeDecimals = 18; // Number of decimals of token used to create Oracle
@@ -33,6 +34,7 @@ contract Oracle {
     event OracleCreated(bytes32 _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
+    event EarningsWithdrawn(uint256 _amountWithdrawn);
 
     /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
     /// @param _eventName The name of the Event this Oracle will arbitrate.
@@ -98,8 +100,15 @@ contract Oracle {
         require(block.number >= arbitrationOptionEndBlock);
         require(participants[msg.sender].stakeContributed > 0);
         require(totalStakeContributed > 0);
+        require(!participants[msg.sender].didWithdrawEarnings);
 
-        // TODO: implement
+        uint256 withdrawAmount = getEarningsAmount();
+        participants[msg.sender].didWithdrawEarnings = true;
+
+        require(withdrawAmount > 0);
+        msg.sender.transfer(withdrawAmount);
+
+        EarningsWithdrawn(withdrawAmount);
     }
 
     /// @notice Gets the number of blocks allowed for arbitration.
