@@ -52,7 +52,7 @@ contract Oracle {
         payable
     {
         require(msg.value >= minBaseReward);
-        require(_eventName.length > 0);
+        require(_eventName != "");
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_averageBlockTime > 0);
