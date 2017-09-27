@@ -25,7 +25,7 @@ contract Oracle {
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     
     uint256 public totalStakeContributed;
-    uint16[] public votedResultCount;
+    uint256[] public votedResultContributions;
 
     mapping(address => Participant) private participants;
 
@@ -88,9 +88,18 @@ contract Oracle {
         participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
 
-        votedResultCount[_eventResultIndex] += 1;
+        votedResultContributions[_eventResultIndex] += msg.value;
 
         ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
+    }
+
+    /// @notice Withdraw earnings if you picked the correct result.
+    function withdrawEarnings() public {
+        require(block.number >= arbitrationOptionEndBlock);
+        require(participants[msg.sender].stakeContributed > 0);
+        require(totalStakeContributed > 0);
+
+        // TODO: implement
     }
 
     /// @notice Gets the number of blocks allowed for arbitration.
@@ -131,13 +140,30 @@ contract Oracle {
         require(block.number >= decisionEndBlock);
 
         uint16 finalResultIndex = 0;
-        uint16 winningIndexCount = 0;
-        for (uint16 i = 0; i < votedResultCount.length; i++) {
-            if (votedResultCount[i] > winningIndexCount) {
+        uint16 winningIndexAmount = 0;
+        for (uint16 i = 0; i < votedResultContributions.length; i++) {
+            if (votedResultContributions[i] > winningIndexAmount) {
                 finalResultIndex = i;
             }
         }
 
         return finalResultIndex;
+    }
+
+    /// @notice Gets the amount of earnings you can withdraw.
+    /// @return The amount of earnings you can withdraw.
+    function getEarningsAmount() public constant returns(uint256) {
+        uint256 stakeContributed = participants[msg.sender].stakeContributed;
+        if (stakeContributed == 0) {
+            return 0;
+        }
+
+        if (!participants[msg.sender].didSetResult) {
+            return 0;
+        }
+
+        uint256 winningResultContributions = votedResultContributions[getFinalResultIndex()];
+        uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
+        return stakeContributed.div(totalStakeContributed).mul(losingResultContributions);
     }
 }
