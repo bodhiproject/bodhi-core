@@ -290,6 +290,26 @@ contract('Oracle', function(accounts) {
         });
     });
 
+    describe("getEventResultName", async function() {
+        it("returns the correct result name", async function() {
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
+                "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testOracleParams._eventResultNames[1], 
+                "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), testOracleParams._eventResultNames[2], 
+                "eventResultName 3 does not match");
+        });
+
+        it("throws if using an invalid result index", async function() {
+            try {
+                await oracle.getEventResultName(3);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+    });
+
     describe("getArbitrationOptionBlocks", async function() {
         it("returns the correct number of blocks", async function() {
             var averageBlockTime = 10;

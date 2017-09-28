@@ -24,7 +24,7 @@ contract Oracle {
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     bytes public eventName;
-    Result[] public eventResults;
+    Result[] private eventResults;
     uint256 public eventBettingEndBlock;
 
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
