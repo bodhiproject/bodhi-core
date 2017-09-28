@@ -4,6 +4,10 @@ const assert = require('chai').assert;
 const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('Oracle', function(accounts) {
+    // These should match the decimals in the contract.
+    const nativeDecimals = 18;
+    const botDecimals = 8;
+
     const blockHeightManager = new BlockHeightManager(web3);
     const testOracleParams = {
         _eventName: "test",
@@ -13,7 +17,9 @@ contract('Oracle', function(accounts) {
         _averageBlockTime: 10,
         _arbitrationOptionMinutes: 1440
     };
-    const baseReward = web3.toBigNumber(10e18);
+    const baseReward = web3.toBigNumber(10 * Math.pow(10, nativeDecimals));
+    const validVotingBlock = testOracleParams._eventBettingEndBlock;
+    const participant1 = accounts[1];
 
     let oracle;
 
@@ -28,11 +34,11 @@ contract('Oracle', function(accounts) {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
                 "eventName does not match");
-            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(0)), testOracleParams._eventResultNames[0], 
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
                 "eventResultName 1 does not match");
-            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(1)), testOracleParams._eventResultNames[1], 
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testOracleParams._eventResultNames[1], 
                 "eventResultName 2 does not match");
-            assert.equal(web3.toUtf8(await oracle.eventResultNames.call(2)), testOracleParams._eventResultNames[2], 
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), testOracleParams._eventResultNames[2], 
                 "eventResultName 3 does not match");
             assert.equal(await oracle.eventBettingEndBlock.call(), testOracleParams._eventBettingEndBlock, 
                 "eventBettingEndBlock does not match");
@@ -162,6 +168,34 @@ contract('Oracle', function(accounts) {
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
+        });
+    });
+
+    describe("voteResult", async function() {
+        it("allows voting", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = web3.eth.blockNumber;
+            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            assert.equal(await oracle.getStakeContributed({ from: participant1 }), 0, 
+                "participant1 should have 0 stakeContributed");
+            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should not have set result");
+            assert.equal(await oracle.totalStakeContributed.call(), 0, "totalStakeContributed should be 0");
+
+            let votedResultIndex = 2;
+            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+
+            let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
+            assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
+                "participant1 stakeContributed does not match");
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
+            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
+                "participant1 voted resultIndex does not match");
         });
     });
 

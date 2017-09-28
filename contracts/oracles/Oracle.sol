@@ -13,22 +13,33 @@ contract Oracle {
         bool didWithdrawEarnings;
     }
 
+    struct Result {
+        bytes32 name;
+        uint256 votedBalance;
+    }
+
     uint256 public constant nativeDecimals = 18; // Number of decimals of token used to create Oracle
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
     uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     bytes public eventName;
-    bytes32[] public eventResultNames;
+    Result[] public eventResults;
     uint256 public eventBettingEndBlock;
 
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     
     uint256 public totalStakeContributed;
-    uint256[] public votedResultContributions;
 
     mapping(address => Participant) private participants;
+
+    // Modifiers
+    modifier validResultIndex(uint _resultIndex) {
+        require(_resultIndex >= 0);
+        require(_resultIndex <= eventResults.length - 1);
+        _;
+    }
 
     // Events
     event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
@@ -61,7 +72,10 @@ contract Oracle {
         eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
-            eventResultNames.push(_eventResultNames[i]);
+            eventResults.push(Result({
+                name: _eventResultNames[i],
+                votedBalance: 0
+            }));
         }
 
         eventBettingEndBlock = _eventBettingEndBlock;
@@ -77,12 +91,10 @@ contract Oracle {
 
     /// @notice Vote an Event result which requires BOT payment.
     /// @param _eventResultIndex The Event result which is being voted on.
-    function voteResult(uint8 _eventResultIndex) public payable {
+    function voteResult(uint8 _eventResultIndex) public payable validResultIndex(_eventResultIndex) {
         require(msg.value > 0);
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);
-        require(_eventResultIndex >= 0);
-        require(_eventResultIndex <= eventResultNames.length - 1);
         require(!participants[msg.sender].didSetResult);
 
         Participant storage participant = participants[msg.sender];
@@ -90,7 +102,7 @@ contract Oracle {
         participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
 
-        votedResultContributions[_eventResultIndex] += msg.value;
+        eventResults[_eventResultIndex].votedBalance += msg.value;
 
         ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
     }
@@ -109,6 +121,18 @@ contract Oracle {
         msg.sender.transfer(withdrawAmount);
 
         EarningsWithdrawn(withdrawAmount);
+    }
+
+    /// @notice Gets the Event result name given a valid index.
+    /// @param _eventResultIndex The index of the wanted result name.
+    /// @return The name of the Event result.
+    function getEventResultName(uint8 _eventResultIndex) 
+        public 
+        validResultIndex(_eventResultIndex) 
+        constant 
+        returns (bytes32) 
+    {
+        return eventResults[_eventResultIndex].name;
     }
 
     /// @notice Gets the number of blocks allowed for arbitration.
@@ -150,8 +174,8 @@ contract Oracle {
 
         uint16 finalResultIndex = 0;
         uint16 winningIndexAmount = 0;
-        for (uint16 i = 0; i < votedResultContributions.length; i++) {
-            if (votedResultContributions[i] > winningIndexAmount) {
+        for (uint16 i = 0; i < eventResults.length; i++) {
+            if (eventResults[i].votedBalance > winningIndexAmount) {
                 finalResultIndex = i;
             }
         }
@@ -171,7 +195,7 @@ contract Oracle {
             return 0;
         }
 
-        uint256 winningResultContributions = votedResultContributions[getFinalResultIndex()];
+        uint256 winningResultContributions = eventResults[getFinalResultIndex()].votedBalance;
         uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
         return stakeContributed.div(totalStakeContributed).mul(losingResultContributions);
     }
