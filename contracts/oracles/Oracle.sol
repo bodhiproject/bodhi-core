@@ -91,7 +91,11 @@ contract Oracle {
 
     /// @notice Vote an Event result which requires BOT payment.
     /// @param _eventResultIndex The Event result which is being voted on.
-    function voteResult(uint8 _eventResultIndex) public payable validResultIndex(_eventResultIndex) {
+    function voteResult(uint8 _eventResultIndex) 
+        public 
+        payable 
+        validResultIndex(_eventResultIndex) 
+    {
         require(msg.value > 0);
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);

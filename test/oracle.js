@@ -175,7 +175,7 @@ contract('Oracle', function(accounts) {
         it("allows voting", async function() {
             await blockHeightManager.mineTo(validVotingBlock);
             let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
                 "Block should be at or after eventBettingEndBlock");
             assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
                 "Block should be below decisionEndBlock");
@@ -196,6 +196,97 @@ contract('Oracle', function(accounts) {
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
             assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
                 "participant1 voted resultIndex does not match");
+        });
+
+        it("throws if the eventResultIndex is invalid", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = web3.eth.blockNumber;
+            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            try {
+                let votedResultIndex = 3;
+                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if the value is 0", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = web3.eth.blockNumber;
+            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            try {
+                let votedResultIndex = 0;
+                await oracle.voteResult(votedResultIndex, { from: participant1 });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if trying to vote before the eventBettingEndBlock", async function() {
+            assert.isBelow(web3.eth.blockNumber, (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be below eventBettingEndBlock");
+
+            try {
+                let votedResultIndex = 1;
+                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if trying to vote after the decisionEndBlock", async function() {
+            await blockHeightManager.mineTo(testOracleParams._decisionEndBlock);
+            assert(web3.eth.blockNumber >= (await oracle.decisionEndBlock.call()).toNumber(),
+                "Block should be greater than or equal to decisionEndBlock");
+
+            try {
+                let votedResultIndex = 1;
+                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
+        it("throws if trying to vote again", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = web3.eth.blockNumber;
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should not have set result");
+
+            let votedResultIndex = 2;
+            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
+            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
+                "participant1 voted resultIndex does not match");
+
+            try {
+                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
     });
 
