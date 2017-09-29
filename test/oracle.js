@@ -337,6 +337,13 @@ contract('Oracle', function(accounts) {
 
             actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
             assert.equal(actualEarningsAmount, 0, "earningsAmount should be 0");
+
+            try {
+                await oracle.withdrawEarnings({ from: participant1 });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
     });
 
