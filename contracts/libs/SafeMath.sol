@@ -22,7 +22,7 @@ library SafeMath {
     function div(uint256 x, uint256 y) internal returns(uint256) {
         assert(y != 0);
         uint256 z = x / y;
-        assert((x == 0) || (z * y == x));
+        assert(x == y * z + x % y);
         return z;
     }
 }

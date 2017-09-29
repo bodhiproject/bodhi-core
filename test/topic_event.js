@@ -1,9 +1,9 @@
 const web3 = global.web3;
-const Topic = artifacts.require("./Topic.sol");
+const TopicEvent = artifacts.require("./TopicEvent.sol");
 const assert = require('chai').assert;
 const BlockHeightManager = require('./helpers/block_height_manager');
 
-contract('Topic', function(accounts) {
+contract('TopicEvent', function(accounts) {
 	const blockHeightManager = new BlockHeightManager(web3);
 
 	const testTopicParams = {
@@ -19,9 +19,9 @@ contract('Topic', function(accounts) {
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
 
-  	describe("New Topic:", async function() {
+  	describe("New TopicEvent:", async function() {
   		before(async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
+			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
   		});
 
   		it("sets the first account as the contract creator", async function() {
@@ -54,7 +54,7 @@ contract('Topic', function(accounts) {
 
   	describe("Betting:", async function() {
   		it("allows users to bet if the betting end block has not been reached", async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
+			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 			let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 			let betAmount = web3.toWei(1, 'ether');
@@ -73,7 +73,7 @@ contract('Topic', function(accounts) {
 	    });
 	 
 	    it("does not allow users to bet if the betting end block has been reached", async function() {
-	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+	    	testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
@@ -91,7 +91,7 @@ contract('Topic', function(accounts) {
 	    });
 
 	    it("throws on a bet of 0", async function() {
-	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+	    	testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isBelow(currentBlock, testTopicParams._bettingEndBlock, "Current block has reached bettingEndBlock.");
@@ -110,7 +110,7 @@ contract('Topic', function(accounts) {
 
     describe("Revealing Results:", async function() {
     	it("allows the resultSetter to reveal the result if the bettingEndBlock has been reached", async function() {
-	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+	    	testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 	    	await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
@@ -134,7 +134,7 @@ contract('Topic', function(accounts) {
 	    });
 
 	    it("does not allow the resultSetter to reveal the result if the bettingEndBlock has not been reached", async function() {
-	    	testTopic = await Topic.new(...Object.values(testTopicParams));
+	    	testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 	    	let currentBlock = web3.eth.blockNumber;
 	    	assert.isBelow(currentBlock, testTopicParams._bettingEndBlock);
@@ -152,7 +152,7 @@ contract('Topic', function(accounts) {
 	    });
 
         it("only allows the resultSetter to reveal the result", async function() {
-            testTopic = await Topic.new(...Object.values(testTopicParams));
+            testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
             assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock);
@@ -187,7 +187,7 @@ contract('Topic', function(accounts) {
 
     describe("Withdrawing:", async function() {
     	it("allows the better to withdraw their winnings if it has ended and the result was revealed", async function() {
-    		testTopic = await Topic.new(...Object.values(testTopicParams));
+    		testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
     		// Set bets
     		let account1 = accounts[1];
@@ -247,7 +247,7 @@ contract('Topic', function(accounts) {
 
     describe("GetResultName:", async function() {
   		it("returns the correct result name for valid result index", async function() {
-  			testTopic = await Topic.new(...Object.values(testTopicParams));
+  			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
   			let resultName1 = await testTopic.getResultName(0);
 	    	assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
@@ -260,7 +260,7 @@ contract('Topic', function(accounts) {
   		});
 
   		it("throws if using an invalid result index", async function() {
-  			testTopic = await Topic.new(...Object.values(testTopicParams));
+  			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
   			try {
 				let resultName3 = await testTopic.getResultName(3);
@@ -273,7 +273,7 @@ contract('Topic', function(accounts) {
 
   	describe("GetResultBalance:", async function() {
   		it("returns the correct result balance", async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
+			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 			let betResultIndex = 0;
 			let better = accounts[1];
@@ -285,7 +285,7 @@ contract('Topic', function(accounts) {
 	    });
 
 	    it("throws if using an invalid result index", async function() {
-  			testTopic = await Topic.new(...Object.values(testTopicParams));
+  			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
   			try {
 				await testTopic.getResultBalance(3);
@@ -298,7 +298,7 @@ contract('Topic', function(accounts) {
 
   	describe("GetBetBalance:", async function() {
   		it("returns the correct bet balance", async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
+			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 			let betResultIndex = 0;
 			let better = accounts[1];
@@ -310,7 +310,7 @@ contract('Topic', function(accounts) {
 	    });
 
 	    it("throws if using an invalid result index", async function() {
-  			testTopic = await Topic.new(...Object.values(testTopicParams));
+  			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
   			try {
 				await testTopic.getBetBalance(3);
@@ -323,7 +323,7 @@ contract('Topic', function(accounts) {
 
   	describe("GetTotalTopicBalance:", async function() {
   		it("returns the correct total topic balance", async function() {
-			testTopic = await Topic.new(...Object.values(testTopicParams));
+			testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
 			let account1 = accounts[1];
     		let account1BetAmount = web3.toBigNumber(web3.toWei(1, "ether"));
@@ -351,7 +351,7 @@ contract('Topic', function(accounts) {
 
     describe("GetFinalResultIndex:", async function() {
     	it("returns the correct final result index", async function() {
-    		testTopic = await Topic.new(...Object.values(testTopicParams));
+    		testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
     		await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
@@ -371,7 +371,7 @@ contract('Topic', function(accounts) {
     	});
 
     	it("throws if trying to get the final result index before it is set", async function() {
-    		testTopic = await Topic.new(...Object.values(testTopicParams));
+    		testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
     		var finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
@@ -387,7 +387,7 @@ contract('Topic', function(accounts) {
 
     describe("GetFinalResultName:", async function() {
     	it("returns the correct final result name", async function() {
-    		testTopic = await Topic.new(...Object.values(testTopicParams));
+    		testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
     		await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
 	    	let currentBlock = web3.eth.blockNumber;
@@ -408,7 +408,7 @@ contract('Topic', function(accounts) {
     	});
 
     	it("throws if trying to get the final result index before it is set", async function() {
-    		testTopic = await Topic.new(...Object.values(testTopicParams));
+    		testTopic = await TopicEvent.new(...Object.values(testTopicParams));
 
     		var finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
