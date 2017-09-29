@@ -453,4 +453,22 @@ contract('Oracle', function(accounts) {
             }
         });
     });
+
+    describe("getStakeContributed", async function() {
+        it("returns the correct stake contributed", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(0, { from: participant1, value: stakeContributed });
+
+            let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
+            assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
+                "stakeContributed does not match");
+        });
+    });
 });
