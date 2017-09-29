@@ -513,5 +513,17 @@ contract('Oracle', function(accounts) {
             assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
                 "participant1 votedResultIndex does not match");
         });
+
+        it("throws if trying to get the voted index and did not vote", async function() {
+            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should not have set result");
+
+            try {
+                await oracle.getVotedResultIndex({ from: participant1 });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
     });
 });
