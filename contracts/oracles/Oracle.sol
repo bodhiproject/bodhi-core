@@ -24,14 +24,12 @@ contract Oracle {
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     bytes public eventName;
-    Result[] private eventResults;
     uint256 public eventBettingEndBlock;
-
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
-    
     uint256 public totalStakeContributed;
 
+    Result[] private eventResults;
     mapping(address => Participant) private participants;
 
     // Modifiers
@@ -106,7 +104,8 @@ contract Oracle {
         participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
 
-        eventResults[_eventResultIndex].votedBalance += msg.value;
+        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(msg.value);
+        totalStakeContributed = totalStakeContributed.add(msg.value);
 
         ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
     }
@@ -177,9 +176,11 @@ contract Oracle {
         require(block.number >= decisionEndBlock);
 
         uint16 finalResultIndex = 0;
-        uint16 winningIndexAmount = 0;
+        uint256 winningIndexAmount = 0;
         for (uint16 i = 0; i < eventResults.length; i++) {
-            if (eventResults[i].votedBalance > winningIndexAmount) {
+            uint256 votedBalance = eventResults[i].votedBalance;
+            if (votedBalance > winningIndexAmount) {
+                winningIndexAmount = votedBalance;
                 finalResultIndex = i;
             }
         }
@@ -199,8 +200,12 @@ contract Oracle {
             return 0;
         }
 
+        if (participants[msg.sender].didWithdrawEarnings) {
+            return 0;
+        }
+
         uint256 winningResultContributions = eventResults[getFinalResultIndex()].votedBalance;
         uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
-        return stakeContributed.div(totalStakeContributed).mul(losingResultContributions);
+        return stakeContributed.mul(losingResultContributions).div(winningResultContributions).add(stakeContributed);
     }
 }

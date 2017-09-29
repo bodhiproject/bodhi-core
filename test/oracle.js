@@ -1,6 +1,7 @@
 const web3 = global.web3;
 const Oracle = artifacts.require("./Oracle.sol");
 const assert = require('chai').assert;
+const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('Oracle', function(accounts) {
@@ -22,6 +23,7 @@ contract('Oracle', function(accounts) {
     const participant1 = accounts[1];
 
     let oracle;
+    let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
@@ -287,6 +289,54 @@ contract('Oracle', function(accounts) {
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
+        });
+    });
+
+    describe("withdrawEarnings", async function() {
+        it("lets the user withdraw if they picked the winning result", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            let winningStake1 = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(0, { from: participant1, value: winningStake1 });
+
+            let winningStake2 = web3.toBigNumber(5 * Math.pow(10, botDecimals));
+            await oracle.voteResult(0, { from: accounts[2], value: winningStake2 });
+
+            let winningStake3 = web3.toBigNumber(7 * Math.pow(10, botDecimals));            
+            await oracle.voteResult(0, { from: accounts[3], value: winningStake3 });
+
+            let losingStake1 = web3.toBigNumber(6 * Math.pow(10, botDecimals));
+            await oracle.voteResult(1, { from: accounts[4], value: losingStake1 });
+
+            let losingStake2 = web3.toBigNumber(2 * Math.pow(10, botDecimals));
+            await oracle.voteResult(2, { from: accounts[5], value: losingStake2 });
+
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
+            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), 0,
+                "participant1 voted resultIndex does not match");
+            assert.equal((await oracle.getStakeContributed({ from: participant1 })).toString(), 
+                winningStake1.toString(), "participant1 stakeContributed does not match");
+
+            let arbitrationOptionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
+            await blockHeightManager.mineTo(arbitrationOptionEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationOptionEndBlock, 
+                "Block should be at least arbitrationOptionEndBlock");
+
+            var actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
+            let winningStakes = winningStake1.add(winningStake2).add(winningStake3);
+            let losingStakes = losingStake1.add(losingStake2);
+            let expectedEarningsAmount = winningStake1.mul(losingStakes).div(winningStakes).add(winningStake1);
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "earningsAmount does not match");
+            await oracle.withdrawEarnings({ from: participant1 });
+
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
+            assert.equal(actualEarningsAmount, 0, "earningsAmount should be 0");
         });
     });
 
