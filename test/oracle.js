@@ -471,4 +471,47 @@ contract('Oracle', function(accounts) {
                 "stakeContributed does not match");
         });
     });
+
+    describe("didSetResult", async function() {
+        it("returns correctly", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should not have set result");
+
+            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(0, { from: participant1, value: stakeContributed });
+
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should have set result");
+        });
+    });
+
+    describe("getVotedResultIndex", async function() {
+        it("returns the correct voted index", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                "Block should be below decisionEndBlock");
+
+            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should not have set result");
+
+            let votedResultIndex = 1;
+            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
+                "participant1 should have set result");
+            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
+                "participant1 votedResultIndex does not match");
+        });
+    });
 });
