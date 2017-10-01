@@ -3,6 +3,7 @@ const Oracle = artifacts.require("./Oracle.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
+const Utils = require('./helpers/utils');
 
 contract('Oracle', function(accounts) {
     // These should match the decimals in the contract.
@@ -524,6 +525,29 @@ contract('Oracle', function(accounts) {
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
+        });
+    });
+
+    describe("getFinalResultIndex", async function() {
+        it("returns the correct final result index", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            let decisionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
+            assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
+
+            await oracle.voteResult(0, { from: participant1, value: Utils.getBigNumberWithDecimals(3, botDecimals) });            
+            await oracle.voteResult(1, { from: accounts[2], value: Utils.getBigNumberWithDecimals(4, botDecimals) });
+            await oracle.voteResult(1, { from: accounts[3], value: Utils.getBigNumberWithDecimals(5, botDecimals) });
+            await oracle.voteResult(2, { from: accounts[4], value: Utils.getBigNumberWithDecimals(10, botDecimals) });
+            await oracle.voteResult(2, { from: accounts[5], value: Utils.getBigNumberWithDecimals(1, botDecimals) });
+
+            
+            await blockHeightManager.mineTo(decisionEndBlock);
+            assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
+
+            assert.equal(await oracle.getFinalResultIndex(), 2, "finalResultIndex does not match");
         });
     });
 });
