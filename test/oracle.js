@@ -542,12 +542,27 @@ contract('Oracle', function(accounts) {
             await oracle.voteResult(1, { from: accounts[3], value: Utils.getBigNumberWithDecimals(5, botDecimals) });
             await oracle.voteResult(2, { from: accounts[4], value: Utils.getBigNumberWithDecimals(10, botDecimals) });
             await oracle.voteResult(2, { from: accounts[5], value: Utils.getBigNumberWithDecimals(1, botDecimals) });
-
             
             await blockHeightManager.mineTo(decisionEndBlock);
             assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
 
             assert.equal(await oracle.getFinalResultIndex(), 2, "finalResultIndex does not match");
+        });
+
+        it("throws if trying to get the final result index before the decisionEndBlock", async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            let decisionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
+            assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
+
+            try {
+                await oracle.getFinalResultIndex();
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
     });
 });
