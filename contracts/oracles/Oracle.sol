@@ -172,12 +172,12 @@ contract Oracle {
 
     /// @notice Gets the final result index set by the Oracle participants.
     /// @return The index of the final result set by Oracle participants.
-    function getFinalResultIndex() public constant returns (uint16) {
+    function getFinalResultIndex() public constant returns (uint8) {
         require(block.number >= decisionEndBlock);
 
-        uint16 finalResultIndex = 0;
+        uint8 finalResultIndex = 0;
         uint256 winningIndexAmount = 0;
-        for (uint16 i = 0; i < eventResults.length; i++) {
+        for (uint8 i = 0; i < eventResults.length; i++) {
             uint256 votedBalance = eventResults[i].votedBalance;
             if (votedBalance > winningIndexAmount) {
                 winningIndexAmount = votedBalance;
@@ -204,7 +204,12 @@ contract Oracle {
             return 0;
         }
 
-        uint256 winningResultContributions = eventResults[getFinalResultIndex()].votedBalance;
+        uint8 finalResultIndex = getFinalResultIndex();
+        if (participants[msg.sender].resultIndex != finalResultIndex) {
+            return 0;
+        }
+
+        uint256 winningResultContributions = eventResults[finalResultIndex].votedBalance;
         uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
         return stakeContributed.mul(losingResultContributions).div(winningResultContributions).add(stakeContributed);
     }

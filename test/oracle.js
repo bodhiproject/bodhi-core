@@ -21,7 +21,13 @@ contract('Oracle', function(accounts) {
     };
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
+    const oracleCreator = accounts[0];
     const participant1 = accounts[1];
+    const participant2 = accounts[2];
+    const participant3 = accounts[3];
+    const participant4 = accounts[4];
+    const participant5 = accounts[5];
+    const participant6 = accounts[6];
 
     let oracle;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
@@ -30,7 +36,7 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), { from: accounts[0], value: baseReward });
+        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, value: baseReward });
     });
 
     describe("New Oracle", async function() {
@@ -64,7 +70,7 @@ contract('Oracle', function(accounts) {
                 _arbitrationOptionMinutes: 1440
             };
 
-            let o = await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+            let o = await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
             assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
         });
 
@@ -75,7 +81,7 @@ contract('Oracle', function(accounts) {
                 "Invalid minBaseReward should be below minBaseReward");
 
             try {
-                await Oracle.new(...Object.values(testOracleParams), { from: accounts[1], value: invalidMinBaseReward });
+                await Oracle.new(...Object.values(testOracleParams), { from: participant1, value: invalidMinBaseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -94,7 +100,7 @@ contract('Oracle', function(accounts) {
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
             try {
-                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -112,7 +118,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -130,7 +136,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -148,7 +154,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -166,7 +172,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: accounts[0], value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -309,10 +315,10 @@ contract('Oracle', function(accounts) {
                 "Block should be below decisionEndBlock");
 
             await oracle.voteResult(0, { from: participant1, value: winningStake1 });            
-            await oracle.voteResult(0, { from: accounts[2], value: winningStake2 });
-            await oracle.voteResult(0, { from: accounts[3], value: winningStake3 });
-            await oracle.voteResult(1, { from: accounts[4], value: losingStake1 });
-            await oracle.voteResult(2, { from: accounts[5], value: losingStake2 });
+            await oracle.voteResult(0, { from: participant2, value: winningStake2 });
+            await oracle.voteResult(0, { from: participant3, value: winningStake3 });
+            await oracle.voteResult(1, { from: participant4, value: losingStake1 });
+            await oracle.voteResult(2, { from: participant5, value: losingStake2 });
         });
 
         it("allows withdrawing if they picked the winning result", async function() {
@@ -389,7 +395,7 @@ contract('Oracle', function(accounts) {
                 "Block should be at least arbitrationOptionEndBlock");
 
             try {
-                await oracle.withdrawEarnings({ from: accounts[6] });
+                await oracle.withdrawEarnings({ from: participant6 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -538,10 +544,10 @@ contract('Oracle', function(accounts) {
             assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
 
             await oracle.voteResult(0, { from: participant1, value: Utils.getBigNumberWithDecimals(3, botDecimals) });            
-            await oracle.voteResult(1, { from: accounts[2], value: Utils.getBigNumberWithDecimals(4, botDecimals) });
-            await oracle.voteResult(1, { from: accounts[3], value: Utils.getBigNumberWithDecimals(5, botDecimals) });
-            await oracle.voteResult(2, { from: accounts[4], value: Utils.getBigNumberWithDecimals(10, botDecimals) });
-            await oracle.voteResult(2, { from: accounts[5], value: Utils.getBigNumberWithDecimals(1, botDecimals) });
+            await oracle.voteResult(1, { from: participant2, value: Utils.getBigNumberWithDecimals(4, botDecimals) });
+            await oracle.voteResult(1, { from: participant3, value: Utils.getBigNumberWithDecimals(5, botDecimals) });
+            await oracle.voteResult(2, { from: participant4, value: Utils.getBigNumberWithDecimals(10, botDecimals) });
+            await oracle.voteResult(2, { from: participant5, value: Utils.getBigNumberWithDecimals(1, botDecimals) });
             
             await blockHeightManager.mineTo(decisionEndBlock);
             assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
@@ -563,6 +569,75 @@ contract('Oracle', function(accounts) {
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
+        });
+    });
+
+    describe("getEarningsAmount", async function() {
+        let winningStake1 = Utils.getBigNumberWithDecimals(11, botDecimals);
+        let winningStake2 = Utils.getBigNumberWithDecimals(13, botDecimals);
+        let winningStake3 = Utils.getBigNumberWithDecimals(5, botDecimals);
+        let losingStake1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+        let losingStake2 = Utils.getBigNumberWithDecimals(3, botDecimals);
+        let losingStake3 = Utils.getBigNumberWithDecimals(8, botDecimals);
+
+        beforeEach(async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = await getBlockNumber();
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                "Block should be at or after eventBettingEndBlock");
+            let decisionEndBlock = (await oracle.decisionEndBlock.call()).toNumber();
+            assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
+
+            await oracle.voteResult(1, { from: participant1, value: winningStake1 });            
+            await oracle.voteResult(1, { from: participant2, value: winningStake2 });
+            await oracle.voteResult(1, { from: participant3, value: winningStake3 });
+            await oracle.voteResult(0, { from: participant4, value: losingStake1 });
+            await oracle.voteResult(2, { from: participant5, value: losingStake2 });
+            await oracle.voteResult(0, { from: participant6, value: losingStake3 });
+
+            await blockHeightManager.mineTo(decisionEndBlock);
+            assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
+        });
+
+        it("returns the correct earnings amount", async function() {
+            let winningStakes = winningStake1.add(winningStake2).add(winningStake3);
+            let losingStakes = losingStake1.add(losingStake2).add(losingStake3);
+
+            // Participant 1
+            var actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
+            var expectedEarningsAmount = Math.floor(winningStake1.mul(losingStakes).div(winningStakes).add(winningStake1));
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant1 earningsAmount does not match");
+
+            // Participant 2
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant2 });
+            expectedEarningsAmount = Math.floor(winningStake2.mul(losingStakes).div(winningStakes).add(winningStake2));
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant2 earningsAmount does not match");
+
+            // Participant 3
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant3 });
+            expectedEarningsAmount = Math.floor(winningStake3.mul(losingStakes).div(winningStakes).add(winningStake3));
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant3 earningsAmount does not match");
+
+            // Participant 4
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant4 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant4 earningsAmount does not match");
+
+            // Participant 5
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant5 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant5 earningsAmount does not match");
+
+            // Participant 6
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant6 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant6 earningsAmount does not match");
         });
     });
 });
