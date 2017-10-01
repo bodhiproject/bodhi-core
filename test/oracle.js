@@ -677,12 +677,10 @@ contract('Oracle', function(accounts) {
                 "participant4 earningsAmount does not match");
 
             actualEarningsAmount = await oracle.getEarningsAmount({ from: participant5 });
-            expectedEarningsAmount = 0;
             assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
                 "participant5 earningsAmount does not match");
 
             actualEarningsAmount = await oracle.getEarningsAmount({ from: participant6 });
-            expectedEarningsAmount = 0;
             assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
                 "participant6 earningsAmount does not match");
         });
