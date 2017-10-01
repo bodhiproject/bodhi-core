@@ -19,7 +19,7 @@ contract('Oracle', function(accounts) {
         _averageBlockTime: 10,
         _arbitrationOptionMinutes: 1440
     };
-    const baseReward = web3.toBigNumber(10 * Math.pow(10, nativeDecimals));
+    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
     const participant1 = accounts[1];
 
@@ -190,7 +190,7 @@ contract('Oracle', function(accounts) {
             assert.equal(await oracle.totalStakeContributed.call(), 0, "totalStakeContributed should be 0");
 
             let votedResultIndex = 2;
-            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
@@ -211,7 +211,7 @@ contract('Oracle', function(accounts) {
 
             try {
                 let votedResultIndex = 3;
-                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
                 await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
                 assert.fail();
             } catch(e) {
@@ -242,7 +242,7 @@ contract('Oracle', function(accounts) {
 
             try {
                 let votedResultIndex = 1;
-                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
                 await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
                 assert.fail();
             } catch(e) {
@@ -257,7 +257,7 @@ contract('Oracle', function(accounts) {
 
             try {
                 let votedResultIndex = 1;
-                let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
                 await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
                 assert.fail();
             } catch(e) {
@@ -277,7 +277,7 @@ contract('Oracle', function(accounts) {
                 "participant1 should not have set result");
 
             let votedResultIndex = 2;
-            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
@@ -294,11 +294,11 @@ contract('Oracle', function(accounts) {
     });
 
     describe("withdrawEarnings", async function() {
-        let winningStake1 = web3.toBigNumber(3 * Math.pow(10, botDecimals));
-        let winningStake2 = web3.toBigNumber(5 * Math.pow(10, botDecimals));
-        let winningStake3 = web3.toBigNumber(7 * Math.pow(10, botDecimals));  
-        let losingStake1 = web3.toBigNumber(6 * Math.pow(10, botDecimals));
-        let losingStake2 = web3.toBigNumber(2 * Math.pow(10, botDecimals));
+        let winningStake1 = Utils.getBigNumberWithDecimals(3, botDecimals);
+        let winningStake2 = Utils.getBigNumberWithDecimals(5, botDecimals);
+        let winningStake3 = Utils.getBigNumberWithDecimals(7, botDecimals);
+        let losingStake1 = Utils.getBigNumberWithDecimals(6, botDecimals);
+        let losingStake2 = Utils.getBigNumberWithDecimals(2, botDecimals);
 
         beforeEach(async function() {
             await blockHeightManager.mineTo(validVotingBlock);
@@ -464,7 +464,7 @@ contract('Oracle', function(accounts) {
             assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
                 "Block should be below decisionEndBlock");
 
-            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await oracle.voteResult(0, { from: participant1, value: stakeContributed });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
@@ -485,7 +485,7 @@ contract('Oracle', function(accounts) {
             assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should not have set result");
 
-            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await oracle.voteResult(0, { from: participant1, value: stakeContributed });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
@@ -506,7 +506,7 @@ contract('Oracle', function(accounts) {
                 "participant1 should not have set result");
 
             let votedResultIndex = 1;
-            let stakeContributed = web3.toBigNumber(3 * Math.pow(10, botDecimals));
+            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
