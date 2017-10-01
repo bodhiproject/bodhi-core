@@ -639,5 +639,35 @@ contract('Oracle', function(accounts) {
             assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
                 "participant6 earningsAmount does not match");
         });
+
+        it("returns 0 if the user's stakeContributed is 0", async function() {
+            assert.equal(await oracle.getEarningsAmount({ from: accounts[7] }), 0, 
+                "getEarningsAmount should be returning 0");
+        });
+
+        it("returns 0 if the user did not set a result", async function() {
+            assert.equal(await oracle.getEarningsAmount({ from: accounts[7] }), 0, 
+                "getEarningsAmount should be returning 0");
+        });
+
+        it("returns 0 if the user already withdrew their earnings", async function() {
+            let arbitrationOptionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
+            await blockHeightManager.mineTo(arbitrationOptionEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationOptionEndBlock, 
+                "Block should be at least arbitrationOptionEndBlock");
+
+            let winningStakes = winningStake1.add(winningStake2).add(winningStake3);
+            let losingStakes = losingStake1.add(losingStake2).add(losingStake3);
+
+            var actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
+            var expectedEarningsAmount = Math.floor(winningStake1.mul(losingStakes).div(winningStakes).add(winningStake1));
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant1 earningsAmount does not match");
+
+            await oracle.withdrawEarnings({ from: participant1 });
+
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
+            assert.equal(actualEarningsAmount, 0, "earningsAmount should be 0 after withdrawing already");
+        });
     });
 });
