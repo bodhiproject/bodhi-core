@@ -1,7 +1,7 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.15;
 
+/// @title BodhiToken interface contract
+/// @dev This contract defines the allowed methods to be called externally.
 contract BodhiToken {
-  function BodhiToken() {
-    // constructor
-  }
+    function transferFrom(address _from, address _to, uint256 _value) returns (bool);
 }
