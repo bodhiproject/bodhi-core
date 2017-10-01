@@ -669,5 +669,22 @@ contract('Oracle', function(accounts) {
             actualEarningsAmount = await oracle.getEarningsAmount({ from: participant1 });
             assert.equal(actualEarningsAmount, 0, "earningsAmount should be 0 after withdrawing already");
         });
+
+        it("returns 0 if the user set a losing result", async function() {
+            var actualEarningsAmount = await oracle.getEarningsAmount({ from: participant4 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant4 earningsAmount does not match");
+
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant5 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant5 earningsAmount does not match");
+
+            actualEarningsAmount = await oracle.getEarningsAmount({ from: participant6 });
+            expectedEarningsAmount = 0;
+            assert.equal(actualEarningsAmount.toString(), expectedEarningsAmount.toString(), 
+                "participant6 earningsAmount does not match");
+        });
     });
 });
