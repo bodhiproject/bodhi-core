@@ -38,7 +38,7 @@ contract("AdddressManager", function(accounts) {
                 "Token address replacement does not match");
         });
 
-        it("throws if setting the address from not the owner", async function() {
+        it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should be unset");
 
             try {
@@ -88,7 +88,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventAddress(0), eventAddress2, "Event address replacement does not match");
         });
 
-        it("throws if setting the address from not the owner", async function() {
+        it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getEventAddress(0), 0, "Event address should be unset");
 
             try {
@@ -139,7 +139,7 @@ contract("AdddressManager", function(accounts) {
                 "Oracle address replacement does not match");
         });
 
-        it("throws if setting the address from not the owner", async function() {
+        it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getOracleAddress(0), 0, "Oracle address should be unset");
 
             try {
