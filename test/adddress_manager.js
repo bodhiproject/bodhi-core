@@ -5,6 +5,9 @@ const assert = require('chai').assert;
 contract("AdddressManager", function(accounts) {
     const owner = accounts[0];
     const tokenAddress = "0x1111111111111111111111111111111111111111";
+    const eventAddress1 = "0x1212121212121212121212121212121212121212";
+    const eventAddress2 = "0x1313131313131313131313131313131313131313";
+    const eventAddress3 = "0x1414141414141414141414141414141414141414";
 
     let instance;
 
@@ -42,6 +45,22 @@ contract("AdddressManager", function(accounts) {
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
+        });
+    });
+
+    describe("EventAddresses", async function() {
+        it("should return the addresses", async function() {
+            assert.equal(await instance.getEventAddress(0), 0, "Event address 0 should be unset");
+            assert.equal(await instance.getEventAddress(1), 0, "Event address 1 should be unset");
+            assert.equal(await instance.getEventAddress(3), 0, "Event address 3 should be unset");
+
+            await instance.setEventAddress(0, eventAddress1, { from: owner });
+            await instance.setEventAddress(1, eventAddress2, { from: owner });
+            await instance.setEventAddress(3, eventAddress3, { from: owner }); 
+
+            assert.equal(await instance.getEventAddress(0), eventAddress1, "Event address 0 does not match");
+            assert.equal(await instance.getEventAddress(1), eventAddress2, "Event address 1 does not match");
+            assert.equal(await instance.getEventAddress(3), eventAddress3, "Event address 3 does not match");
         });
     });
 });
