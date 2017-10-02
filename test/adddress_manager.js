@@ -62,5 +62,29 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventAddress(1), eventAddress2, "Event address 1 does not match");
             assert.equal(await instance.getEventAddress(3), eventAddress3, "Event address 3 does not match");
         });
+
+        it("throws if setting the address from not the owner", async function() {
+            assert.equal(await instance.getEventAddress(0), 0, "Token address should be unset");
+
+            try {
+                await instance.setEventAddress(0, eventAddress1, { from: accounts[1] });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+
+            assert.equal(await instance.getEventAddress(0), 0, "Token address should still be unset");
+        });
+
+        it("throws if trying to set an invalid address", async function() {
+            assert.equal(await instance.getEventAddress(0), 0, "Token address should be unset");
+
+            try {
+                await instance.setEventAddress(0, 0, { from: owner });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
     });
 });
