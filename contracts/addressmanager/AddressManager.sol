@@ -29,7 +29,7 @@ contract AddressManager is Ownable {
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
-    /// @param _tokenAddress The address of the latest Bodhi Token contract.
+    /// @param _tokenAddress The address of the Bodhi Token contract.
     function setBodhiTokenAddress(address _tokenAddress) 
         public 
         onlyOwner 
@@ -41,7 +41,7 @@ contract AddressManager is Ownable {
 
     /// @notice Gets the address of the Event contract.
     /// @param _indexOfAddress The index of the stored Event contract address.
-    /// @return The address of Event contract.
+    /// @return The address of the Event contract.
     function getEventAddress(uint8 _indexOfAddress) 
         public 
         constant 
@@ -51,8 +51,8 @@ contract AddressManager is Ownable {
     }
 
     /// @dev Allows the owner to set the address of an Event contract.
-    /// @param _indexOfAddress The index of where to store the Event contract.
-    /// @param _newContractAddress The address of the latest Event contract.
+    /// @param _indexOfAddress The index to store the Event contract.
+    /// @param _newContractAddress The address of the Event contract.
     function setEventAddress(uint8 _indexOfAddress, address _newContractAddress) 
         public 
         onlyOwner 
@@ -74,8 +74,8 @@ contract AddressManager is Ownable {
     }
 
     /// @dev Allows the owner to set the address of an Oracle contract.
-    /// @param _indexOfAddress The index of where to store the Oracle contract.
-    /// @param _newContractAddress The address of the latest Oracle contract.
+    /// @param _indexOfAddress The index to store the Oracle contract.
+    /// @param _newContractAddress The address of the Oracle contract.
     function setOracleAddress(uint8 _indexOfAddress, address _newContractAddress) 
         public 
         onlyOwner 
