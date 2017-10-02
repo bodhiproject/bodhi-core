@@ -1,5 +1,7 @@
 pragma solidity ^0.4.15;
 
+import "../libs/Ownable.sol";
+
 contract AddressManager is Ownable {
     address public bodhiTokenAddress;
     mapping(uint8 => address) public eventAddresses;
@@ -19,7 +21,7 @@ contract AddressManager is Ownable {
     function getBodhiTokenAddress() 
         public 
         constant 
-        return(address) 
+        returns (address) 
     {
         return bodhiTokenAddress;
     }
@@ -36,7 +38,7 @@ contract AddressManager is Ownable {
     function getEventAddress(uint8 _indexOfAddress) 
         public 
         constant 
-        return(address) 
+        returns (address) 
     {
         return eventAddresses[_indexOfAddress];
     }
@@ -53,7 +55,7 @@ contract AddressManager is Ownable {
     function getOracleAddress(uint8 _indexOfAddress) 
         public 
         constant 
-        return(address) 
+        returns (address) 
     {
         return oracleAddresses[_indexOfAddress];
     }
