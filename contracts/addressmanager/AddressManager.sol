@@ -2,8 +2,8 @@ pragma solidity ^0.4.15;
 
 contract AddressManager is Ownable {
     address public bodhiTokenAddress;
-    mapping(uint16 => address) public eventAddresses;
-    mapping(uint16 => address) public oracleAddresses;
+    mapping(uint8 => address) public eventAddresses;
+    mapping(uint8 => address) public oracleAddresses;
 
     // Modifiers
     modifier validAddress(address _address) {
@@ -13,7 +13,7 @@ contract AddressManager is Ownable {
 
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
-    event EventAddressChanged(address indexed _oldAddress, address indexed _newAddress);
+    event EventAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
 
     function getBodhiTokenAddress() 
         public 
@@ -32,7 +32,7 @@ contract AddressManager is Ownable {
         bodhiTokenAddress = _tokenAddress;
     }
 
-    function getEventAddress(uint16 _indexOfAddress) 
+    function getEventAddress(uint8 _indexOfAddress) 
         public 
         constant 
         return(address) 
@@ -40,12 +40,12 @@ contract AddressManager is Ownable {
         return eventAddresses[_indexOfAddress];
     }
 
-    function setEventAddress(uint16 _indexOfAddress, address _contractAddress) 
+    function setEventAddress(uint8 _indexOfAddress, address _contractAddress) 
         public 
         onlyOwner 
         validAddress(_contractAddress) 
     {
-        EventAddressChanged(eventAddresses[_indexOfAddress], _contractAddress);
+        EventAddressChanged(_indexOfAddress, eventAddresses[_indexOfAddress], _contractAddress);
         eventAddresses[_indexOfAddress] = _contractAddress;
     }
 }
