@@ -1,4 +1,5 @@
 const web3 = global.web3;
+const AddressManager = artifacts.require("./AddressManager.sol");
 const Oracle = artifacts.require("./Oracle.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
@@ -36,7 +37,9 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, value: baseReward });
+        let transaction = await AddressManager.deployed();
+        oracle = await Oracle.new(transaction.address, ...Object.values(testOracleParams), 
+            { from: oracleCreator, value: baseReward });
     });
 
     describe("New Oracle", async function() {

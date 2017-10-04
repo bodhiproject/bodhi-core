@@ -71,7 +71,7 @@ contract Oracle {
         require(_averageBlockTime > 0);
         require(_arbitrationOptionMinutes > 0);
 
-        addressManager = _addressManager;
+        addressManager = IAddressManager(_addressManager);
         eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
