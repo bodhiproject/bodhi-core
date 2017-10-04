@@ -1,6 +1,7 @@
 pragma solidity ^0.4.15;
 
 import "../libs/SafeMath.sol";
+import "../addressmanager/IAddressManager.sol";
 
 /// @title Base Oracle contract
 contract Oracle {
@@ -29,6 +30,7 @@ contract Oracle {
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
 
+    IAddressManager private addressManager;
     Result[] private eventResults;
     mapping(address => Participant) private participants;
 
@@ -51,6 +53,7 @@ contract Oracle {
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
     function Oracle(
+        address _addressManager,
         bytes _eventName, 
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
@@ -60,6 +63,7 @@ contract Oracle {
         public
         payable
     {
+        require(_addressManager != address(0));
         require(msg.value >= minBaseReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
@@ -67,6 +71,7 @@ contract Oracle {
         require(_averageBlockTime > 0);
         require(_arbitrationOptionMinutes > 0);
 
+        addressManager = _addressManager;
         eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
