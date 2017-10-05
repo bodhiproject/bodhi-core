@@ -37,13 +37,15 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        let transaction = await AddressManager.deployed();
-        oracle = await Oracle.new(transaction.address, ...Object.values(testOracleParams), 
-            { from: oracleCreator, value: baseReward });
+        let addressManager = await AddressManager.deployed();
+        console.log(addressManager);
+        console.log(addressManager.address);
+        oracle = await Oracle.new(addressManager.address, ...Object.values(testOracleParams), 
+                { from: oracleCreator, value: baseReward });
     });
 
     describe("New Oracle", async function() {
-        it.only("inits the Oracle with the correct values", async function() {
+        it("inits the Oracle with the correct values", async function() {
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
