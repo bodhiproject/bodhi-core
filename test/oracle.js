@@ -16,8 +16,7 @@ contract('Oracle', function(accounts) {
         _eventResultNames: ["first", "second", "third"],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
-        _averageBlockTime: 10,
-        _arbitrationOptionMinutes: 1440
+        _arbitrationOptionEndBlock: 140
     };
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
