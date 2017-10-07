@@ -18,7 +18,7 @@ contract OracleFactory {
         uint256 _arbitrationOptionEndBlock)
         public
         payable
-        returns (TopicEvent tokenAddress) 
+        returns (Oracle oracleAddress)
     {
         bytes32 topicHash = getTopicHash(_name, _resultNames, _bettingEndBlock);
         // Oracle should not exist yet
@@ -27,8 +27,7 @@ contract OracleFactory {
         TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
 
-        TopicCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);
+        OracleCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);
         return topic;
     }
-
 }
