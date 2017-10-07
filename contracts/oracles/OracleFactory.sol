@@ -1,5 +1,6 @@
 pragma solidity ^0.4.4;
 
+import "../libs/IdUtils.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
@@ -12,7 +13,7 @@ contract OracleFactory {
 
     function createOracle(
         bytes _eventName, 
-        bytes32[] _eventResultNames,
+        bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock)
@@ -20,14 +21,17 @@ contract OracleFactory {
         payable
         returns (Oracle oracleAddress)
     {
-        bytes32 topicHash = getTopicHash(_name, _resultNames, _bettingEndBlock);
+        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+            _decisionEndBlock, _arbitrationOptionEndBlock);
         // Oracle should not exist yet
-        require(address(topics[topicHash]) == 0);
+        require(address(oracles[oracleHash]) == 0);
 
-        TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
-        topics[topicHash] = topic;
+        Oracle oracle = new Oracle(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+            _arbitrationOptionEndBlock);
+        oracles[oracleHash] = oracle;
 
-        OracleCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);
-        return topic;
+        OracleCreated(msg.sender, oracle, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+            _arbitrationOptionEndBlock, msg.value);
+        return oracle;
     }
 }
