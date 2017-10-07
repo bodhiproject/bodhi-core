@@ -52,6 +52,8 @@ contract Oracle {
     /// @param _eventResultNames The result options of the Event.
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _averageBlockTime The current average block time of the blockchain.
+    /// @param _arbitrationOptionMinutes The number of minutes allowed for starting an arbitration.
     function Oracle(
         // address _addressManager,
         bytes _eventName, 
