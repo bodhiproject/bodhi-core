@@ -37,11 +37,9 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        let addressManager = await AddressManager.deployed();
-        console.log(addressManager);
-        console.log(addressManager.address);
-        oracle = await Oracle.new(addressManager.address, ...Object.values(testOracleParams), 
-                { from: oracleCreator, value: baseReward });
+        // let addressManager = await AddressManager.deployed();
+        // console.log(addressManager.address);
+        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, value: baseReward });
     });
 
     describe("New Oracle", async function() {
