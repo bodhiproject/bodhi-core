@@ -52,16 +52,14 @@ contract Oracle {
     /// @param _eventResultNames The result options of the Event.
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
-    /// @param _averageBlockTime The current average block time of the blockchain.
-    /// @param _arbitrationOptionMinutes The number of minutes allowed for starting an arbitration.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
         // address _addressManager,
         bytes _eventName, 
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
-        uint8 _averageBlockTime,
-        uint256 _arbitrationOptionMinutes) 
+        uint256 _arbitrationOptionEndBlock) 
         public
         payable
     {
@@ -70,8 +68,7 @@ contract Oracle {
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
-        require(_averageBlockTime > 0);
-        require(_arbitrationOptionMinutes > 0);
+        require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
         // addressManager = IAddressManager(_addressManager);
         eventName = _eventName;
@@ -85,10 +82,7 @@ contract Oracle {
 
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
-
-        uint256 arbitrationBlocks = getArbitrationOptionBlocks(_averageBlockTime, _arbitrationOptionMinutes);
-        arbitrationOptionEndBlock = decisionEndBlock.add(arbitrationBlocks);
-        assert(arbitrationOptionEndBlock > decisionEndBlock);
+        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock, msg.value);
