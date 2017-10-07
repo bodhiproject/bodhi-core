@@ -52,10 +52,7 @@ contract('Oracle', function(accounts) {
                 "eventBettingEndBlock does not match");
             assert.equal(await oracle.decisionEndBlock.call(), testOracleParams._decisionEndBlock, 
                 "decisionEndBlock does not match");
-
-            let arbitrationBlocks = testOracleParams._arbitrationOptionMinutes / testOracleParams._averageBlockTime;
-            let expectedArbitrationOptionEndBlock = testOracleParams._decisionEndBlock + arbitrationBlocks;
-            assert.equal(await oracle.arbitrationOptionEndBlock.call(), expectedArbitrationOptionEndBlock, 
+            assert.equal(await oracle.arbitrationOptionEndBlock.call(), testOracleParams._arbitrationOptionEndBlock, 
                 "arbitrationEndBlock does not match");
         });
 
