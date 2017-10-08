@@ -84,7 +84,7 @@ contract Oracle is Ownable {
     }
 
     function() external payable {
-        addBaseReward
+        this.addBaseReward.value(msg.value)();
     }
 
     function addBaseReward() external payable onlyOwner {
