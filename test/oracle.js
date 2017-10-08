@@ -140,9 +140,24 @@ contract('Oracle', function(accounts) {
         });
     });
 
+    describe("fallback function", async function() {
+        it("calls addBaseReward and sets the contract value", async function() {
+            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
+
+            await requester.sendTransactionAsync({
+                to: o.address,
+                from: oracleCreator,
+                value: baseReward
+            });
+
+            let balance = await web3.eth.getBalance(o.address);
+            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+        });
+    });
+
     describe("addBaseReward", async function() {
         it("accepts the baseReward", async function() {
-            let balance = await web3.eth.getBalance(oracle);
+            let balance = await web3.eth.getBalance(oracle.address);
             assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
         });
 
