@@ -62,8 +62,7 @@ contract('Oracle', function(accounts) {
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
             let o = await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
@@ -90,8 +89,7 @@ contract('Oracle', function(accounts) {
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
@@ -109,8 +107,7 @@ contract('Oracle', function(accounts) {
                 _eventResultNames: ["first"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
             try {
@@ -127,8 +124,7 @@ contract('Oracle', function(accounts) {
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 99,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
             try {
@@ -139,32 +135,13 @@ contract('Oracle', function(accounts) {
             }
         });
 
-        it("throws if the averageBlockTime is not greater than 0", async function() {
+        it("throws if the arbitrationOptionEndBlock is not greater than decisionEndBlock", async function() {
             let params = {
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 0,
-                _arbitrationOptionMinutes: 1440
-            };
-
-            try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
-                assert.fail();
-            } catch(e) {
-                assert.match(e.message, /invalid opcode/);
-            }
-        });
-
-        it("throws if the _arbitrationOptionMinutes is not greater than 0", async function() {
-            let params = {
-                _eventName: "test",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 0
+                _arbitrationOptionEndBlock: 110
             };
 
             try {
