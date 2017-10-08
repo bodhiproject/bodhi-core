@@ -141,6 +141,11 @@ contract('Oracle', function(accounts) {
     });
 
     describe("addBaseReward", async function() {
+        it("accepts the baseReward", async function() {
+            let balance = await web3.eth.getBalance(oracle);
+            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+        });
+
         it("throws if the baseReward is not enough", async function() {
             let invalidMinBaseReward = web3.toBigNumber(10e16);
             assert.isBelow(invalidMinBaseReward.toNumber(), 
