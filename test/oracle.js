@@ -66,22 +66,8 @@ contract('Oracle', function(accounts) {
                 _arbitrationOptionEndBlock: 140
             };
 
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
             assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
-        });
-
-        it("throws if the baseReward is not enough", async function() {
-            let invalidMinBaseReward = web3.toBigNumber(10e16);
-            assert.isBelow(invalidMinBaseReward.toNumber(), 
-                web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
-                "Invalid minBaseReward should be below minBaseReward");
-
-            try {
-                await Oracle.new(...Object.values(testOracleParams), { from: participant1, value: invalidMinBaseReward });
-                assert.fail();
-            } catch(e) {
-                assert.match(e.message, /invalid opcode/);
-            }
         });
 
         it("throws if the eventName is empty", async function() {
@@ -95,7 +81,7 @@ contract('Oracle', function(accounts) {
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -112,7 +98,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -129,7 +115,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -146,7 +132,25 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+    });
+
+    describe("addBaseReward", async function() {
+        it("throws if the baseReward is not enough", async function() {
+            let invalidMinBaseReward = web3.toBigNumber(10e16);
+            assert.isBelow(invalidMinBaseReward.toNumber(), 
+                web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
+                "Invalid minBaseReward should be below minBaseReward");
+
+            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
+
+            try {
+                o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
