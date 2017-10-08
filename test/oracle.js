@@ -40,7 +40,7 @@ contract('Oracle', function(accounts) {
     });
 
     describe("New Oracle", async function() {
-        it.only("inits the Oracle with the correct values", async function() {
+        it("inits the Oracle with the correct values", async function() {
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
