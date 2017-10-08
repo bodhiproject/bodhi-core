@@ -1,9 +1,10 @@
 pragma solidity ^0.4.15;
 
+import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 
 /// @title Base Oracle contract
-contract Oracle {
+contract Oracle is Ownable {
     using SafeMath for uint256;
 
     struct Participant {
@@ -81,6 +82,10 @@ contract Oracle {
 
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock, msg.value);
+    }
+
+    function() external payable onlyOwner {
+
     }
 
     /// @notice Vote an Event result which requires BOT payment.
