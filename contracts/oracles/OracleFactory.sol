@@ -28,6 +28,7 @@ contract OracleFactory {
 
         Oracle oracle = new Oracle(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             _arbitrationOptionEndBlock);
+        oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;
 
         OracleCreated(msg.sender, oracle, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
