@@ -42,7 +42,8 @@ contract Oracle is Ownable {
 
     // Events
     event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
-        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
+        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
+    event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
     event EarningsWithdrawn(uint256 _amountWithdrawn);
 
@@ -59,9 +60,7 @@ contract Oracle is Ownable {
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 
         public
-        payable
     {
-        require(msg.value >= minBaseReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
@@ -81,11 +80,16 @@ contract Oracle is Ownable {
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            arbitrationOptionEndBlock, msg.value);
+            arbitrationOptionEndBlock);
     }
 
-    function() external payable onlyOwner {
+    function() external payable {
+        addBaseReward
+    }
 
+    function addBaseReward() external payable onlyOwner {
+        require(msg.value >= minBaseReward);
+        OracleFunded(msg.value);
     }
 
     /// @notice Vote an Event result which requires BOT payment.
