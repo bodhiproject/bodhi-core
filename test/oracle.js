@@ -132,7 +132,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -142,7 +142,7 @@ contract('Oracle', function(accounts) {
 
     describe("fallback function", async function() {
         it("calls addBaseReward and sets the contract value", async function() {
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
+            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
             await requester.sendTransactionAsync({
                 to: o.address,
