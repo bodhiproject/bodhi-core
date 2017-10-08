@@ -5,6 +5,8 @@ const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
 const Utils = require('./helpers/utils');
 
+const ethAsync = bluebird.promisifyAll(web3.eth);
+
 contract('Oracle', function(accounts) {
     // These should match the decimals in the contract.
     const nativeDecimals = 18;
@@ -132,7 +134,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -144,7 +146,7 @@ contract('Oracle', function(accounts) {
         it("calls addBaseReward and sets the contract value", async function() {
             let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
-            await requester.sendTransactionAsync({
+            await ethAsync.sendTransactionAsync({
                 to: o.address,
                 from: oracleCreator,
                 value: baseReward
@@ -167,7 +169,7 @@ contract('Oracle', function(accounts) {
                 web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
                 "Invalid minBaseReward should be below minBaseReward");
 
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
+            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
             try {
                 o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
