@@ -18,12 +18,12 @@ contract('OracleFactory', function(accounts) {
         _decisionEndBlock: 120,
         _arbitrationOptionEndBlock: 140
     };
+    const oracleFactoryCreator = accounts[0];
+    const oracleCreator = accounts[1];
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
 
     let oracleFactory;
-    let oracleFactoryCreator = accounts[0];
     let oracle;
-    let oracleCreator = accounts[1];
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
@@ -31,7 +31,8 @@ contract('OracleFactory', function(accounts) {
     beforeEach(async function() {
         oracleFactory = await OracleFactory.deployed({ from: oracleFactoryCreator });
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
-            { from: oracleCreator, value: baseReward});
+            { from: oracleCreator, value: baseReward });
+        console.log(transaction);
         oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, '_oracle'));
     });
 

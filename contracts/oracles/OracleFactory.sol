@@ -26,7 +26,7 @@ contract OracleFactory {
         // Oracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
 
-        Oracle oracle = new Oracle(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+        Oracle oracle = new Oracle(msg.sender, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             _arbitrationOptionEndBlock);
         oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;

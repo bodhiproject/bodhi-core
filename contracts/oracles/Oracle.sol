@@ -54,11 +54,13 @@ contract Oracle is Ownable {
     /// @param _decisionEndBlock The block when Oracle voting will end.
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
-        bytes _eventName, 
+        address _owner,
+        bytes _eventName,
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 
+        Ownable(_owner)
         public
     {
         require(_eventName.length > 0);
