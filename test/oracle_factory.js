@@ -40,14 +40,18 @@ contract('OracleFactory', function(accounts) {
             assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventName, 
                 'eventName does not match');
-            // assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], 
-            //     'Result name 1 does not match.');
-            // assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1],
-            //     'Result name 2 does not match.');
-            // assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2],
-            //     'Result name 3 does not match.');
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testParams._eventResultNames[0], 
+                'eventResultName 0 does not match.');
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testParams._eventResultNames[1], 
+                'eventResultName 1 does not match.');
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), testParams._eventResultNames[2], 
+                'eventResultName 2 does not match.');
             assert.equal(await oracle.eventBettingEndBlock.call(), testParams._eventBettingEndBlock,
                 'eventBettingEndBlock does not match');
+            assert.equal(await oracle.decisionEndBlock.call(), testParams._decisionEndBlock,
+                'decisionEndBlock does not match');
+            assert.equal(await oracle.arbitrationOptionEndBlock.call(), testParams._arbitrationOptionEndBlock,
+                'arbitrationOptionEndBlock does not match');
         });
 
         it('does not allow recreating the same Oracle twice', async function() {
