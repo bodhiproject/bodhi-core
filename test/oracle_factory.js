@@ -15,9 +15,6 @@ contract('OracleFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const oracleFactoryCreator = accounts[0];
     const oracleCreator = accounts[1];
-    const participant1 = accounts[2];
-    const participant2 = accounts[3];
-    const participant3 = accounts[4];
 
     const testParams = {
         _eventName: 'Test Oracle',
@@ -77,31 +74,16 @@ contract('OracleFactory', function(accounts) {
                 assert.match(e.message, /invalid opcode/);
             }
         });
+    });
 
-        it("allows voting if the decisionEndBlock has not been reached", async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = await ethAsync.getBlockNumberAsync();
-            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
-                "Block should be at or after eventBettingEndBlock");
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                "Block should be below decisionEndBlock");
+    describe('doesOracleExist', async function() {
+        it('returns true if the Oracle exists', async function() {
+            var oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
+            assert.isTrue(oracleExists, 'Oracle 1 should already exist');
 
-            assert.equal(await oracle.getStakeContributed({ from: participant1 }), 0, 
-                "participant1 should have 0 stakeContributed");
-            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
-                "participant1 should not have set result");
-            assert.equal(await oracle.totalStakeContributed.call(), 0, "totalStakeContributed should be 0");
-
-            let votedResultIndex = 2;
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
-
-            let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
-            assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
-                "participant1 stakeContributed does not match");
-            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
-            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
-                "participant1 voted resultIndex does not match");
+            var oracleExists = await oracleFactory.doesOracleExist('oracle 2', ['first', 'second', 'third'], 100, 120, 
+                140);
+            assert.isFalse(oracleExists, 'Oracle 2 should not exist');
         });
     });
 });
