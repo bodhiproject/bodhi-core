@@ -142,43 +142,43 @@ contract('Oracle', function(accounts) {
         });
     });
 
-    describe("fallback function", async function() {
-        it("calls addBaseReward and sets the contract value", async function() {
-            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+    // describe("fallback function", async function() {
+    //     it("calls addBaseReward and sets the contract value", async function() {
+    //         let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
-            await ethAsync.sendTransactionAsync({
-                to: o.address,
-                from: oracleCreator,
-                value: baseReward
-            });
+    //         await ethAsync.sendTransactionAsync({
+    //             to: o.address,
+    //             from: oracleCreator,
+    //             value: baseReward
+    //         });
 
-            let balance = await web3.eth.getBalance(o.address);
-            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
-        });
-    });
+    //         let balance = await web3.eth.getBalance(o.address);
+    //         assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+    //     });
+    // });
 
-    describe("addBaseReward", async function() {
-        it("accepts the baseReward", async function() {
-            let balance = await web3.eth.getBalance(oracle.address);
-            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
-        });
+    // describe("addBaseReward", async function() {
+    //     it("accepts the baseReward", async function() {
+    //         let balance = await web3.eth.getBalance(oracle.address);
+    //         assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+    //     });
 
-        it("throws if the baseReward is not enough", async function() {
-            let invalidMinBaseReward = web3.toBigNumber(10e16);
-            assert.isBelow(invalidMinBaseReward.toNumber(), 
-                web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
-                "Invalid minBaseReward should be below minBaseReward");
+    //     it("throws if the baseReward is not enough", async function() {
+    //         let invalidMinBaseReward = web3.toBigNumber(10e16);
+    //         assert.isBelow(invalidMinBaseReward.toNumber(), 
+    //             web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
+    //             "Invalid minBaseReward should be below minBaseReward");
 
-            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+    //         let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
-            try {
-                o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
-                assert.fail();
-            } catch(e) {
-                assert.match(e.message, /invalid opcode/);
-            }
-        });
-    });
+    //         try {
+    //             o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
+    //             assert.fail();
+    //         } catch(e) {
+    //             assert.match(e.message, /invalid opcode/);
+    //         }
+    //     });
+    // });
 
     describe("voteResult", async function() {
         it("allows voting", async function() {
