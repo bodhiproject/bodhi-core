@@ -148,19 +148,6 @@ contract Oracle is Ownable {
         return eventResults[_eventResultIndex].name;
     }
 
-    /// @notice Gets the number of blocks allowed for arbitration.
-    /// @param _averageBlockTime The current average mining block time.
-    /// @param _arbitrationOptionMinutes The number of minutes allowed for initiating arbitration.
-    function getArbitrationOptionBlocks(
-        uint8 _averageBlockTime, 
-        uint256 _arbitrationOptionMinutes) 
-        public 
-        constant 
-        returns(uint256) 
-    {
-        return _arbitrationOptionMinutes.div(uint256(_averageBlockTime));
-    }
-
     /// @notice Gets the stake contributed by the Oracle participant.
     /// @return The amount of stake contributed by the Oracle participant.
     function getStakeContributed() public constant returns(uint256) {
