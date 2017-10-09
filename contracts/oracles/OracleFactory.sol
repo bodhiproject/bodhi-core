@@ -35,4 +35,19 @@ contract OracleFactory {
             _arbitrationOptionEndBlock, msg.value);
         return oracle;
     }
+
+    function doesOracleExist(
+        bytes _eventName, 
+        bytes32[] _eventResultNames, 
+        uint256 _eventBettingEndBlock,
+        uint256 _decisionEndBlock,
+        uint256 _arbitrationOptionEndBlock)
+        public
+        constant
+        returns (bool)
+    {
+        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+            _decisionEndBlock, _arbitrationOptionEndBlock);
+        return address(oracles[oracleHash]) != 0;
+    }
 }

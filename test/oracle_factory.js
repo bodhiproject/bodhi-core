@@ -30,7 +30,7 @@ contract('OracleFactory', function(accounts) {
     });
 
     describe("createOracle", async function() {
-        it('initializes all the values of the new Oracle correctly', async function() {
+        it("initializes all the values of the new Oracle", async function() {
             assert.equal(await oracle.owner.call(), oracleCreator, "owner does not match");
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventBettingEndBlock, 
                 "eventName does not match");
@@ -42,6 +42,17 @@ contract('OracleFactory', function(accounts) {
             //     'Result name 3 does not match.');
             assert.equal(await oracle.eventBettingEndBlock.call(), testParams._eventBettingEndBlock,
                 "eventBettingEndBlock does not match");
+        });
+
+        it("does not allow recreating the same Oracle twice", async function() {
+            let oracleExists = await eventFactory.doesOracleExist(...Object.values(testParams));
+            assert.isTrue(oracleExists, "Oracle should already exist");
+
+            try {
+                await oracleFactory.createOracle(...Object.values(testParams), { from: oracleCreator });
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
     });
 });
