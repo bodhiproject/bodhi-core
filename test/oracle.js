@@ -37,7 +37,7 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, gas: 10000000 });
+        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
         await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
 
