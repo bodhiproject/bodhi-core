@@ -2,10 +2,8 @@ const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const Oracle = artifacts.require('./oracles/Oracle.sol');
 const BlockHeightManager = require('./helpers/block_height_manager');
 const Utils = require('./helpers/utils');
-const bluebird = require('bluebird');
 const assert = require('chai').assert;
 const web3 = global.web3;
-const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('OracleFactory', function(accounts) {
     // These should match the decimals in the Oracle contract.

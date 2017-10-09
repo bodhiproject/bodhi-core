@@ -11,6 +11,12 @@ contract OracleFactory {
         uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, 
         uint256 _baseRewardAmount);
 
+    /// @notice Creates new Oracle contract.
+    /// @param _eventName The name of the Event this Oracle will arbitrate.
+    /// @param _eventResultNames The result options of the Event.
+    /// @param _eventBettingEndBlock The block when Event betting ended.
+    /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function createOracle(
         bytes _eventName, 
         bytes32[] _eventResultNames, 
@@ -36,6 +42,12 @@ contract OracleFactory {
         return oracle;
     }
 
+    /// @notice Returns if the Oracle has already been created for a specific Event.
+    /// @param _eventName The name of the Event this Oracle will arbitrate.
+    /// @param _eventResultNames The result options of the Event.
+    /// @param _eventBettingEndBlock The block when Event betting ended.
+    /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function doesOracleExist(
         bytes _eventName, 
         bytes32[] _eventResultNames, 

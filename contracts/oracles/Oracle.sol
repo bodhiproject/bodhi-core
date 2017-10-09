@@ -47,7 +47,7 @@ contract Oracle is Ownable {
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
     event EarningsWithdrawn(uint256 _amountWithdrawn);
 
-    /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
+    /// @notice Creates new Oracle contract.
     /// @param _owner The address of the owner.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
     /// @param _eventResultNames The result options of the Event.
@@ -86,11 +86,12 @@ contract Oracle is Ownable {
             arbitrationOptionEndBlock);
     }
 
+    /// @notice Fallback function that adds the base reward.
     function() external payable {
         addBaseReward();
     }
 
-    /// @notice Allows the owner of the Oracle to deposit the base reward.
+    /// @notice Deposit the base reward for the Oracle.
     function addBaseReward() public payable {
         require(msg.value >= minBaseReward);
         OracleFunded(msg.value);
