@@ -12,8 +12,17 @@ contract('Oracle', function(accounts) {
     const nativeDecimals = 18;
     const botDecimals = 8;
 
+    const oracleCreator = accounts[0];
+    const participant1 = accounts[1];
+    const participant2 = accounts[2];
+    const participant3 = accounts[3];
+    const participant4 = accounts[4];
+    const participant5 = accounts[5];
+    const participant6 = accounts[6];
+
     const blockHeightManager = new BlockHeightManager(web3);
     const testOracleParams = {
+        _owner: oracleCreator,
         _eventName: "test",
         _eventResultNames: ["first", "second", "third"],
         _eventBettingEndBlock: 100,
@@ -22,13 +31,6 @@ contract('Oracle', function(accounts) {
     };
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
-    const oracleCreator = accounts[0];
-    const participant1 = accounts[1];
-    const participant2 = accounts[2];
-    const participant3 = accounts[3];
-    const participant4 = accounts[4];
-    const participant5 = accounts[5];
-    const participant6 = accounts[6];
 
     let oracle;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
@@ -43,6 +45,7 @@ contract('Oracle', function(accounts) {
 
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
+            assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
@@ -61,6 +64,7 @@ contract('Oracle', function(accounts) {
 
         it("can handle a long eventName", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "This is a super long event name that is longer than 32 bytes. It should still work.",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -74,6 +78,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the eventName is empty", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -92,6 +97,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the eventResultNames array is not greater than 1", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first"],
                 _eventBettingEndBlock: 100,
@@ -109,6 +115,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the decisionEndBlock is not greater than eventBettingEndBlock", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -126,6 +133,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the arbitrationOptionEndBlock is not greater than decisionEndBlock", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
