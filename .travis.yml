@@ -19,7 +19,7 @@ install:
   - npm install -g truffle
   - npm install bluebird
   - npm install chai
-  - npm install
 
 script:
+  - truffle version
   - testrpc & truffle test
