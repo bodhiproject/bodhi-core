@@ -22,7 +22,7 @@ contract Ownable {
     event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
 
     /// @dev The Ownable constructor sets the original `owner` of the contract to the sender account.
-    function Ownable(address _owner) {
+    function Ownable(address _owner) validAddress(_owner) {
         owner = _owner;
     }
 
