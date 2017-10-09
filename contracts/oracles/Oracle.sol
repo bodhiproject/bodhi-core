@@ -48,6 +48,7 @@ contract Oracle is Ownable {
     event EarningsWithdrawn(uint256 _amountWithdrawn);
 
     /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
+    /// @param _owner The address of the owner.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
     /// @param _eventResultNames The result options of the Event.
     /// @param _eventBettingEndBlock The block when Event betting ended.
@@ -90,7 +91,7 @@ contract Oracle is Ownable {
     }
 
     /// @notice Allows the owner of the Oracle to deposit the base reward.
-    function addBaseReward() public payable onlyOwner {
+    function addBaseReward() public payable {
         require(msg.value >= minBaseReward);
         OracleFunded(msg.value);
     }

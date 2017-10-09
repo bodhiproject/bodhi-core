@@ -32,14 +32,13 @@ contract('OracleFactory', function(accounts) {
         oracleFactory = await OracleFactory.deployed({ from: oracleFactoryCreator });
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward });
-        console.log(transaction);
         oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, '_oracle'));
     });
 
     describe('createOracle', async function() {
         it('initializes all the values of the new Oracle', async function() {
             assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
-            assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventBettingEndBlock, 
+            assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventName, 
                 'eventName does not match');
             // assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], 
             //     'Result name 1 does not match.');
