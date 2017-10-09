@@ -1,5 +1,5 @@
-const OracleFactory = artifacts.require("./oracles/OracleFactory.sol");
-const Oracle = artifacts.require("./oracles/Oracle.sol");
+const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
+const Oracle = artifacts.require('./oracles/Oracle.sol');
 const BlockHeightManager = require('./helpers/block_height_manager');
 const Utils = require('./helpers/utils');
 const assert = require('chai').assert;
@@ -12,8 +12,8 @@ contract('OracleFactory', function(accounts) {
 
     const blockHeightManager = new BlockHeightManager(web3);
     const testParams = {
-        _eventName: "Test Oracle",
-        _eventResultNames: ["first", "second", "third"],
+        _eventName: 'Test Oracle',
+        _eventResultNames: ['first', 'second', 'third'],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
         _arbitrationOptionEndBlock: 140
@@ -32,14 +32,14 @@ contract('OracleFactory', function(accounts) {
         oracleFactory = await OracleFactory.deployed({ from: oracleFactoryCreator });
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward});
-        oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, "_oracle"));
+        oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, '_oracle'));
     });
 
-    describe("createOracle", async function() {
-        it("initializes all the values of the new Oracle", async function() {
-            assert.equal(await oracle.owner.call(), oracleCreator, "owner does not match");
+    describe('createOracle', async function() {
+        it('initializes all the values of the new Oracle', async function() {
+            assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventBettingEndBlock, 
-                "eventName does not match");
+                'eventName does not match');
             // assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], 
             //     'Result name 1 does not match.');
             // assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1],
@@ -47,12 +47,12 @@ contract('OracleFactory', function(accounts) {
             // assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2],
             //     'Result name 3 does not match.');
             assert.equal(await oracle.eventBettingEndBlock.call(), testParams._eventBettingEndBlock,
-                "eventBettingEndBlock does not match");
+                'eventBettingEndBlock does not match');
         });
 
-        it("does not allow recreating the same Oracle twice", async function() {
-            let oracleExists = await eventFactory.doesOracleExist(...Object.values(testParams));
-            assert.isTrue(oracleExists, "Oracle should already exist");
+        it('does not allow recreating the same Oracle twice', async function() {
+            let oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
+            assert.isTrue(oracleExists, 'Oracle should already exist');
 
             try {
                 await oracleFactory.createOracle(...Object.values(testParams), 
