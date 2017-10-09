@@ -6,6 +6,10 @@ const assert = require('chai').assert;
 const web3 = global.web3;
 
 contract('OracleFactory', function(accounts) {
+    // These should match the decimals in the Oracle contract.
+    const nativeDecimals = 18;
+    const botDecimals = 8;
+
     const blockHeightManager = new BlockHeightManager(web3);
     const testParams = {
         _eventName: "Test Oracle",
@@ -14,6 +18,7 @@ contract('OracleFactory', function(accounts) {
         _decisionEndBlock: 120,
         _arbitrationOptionEndBlock: 140
     };
+    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
 
     let oracleFactory;
     let oracleFactoryCreator = accounts[0];
@@ -25,7 +30,8 @@ contract('OracleFactory', function(accounts) {
 
     beforeEach(async function() {
         oracleFactory = await OracleFactory.deployed({ from: oracleFactoryCreator });
-        let transaction = await oracleFactory.createOracle(...Object.values(testParams), { from: oracleCreator });
+        let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
+            { from: oracleCreator, value: baseReward});
         oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, "_oracle"));
     });
 
@@ -49,7 +55,8 @@ contract('OracleFactory', function(accounts) {
             assert.isTrue(oracleExists, "Oracle should already exist");
 
             try {
-                await oracleFactory.createOracle(...Object.values(testParams), { from: oracleCreator });
+                await oracleFactory.createOracle(...Object.values(testParams), 
+                    { from: oracleCreator, value: baseReward});
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
