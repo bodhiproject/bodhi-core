@@ -84,10 +84,11 @@ contract Oracle is Ownable {
     }
 
     function() external payable {
-        this.addBaseReward.value(msg.value)();
+        addBaseReward();
     }
 
-    function addBaseReward() external payable onlyOwner {
+    /// @notice Allows the owner of the Oracle to deposit the base reward.
+    function addBaseReward() public payable onlyOwner {
         require(msg.value >= minBaseReward);
         OracleFunded(msg.value);
     }
