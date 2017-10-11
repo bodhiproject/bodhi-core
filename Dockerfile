@@ -10,10 +10,12 @@ RUN apt-get install -y vim
 RUN apt-get install -y curl
 RUN apt-get -y autoclean
 
-# copy project files
+# create directory and add module list
 WORKDIR /bodhi-core
-ADD . /bodhi-core
+ADD package.json package.json
 
 # install node modules
 RUN npm install -g truffle@^4.0.0-beta.2
 RUN npm install
+
+ADD . .
