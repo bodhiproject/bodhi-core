@@ -7,9 +7,10 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # update the repository sources list
 # and install dependencies
-RUN apt-get update \
-    && apt-get install -y curl \
-    && apt-get -y autoclean
+RUN apt-get update
+RUN apt-get install -y vim
+RUN apt-get install -y curl
+RUN apt-get -y autoclean
 
 # nvm environment variables
 ENV NVM_DIR /usr/local/nvm
