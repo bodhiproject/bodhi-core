@@ -1,0 +1,29 @@
+{
+  "name": "bodhi-core",
+  "version": "1.0.0",
+  "description": "Bodhi Core",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "chai": "^4.1.2"
+  },
+  "devDependencies": {
+    "truffle": "^4.0.0-beta.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bodhiproject/bodhi-core.git"
+  },
+  "author": "Deric Walintukan <deric@bodhi.network>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bodhiproject/bodhi-core/issues"
+  },
+  "homepage": "https://github.com/bodhiproject/bodhi-core#readme"
+}
