@@ -1,6 +1,7 @@
 pragma solidity ^0.4.15;
 
 import "../libs/SafeMath.sol";
+import "../addressmanager/IAddressManager.sol";
 
 /// @title Base Oracle contract
 contract Oracle {
@@ -29,6 +30,7 @@ contract Oracle {
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
 
+    IAddressManager private addressManager;
     Result[] private eventResults;
     mapping(address => Participant) private participants;
 
@@ -50,23 +52,24 @@ contract Oracle {
     /// @param _eventResultNames The result options of the Event.
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
         bytes _eventName, 
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
-        uint8 _averageBlockTime,
-        uint256 _arbitrationOptionMinutes) 
+        uint256 _arbitrationOptionEndBlock) 
         public
         payable
     {
+        // require(_addressManager != address(0));
         require(msg.value >= minBaseReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
-        require(_averageBlockTime > 0);
-        require(_arbitrationOptionMinutes > 0);
+        require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
+        // addressManager = IAddressManager(_addressManager);
         eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
@@ -78,10 +81,7 @@ contract Oracle {
 
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
-
-        uint256 arbitrationBlocks = getArbitrationOptionBlocks(_averageBlockTime, _arbitrationOptionMinutes);
-        arbitrationOptionEndBlock = decisionEndBlock.add(arbitrationBlocks);
-        assert(arbitrationOptionEndBlock > decisionEndBlock);
+        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock, msg.value);

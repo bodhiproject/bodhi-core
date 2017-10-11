@@ -16,7 +16,7 @@ contract EventFactory {
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock)
         public
-        returns (TopicEvent tokenAddress) 
+        returns (TopicEvent topicEventAddress) 
     {
         bytes32 topicHash = getTopicHash(_name, _resultNames, _bettingEndBlock);
         // Topic should not exist yet

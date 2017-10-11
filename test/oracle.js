@@ -1,4 +1,5 @@
 const web3 = global.web3;
+const AddressManager = artifacts.require("./AddressManager.sol");
 const Oracle = artifacts.require("./Oracle.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
@@ -16,8 +17,7 @@ contract('Oracle', function(accounts) {
         _eventResultNames: ["first", "second", "third"],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
-        _averageBlockTime: 10,
-        _arbitrationOptionMinutes: 1440
+        _arbitrationOptionEndBlock: 140
     };
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
@@ -36,6 +36,8 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
+        // let addressManager = await AddressManager.deployed();
+        // console.log(addressManager.address);
         oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, value: baseReward });
     });
 
@@ -53,10 +55,7 @@ contract('Oracle', function(accounts) {
                 "eventBettingEndBlock does not match");
             assert.equal(await oracle.decisionEndBlock.call(), testOracleParams._decisionEndBlock, 
                 "decisionEndBlock does not match");
-
-            let arbitrationBlocks = testOracleParams._arbitrationOptionMinutes / testOracleParams._averageBlockTime;
-            let expectedArbitrationOptionEndBlock = testOracleParams._decisionEndBlock + arbitrationBlocks;
-            assert.equal(await oracle.arbitrationOptionEndBlock.call(), expectedArbitrationOptionEndBlock, 
+            assert.equal(await oracle.arbitrationOptionEndBlock.call(), testOracleParams._arbitrationOptionEndBlock, 
                 "arbitrationEndBlock does not match");
         });
 
