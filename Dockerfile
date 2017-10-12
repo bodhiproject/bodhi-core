@@ -1,7 +1,6 @@
-# set the base image to Debian
-# https://hub.docker.com/_/debian/
-FROM debian:latest
-FROM node:latest
+# set the base image to Node
+# which is built off Debian Jessie
+FROM node:8.6
 
 # update the repository sources list
 # and install dependencies
