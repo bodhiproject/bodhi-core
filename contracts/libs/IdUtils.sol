@@ -8,7 +8,7 @@ library IdUtils {
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 
         internal
-        constant
+        pure
         returns (bytes32)
     {
         return keccak256(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
