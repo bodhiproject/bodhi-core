@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - "7"
+  - "8"
 
 env:
   - CXX=g++-4.8
@@ -15,11 +15,8 @@ addons:
     - g++-4.8
 
 install:
-  - npm install -g ethereumjs-testrpc@4.1.1
-  - npm install -g truffle
-  - npm install bluebird
-  - npm install chai
+  - npm install -g truffle@^4.0.0-beta.2
   - npm install
 
 script:
-  - testrpc & truffle test
+  - truffle test

@@ -1,9 +1,10 @@
 pragma solidity ^0.4.15;
 
+import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 
 /// @title Base Oracle contract
-contract Oracle {
+contract Oracle is Ownable {
     using SafeMath for uint256;
 
     struct Participant {
@@ -41,31 +42,32 @@ contract Oracle {
 
     // Events
     event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
-        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
+        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
+    event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
     event EarningsWithdrawn(uint256 _amountWithdrawn);
 
-    /// @notice Creates new Oracle contract. Requires payment of the minBaseReward. 
+    /// @notice Creates new Oracle contract.
+    /// @param _owner The address of the owner.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
     /// @param _eventResultNames The result options of the Event.
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
-        bytes _eventName, 
+        address _owner,
+        bytes _eventName,
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
-        uint8 _averageBlockTime,
-        uint256 _arbitrationOptionMinutes) 
+        uint256 _arbitrationOptionEndBlock) 
+        Ownable(_owner)
         public
-        payable
     {
-        require(msg.value >= minBaseReward);
         require(_eventName.length > 0);
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
-        require(_averageBlockTime > 0);
-        require(_arbitrationOptionMinutes > 0);
+        require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
         eventName = _eventName;
 
@@ -78,13 +80,21 @@ contract Oracle {
 
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
-
-        uint256 arbitrationBlocks = getArbitrationOptionBlocks(_averageBlockTime, _arbitrationOptionMinutes);
-        arbitrationOptionEndBlock = decisionEndBlock.add(arbitrationBlocks);
-        assert(arbitrationOptionEndBlock > decisionEndBlock);
+        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
         OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            arbitrationOptionEndBlock, msg.value);
+            arbitrationOptionEndBlock);
+    }
+
+    /// @notice Fallback function that adds the base reward.
+    function() external payable {
+        addBaseReward();
+    }
+
+    /// @notice Deposit the base reward for the Oracle.
+    function addBaseReward() public payable {
+        require(msg.value >= minBaseReward);
+        OracleFunded(msg.value);
     }
 
     /// @notice Vote an Event result which requires BOT payment.
@@ -136,19 +146,6 @@ contract Oracle {
         returns (bytes32) 
     {
         return eventResults[_eventResultIndex].name;
-    }
-
-    /// @notice Gets the number of blocks allowed for arbitration.
-    /// @param _averageBlockTime The current average mining block time.
-    /// @param _arbitrationOptionMinutes The number of minutes allowed for initiating arbitration.
-    function getArbitrationOptionBlocks(
-        uint8 _averageBlockTime, 
-        uint256 _arbitrationOptionMinutes) 
-        public 
-        constant 
-        returns(uint256) 
-    {
-        return _arbitrationOptionMinutes.div(uint256(_averageBlockTime));
     }
 
     /// @notice Gets the stake contributed by the Oracle participant.

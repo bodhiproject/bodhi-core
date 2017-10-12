@@ -5,22 +5,13 @@ const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
 const Utils = require('./helpers/utils');
 
+const ethAsync = bluebird.promisifyAll(web3.eth);
+
 contract('Oracle', function(accounts) {
     // These should match the decimals in the contract.
     const nativeDecimals = 18;
     const botDecimals = 8;
 
-    const blockHeightManager = new BlockHeightManager(web3);
-    const testOracleParams = {
-        _eventName: "test",
-        _eventResultNames: ["first", "second", "third"],
-        _eventBettingEndBlock: 100,
-        _decisionEndBlock: 120,
-        _averageBlockTime: 10,
-        _arbitrationOptionMinutes: 1440
-    };
-    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
-    const validVotingBlock = testOracleParams._eventBettingEndBlock;
     const oracleCreator = accounts[0];
     const participant1 = accounts[1];
     const participant2 = accounts[2];
@@ -29,6 +20,18 @@ contract('Oracle', function(accounts) {
     const participant5 = accounts[5];
     const participant6 = accounts[6];
 
+    const blockHeightManager = new BlockHeightManager(web3);
+    const testOracleParams = {
+        _owner: oracleCreator,
+        _eventName: "test",
+        _eventResultNames: ["first", "second", "third"],
+        _eventBettingEndBlock: 100,
+        _decisionEndBlock: 120,
+        _arbitrationOptionEndBlock: 140
+    };
+    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
+    const validVotingBlock = testOracleParams._eventBettingEndBlock;
+
     let oracle;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
@@ -36,11 +39,13 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator, value: baseReward });
+        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+        await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
 
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
+            assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
             assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
@@ -53,54 +58,37 @@ contract('Oracle', function(accounts) {
                 "eventBettingEndBlock does not match");
             assert.equal(await oracle.decisionEndBlock.call(), testOracleParams._decisionEndBlock, 
                 "decisionEndBlock does not match");
-
-            let arbitrationBlocks = testOracleParams._arbitrationOptionMinutes / testOracleParams._averageBlockTime;
-            let expectedArbitrationOptionEndBlock = testOracleParams._decisionEndBlock + arbitrationBlocks;
-            assert.equal(await oracle.arbitrationOptionEndBlock.call(), expectedArbitrationOptionEndBlock, 
+            assert.equal(await oracle.arbitrationOptionEndBlock.call(), testOracleParams._arbitrationOptionEndBlock, 
                 "arbitrationEndBlock does not match");
         });
 
         it("can handle a long eventName", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "This is a super long event name that is longer than 32 bytes. It should still work.",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
             assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
-        });
-
-        it("throws if the baseReward is not enough", async function() {
-            let invalidMinBaseReward = web3.toBigNumber(10e16);
-            assert.isBelow(invalidMinBaseReward.toNumber(), 
-                web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
-                "Invalid minBaseReward should be below minBaseReward");
-
-            try {
-                await Oracle.new(...Object.values(testOracleParams), { from: participant1, value: invalidMinBaseReward });
-                assert.fail();
-            } catch(e) {
-                assert.match(e.message, /invalid opcode/);
-            }
         });
 
         it("throws if the eventName is empty", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -109,16 +97,16 @@ contract('Oracle', function(accounts) {
 
         it("throws if the eventResultNames array is not greater than 1", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -127,52 +115,72 @@ contract('Oracle', function(accounts) {
 
         it("throws if the decisionEndBlock is not greater than eventBettingEndBlock", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 99,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 140
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
         });
 
-        it("throws if the averageBlockTime is not greater than 0", async function() {
+        it("throws if the arbitrationOptionEndBlock is not greater than decisionEndBlock", async function() {
             let params = {
+                _owner: oracleCreator,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
                 _decisionEndBlock: 120,
-                _averageBlockTime: 0,
-                _arbitrationOptionMinutes: 1440
+                _arbitrationOptionEndBlock: 110
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
             }
         });
+    });
 
-        it("throws if the _arbitrationOptionMinutes is not greater than 0", async function() {
-            let params = {
-                _eventName: "test",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _averageBlockTime: 10,
-                _arbitrationOptionMinutes: 0
-            };
+    describe("fallback function", async function() {
+        it("calls addBaseReward and sets the contract value", async function() {
+            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+
+            await ethAsync.sendTransactionAsync({
+                to: o.address,
+                from: oracleCreator,
+                value: baseReward
+            });
+
+            let balance = await web3.eth.getBalance(o.address);
+            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+        });
+    });
+
+    describe("addBaseReward", async function() {
+        it("accepts the baseReward", async function() {
+            let balance = await web3.eth.getBalance(oracle.address);
+            assert.equal(balance.toString(), baseReward.toString(), "baseReward does not match");
+        });
+
+        it("throws if the baseReward is not enough", async function() {
+            let invalidMinBaseReward = web3.toBigNumber(10e16);
+            assert.isBelow(invalidMinBaseReward.toNumber(), 
+                web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
+                "Invalid minBaseReward should be below minBaseReward");
+
+            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator, value: baseReward });
+                await o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -416,44 +424,6 @@ contract('Oracle', function(accounts) {
         it("throws if using an invalid result index", async function() {
             try {
                 await oracle.getEventResultName(3);
-                assert.fail();
-            } catch(e) {
-                assert.match(e.message, /invalid opcode/);
-            }
-        });
-    });
-
-    describe("getArbitrationOptionBlocks", async function() {
-        it("returns the correct number of blocks", async function() {
-            var averageBlockTime = 10;
-            var arbitrationOptionMinutes = 100;
-            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
-                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
-
-            averageBlockTime = 7;
-            arbitrationOptionMinutes = 12345;
-            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
-                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
-
-            averageBlockTime = 13;
-            arbitrationOptionMinutes = 42176;
-            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
-                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
-
-            averageBlockTime = 3;
-            arbitrationOptionMinutes = 1;
-            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
-                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
-
-            averageBlockTime = 5;
-            arbitrationOptionMinutes = 0;
-            assert.equal(await oracle.getArbitrationOptionBlocks(averageBlockTime, arbitrationOptionMinutes), 
-                Math.trunc(arbitrationOptionMinutes / averageBlockTime));
-        });
-
-        it("throws if averageBlockTime is 0", async function() {
-            try {
-                await oracle.getArbitrationOptionBlocks(0, 100);
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);

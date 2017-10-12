@@ -7,16 +7,13 @@ contract AddressManager is Ownable {
     mapping(uint8 => address) public eventAddresses;
     mapping(uint8 => address) public oracleAddresses;
 
-    // Modifiers
-    modifier validAddress(address _address) {
-        require(_address != address(0));
-        _;
-    }
-
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
     event EventAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
     event OracleAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
+
+    function AddressManager() Ownable(msg.sender) {
+    }
 
     /// @notice Gets the current address of the Bodhi Token contract.
     /// @return The address of Bodhi Token contract.
