@@ -67,6 +67,7 @@ contract TopicEvent {
         bytes32 _name, 
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock) 
+        public
     {
         require(_owner != 0);
         require(_resultSetter != 0);
@@ -130,8 +131,8 @@ contract TopicEvent {
         WinningsWithdrawn(withdrawAmount);
     }
 
-    function destroy() onlyOwner {
-        suicide(owner);
+    function destroy() external onlyOwner {
+        selfdestruct(owner);
     }
 
     function getResultName(uint _resultIndex) 

@@ -40,7 +40,7 @@ contract EventFactory {
 
     function getTopicHash(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
         internal
-        constant
+        pure    
         returns (bytes32)
     {
         return keccak256(_name, _resultNames, _bettingEndBlock);

@@ -12,7 +12,7 @@ contract AddressManager is Ownable {
     event EventAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
     event OracleAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
 
-    function AddressManager() Ownable(msg.sender) {
+    function AddressManager() public Ownable(msg.sender) {
     }
 
     /// @notice Gets the current address of the Bodhi Token contract.
