@@ -4,13 +4,13 @@ import "../libs/Ownable.sol";
 
 contract AddressManager is Ownable {
     address public bodhiTokenAddress;
-    mapping(uint8 => address) public eventAddresses;
-    mapping(uint8 => address) public oracleAddresses;
+    mapping(uint8 => address) public eventFactoryAddresses;
+    mapping(uint8 => address) public oracleFactoryAddresses;
 
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
-    event EventAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
-    event OracleAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
+    event EventFactoryAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
+    event OracleFactoryAddressChanged(uint8 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
 
     function AddressManager() public Ownable(msg.sender) {
     }
@@ -36,49 +36,49 @@ contract AddressManager is Ownable {
         bodhiTokenAddress = _tokenAddress;
     }
 
-    /// @notice Gets the address of the Event contract.
-    /// @param _indexOfAddress The index of the stored Event contract address.
-    /// @return The address of the Event contract.
-    function getEventAddress(uint8 _indexOfAddress) 
+    /// @notice Gets the address of the EventFactory contract.
+    /// @param _indexOfAddress The index of the stored EventFactory contract address.
+    /// @return The address of the EventFactory contract.
+    function getEventFactoryAddress(uint8 _indexOfAddress) 
         public 
         constant 
         returns (address) 
     {
-        return eventAddresses[_indexOfAddress];
+        return eventFactoryAddresses[_indexOfAddress];
     }
 
-    /// @dev Allows the owner to set the address of an Event contract.
-    /// @param _indexOfAddress The index to store the Event contract.
-    /// @param _newContractAddress The address of the Event contract.
-    function setEventAddress(uint8 _indexOfAddress, address _newContractAddress) 
+    /// @dev Allows the owner to set the address of an EventFactory contract.
+    /// @param _indexOfAddress The index to store the EventFactory contract.
+    /// @param _newContractAddress The address of the EventFactory contract.
+    function setEventFactoryAddress(uint8 _indexOfAddress, address _newContractAddress) 
         public 
         onlyOwner 
         validAddress(_newContractAddress) 
     {
-        EventAddressChanged(_indexOfAddress, eventAddresses[_indexOfAddress], _newContractAddress);
-        eventAddresses[_indexOfAddress] = _newContractAddress;
+        EventFactoryAddressChanged(_indexOfAddress, eventFactoryAddresses[_indexOfAddress], _newContractAddress);
+        eventFactoryAddresses[_indexOfAddress] = _newContractAddress;
     }
 
     /// @notice Gets the address of the Oracle contract.
     /// @param _indexOfAddress The index of the stored Oracle contract address.
     /// @return The address of Oracle contract.
-    function getOracleAddress(uint8 _indexOfAddress) 
+    function getOracleFactoryAddress(uint8 _indexOfAddress) 
         public 
         constant 
         returns (address) 
     {
-        return oracleAddresses[_indexOfAddress];
+        return oracleFactoryAddresses[_indexOfAddress];
     }
 
     /// @dev Allows the owner to set the address of an Oracle contract.
     /// @param _indexOfAddress The index to store the Oracle contract.
     /// @param _newContractAddress The address of the Oracle contract.
-    function setOracleAddress(uint8 _indexOfAddress, address _newContractAddress) 
+    function setOracleFactoryAddress(uint8 _indexOfAddress, address _newContractAddress) 
         public 
         onlyOwner 
         validAddress(_newContractAddress) 
     {
-        OracleAddressChanged(_indexOfAddress, oracleAddresses[_indexOfAddress], _newContractAddress);
-        oracleAddresses[_indexOfAddress] = _newContractAddress;
+        OracleFactoryAddressChanged(_indexOfAddress, oracleFactoryAddresses[_indexOfAddress], _newContractAddress);
+        oracleFactoryAddresses[_indexOfAddress] = _newContractAddress;
     }
 }
