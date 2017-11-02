@@ -1,6 +1,5 @@
 pragma solidity ^0.4.15;
 
-import "../libs/IdUtils.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
@@ -27,7 +26,7 @@ contract OracleFactory {
         payable
         returns (Oracle oracleAddress)
     {
-        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
         // Oracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
@@ -58,8 +57,22 @@ contract OracleFactory {
         constant
         returns (bool)
     {
-        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
         return address(oracles[oracleHash]) != 0;
+    }
+
+    function getOracleHash(
+        bytes _eventName, 
+        bytes32[] _eventResultNames,
+        uint256 _eventBettingEndBlock,
+        uint256 _decisionEndBlock,
+        uint256 _arbitrationOptionEndBlock) 
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+            _arbitrationOptionEndBlock);
     }
 }
