@@ -13,13 +13,13 @@ contract TopicEvent {
 
     address public owner;
     address public resultSetter;
-    bytes32 public name;
+    bytes public name;
     Result[] results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
     bool public finalResultSet;
 
-    event TopicCreated(bytes32 _name);
+    event TopicCreated(bytes _name);
     event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint _finalResultIndex);
@@ -64,7 +64,7 @@ contract TopicEvent {
     function TopicEvent(
         address _owner, 
         address _resultSetter, 
-        bytes32 _name, 
+        bytes _name, 
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock) 
         public

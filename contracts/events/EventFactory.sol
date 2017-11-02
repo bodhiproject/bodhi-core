@@ -7,12 +7,12 @@ contract EventFactory {
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes32 _name, bytes32[] _resultNames,
+    event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
     
     function createTopic(
         address _resultSetter, 
-        bytes32 _name, 
+        bytes _name, 
         bytes32[] _resultNames, 
         uint256 _bettingEndBlock)
         public
@@ -29,7 +29,7 @@ contract EventFactory {
         return topic;
     }
 
-    function doesTopicExist(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
+    function doesTopicExist(bytes _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
         public
         constant
         returns (bool)
@@ -38,7 +38,7 @@ contract EventFactory {
         return address(topics[topicHash]) != 0;
     }
 
-    function getTopicHash(bytes32 _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
+    function getTopicHash(bytes _name, bytes32[] _resultNames, uint256 _bettingEndBlock)
         internal
         pure    
         returns (bytes32)
