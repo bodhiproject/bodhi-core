@@ -6,9 +6,11 @@ const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const Oracle = artifacts.require("./oracles/Oracle.sol");
 
 module.exports = function(deployer) {
-    deployer.deploy(AddressManager);
-    deployer.deploy(EventFactory);
-    deployer.deploy(OracleFactory);
     deployer.deploy(SafeMath);
     deployer.link(SafeMath, [TopicEvent, Oracle]);
+    
+    deployer.deploy(AddressManager).then(function() {
+        deployer.deploy(EventFactory, AddressManager.address);
+    });
+    deployer.deploy(OracleFactory);
 };

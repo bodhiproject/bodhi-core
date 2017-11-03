@@ -15,7 +15,7 @@ contract EventFactory {
     function EventFactory(address _addressManager) public {
         addressManager = IAddressManager(_addressManager);
         uint16 newIndex = addressManager.getCurrentEventFactoryIndex() + 1;
-        addressManager.setEventFactoryAddress(newIndex , address(this));
+        addressManager.setEventFactoryAddress(0 , address(this));
     }
     
     function createTopic(

@@ -1,3 +1,4 @@
+const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const EventFactory = artifacts.require("./events/EventFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const BlockHeightManager = require('./helpers/block_height_manager');
@@ -23,12 +24,17 @@ contract('EventFactory', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
+        let addressManagerTx = await AddressManager.deployed({ from: eventFactoryCreator });
+        console.log("address manager: " + addressManagerTx);
+
         eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
+        console.log("eventfactory: " + eventFactory);
+
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
         topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
     });
 
-    describe('TopicEvent:', async function() {
+    describe.only('TopicEvent:', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
             assert.equal(web3.toUtf8(await topic.name.call()), testTopicParams._name, 'Topic name does not match.');
