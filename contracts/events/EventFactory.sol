@@ -1,14 +1,22 @@
 pragma solidity ^0.4.11;
 
 import "./TopicEvent.sol";
+import "../storage/IAddressManager.sol";
 
 /// @title Event Factory contract - allows creation of individual prediction events
 contract EventFactory {
+    IAddressManager public addressManager;
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
     event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
+
+    function EventFactory(address _addressManager) public {
+        addressManager = IAddressManager(_addressManager);
+        uint16 newIndex = addressManager.getCurrentEventFactoryIndex() + 1;
+        addressManager.setEventFactoryAddress(newIndex , address(this));
+    }
     
     function createTopic(
         address _resultSetter, 
