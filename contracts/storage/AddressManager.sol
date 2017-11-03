@@ -11,8 +11,8 @@ contract AddressManager is Ownable {
 
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
-    event EventFactoryAddressChanged(uint16 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
-    event OracleFactoryAddressChanged(uint16 _indexOfAddress, address indexed _oldAddress, address indexed _newAddress);
+    event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
+    event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
 
     function AddressManager() public Ownable(msg.sender) {
     }
@@ -29,35 +29,37 @@ contract AddressManager is Ownable {
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
-    /// @param _indexOfAddress The index to store the EventFactory contract.
-    /// @param _newContractAddress The address of the EventFactory contract.
-    function setEventFactoryAddress(uint16 _indexOfAddress, address _newContractAddress) 
+    /// @param _contractAddress The address of the EventFactory contract.
+    function setEventFactoryAddress(address _contractAddress) 
         public 
         onlyOwner 
-        validAddress(_newContractAddress) 
+        validAddress(_contractAddress) 
     {
-        if (_indexOfAddress > currentEventFactoryIndex) {
-            currentEventFactoryIndex = _indexOfAddress;
+        uint16 newIndex = currentEventFactoryIndex;
+        if (newIndex > 0) {
+            newIndex++;
         }
 
-        EventFactoryAddressChanged(_indexOfAddress, eventFactoryAddresses[_indexOfAddress], _newContractAddress);
-        eventFactoryAddresses[_indexOfAddress] = _newContractAddress;
+        currentEventFactoryIndex = newIndex;
+        eventFactoryAddresses[newIndex] = _contractAddress;
+        EventFactoryAddressAdded(newIndex, _contractAddress);
     }
 
     /// @dev Allows the owner to set the address of an Oracle contract.
-    /// @param _indexOfAddress The index to store the Oracle contract.
-    /// @param _newContractAddress The address of the Oracle contract.
-    function setOracleFactoryAddress(uint16 _indexOfAddress, address _newContractAddress) 
+    /// @param _contractAddress The address of the Oracle contract.
+    function setOracleFactoryAddress(address _contractAddress) 
         public 
         onlyOwner 
-        validAddress(_newContractAddress) 
+        validAddress(_contractAddress) 
     {
-        if (_indexOfAddress > currentOracleFactoryIndex) {
-            currentOracleFactoryIndex = _indexOfAddress;
+        uint16 newIndex = currentOracleFactoryIndex;
+        if (newIndex > 0) {
+            newIndex++;
         }
 
-        OracleFactoryAddressChanged(_indexOfAddress, oracleFactoryAddresses[_indexOfAddress], _newContractAddress);
-        oracleFactoryAddresses[_indexOfAddress] = _newContractAddress;
+        currentOracleFactoryIndex = newIndex;
+        oracleFactoryAddresses[newIndex] = _contractAddress;
+        OracleFactoryAddressAdded(newIndex, _contractAddress);
     }
 
     /// @notice Gets the current address of the Bodhi Token contract.
