@@ -78,6 +78,19 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(2), eventAddress3, "Event address 2 does not match");
         });
 
+        it("should return the last EventFactory index", async function() {
+            assert.equal(await instance.getLastEventFactoryIndex(), 0, "lastEventFactoryIndex should be 0");
+
+            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
+            assert.equal(await instance.getLastEventFactoryIndex(), 0, "lastEventFactoryIndex should be 0");
+
+            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
+            assert.equal(await instance.getLastEventFactoryIndex(), 1, "lastEventFactoryIndex should be 1");
+
+            await instance.setEventFactoryAddress(eventAddress3, { from: owner });
+            assert.equal(await instance.getLastEventFactoryIndex(), 2, "lastEventFactoryIndex should be 2");
+        });
+
         it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address should be unset");
 
@@ -116,6 +129,19 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1, "Oracle address 0 does not match");
             assert.equal(await instance.getOracleFactoryAddress(1), oracleAddress2, "Oracle address 1 does not match");
             assert.equal(await instance.getOracleFactoryAddress(2), oracleAddress3, "Oracle address 2 does not match");
+        });
+
+        it("should return the last OracleFactory index", async function() {
+            assert.equal(await instance.getLastOracleFactoryIndex(), 0, "lastOracleFactoryIndex should be 0");
+
+            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
+            assert.equal(await instance.getLastOracleFactoryIndex(), 0, "lastOracleFactoryIndex should be 0");
+
+            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
+            assert.equal(await instance.getLastOracleFactoryIndex(), 1, "lastOracleFactoryIndex should be 1");
+
+            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner });
+            assert.equal(await instance.getLastOracleFactoryIndex(), 2, "lastOracleFactoryIndex should be 2");
         });
 
         it("throws if a non-owner tries setting the address", async function() {

@@ -7,15 +7,13 @@ contract AddressManager is IAddressManager, Ownable {
     address public bodhiTokenAddress;
     mapping(uint16 => address) public eventFactoryAddresses;
     mapping(uint16 => address) public oracleFactoryAddresses;
-    uint16 public currentEventFactoryIndex = 0;
-    uint16 public currentOracleFactoryIndex = 0;
+    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
 
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
-
-    event IndexChanged(uint16 _index);
 
     function AddressManager() public Ownable(msg.sender) {
     }
@@ -65,14 +63,18 @@ contract AddressManager is IAddressManager, Ownable {
         return bodhiTokenAddress;
     }
 
-    /// @notice Gets the latest index of the EventFactory contract.
-    /// @return The index of the latest EventFactory contract.
-    function getCurrentEventFactoryIndex() 
+    /// @notice Gets the latest index of a deployed EventFactory contract.
+    /// @return The index of the latest deployed EventFactory contract.
+    function getLastEventFactoryIndex() 
         public 
         view 
         returns (uint16) 
     {
-        return currentEventFactoryIndex;
+        if (currentEventFactoryIndex == 0) {
+            return 0;
+        } else {
+            return currentEventFactoryIndex - 1;
+        }
     }
 
     /// @notice Gets the address of the EventFactory contract.
@@ -86,14 +88,18 @@ contract AddressManager is IAddressManager, Ownable {
         return eventFactoryAddresses[_indexOfAddress];
     }
 
-    /// @notice Gets the latest index of the OracleFactory contract.
-    /// @return The index of the latest OracleFactory contract.
-    function getCurrentOracleFactoryIndex() 
+    /// @notice Gets the latest index of a deployed OracleFactory contract.
+    /// @return The index of the latest deployed OracleFactory contract.
+    function getLastOracleFactoryIndex() 
         public 
         view 
         returns (uint16) 
     {
-        return currentOracleFactoryIndex;
+        if (currentOracleFactoryIndex == 0) {
+            return 0;
+        } else {
+            return currentOracleFactoryIndex - 1;
+        }
     }
 
     /// @notice Gets the address of the Oracle contract.
