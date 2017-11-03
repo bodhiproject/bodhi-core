@@ -64,33 +64,53 @@ contract AddressManager is Ownable {
 
     /// @notice Gets the current address of the Bodhi Token contract.
     /// @return The address of Bodhi Token contract.
-    function getBodhiTokenAddress() public view returns (address) {
+    function getBodhiTokenAddress() 
+        public 
+        view 
+        returns (address) 
+    {
         return bodhiTokenAddress;
     }
 
     /// @notice Gets the latest index of the EventFactory contract.
     /// @return The index of the latest EventFactory contract.
-    function getCurrentEventFactoryIndex() public view returns (uint16) {
+    function getCurrentEventFactoryIndex() 
+        public 
+        view 
+        returns (uint16) 
+    {
         return currentEventFactoryIndex;
     }
 
     /// @notice Gets the address of the EventFactory contract.
     /// @param _indexOfAddress The index of the stored EventFactory contract address.
     /// @return The address of the EventFactory contract.
-    function getEventFactoryAddress(uint16 _indexOfAddress) public view returns (address) {
+    function getEventFactoryAddress(uint16 _indexOfAddress) 
+        public 
+        view 
+        returns (address) 
+    {
         return eventFactoryAddresses[_indexOfAddress];
     }
 
     /// @notice Gets the latest index of the OracleFactory contract.
     /// @return The index of the latest OracleFactory contract.
-    function getCurrentOracleFactoryIndex() public view returns (uint16) {
+    function getCurrentOracleFactoryIndex() 
+        public 
+        view 
+        returns (uint16) 
+    {
         return currentOracleFactoryIndex;
     }
 
     /// @notice Gets the address of the Oracle contract.
     /// @param _indexOfAddress The index of the stored Oracle contract address.
     /// @return The address of Oracle contract.
-    function getOracleFactoryAddress(uint16 _indexOfAddress) public view returns (address) {
+    function getOracleFactoryAddress(uint16 _indexOfAddress) 
+        public 
+        view 
+        returns (address) 
+    {
         return oracleFactoryAddresses[_indexOfAddress];
     }
 }
