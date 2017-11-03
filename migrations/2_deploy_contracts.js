@@ -8,9 +8,9 @@ const Oracle = artifacts.require("./oracles/Oracle.sol");
 module.exports = function(deployer) {
     deployer.deploy(SafeMath);
     deployer.link(SafeMath, [TopicEvent, Oracle]);
+    deployer.deploy(OracleFactory);
     
     deployer.deploy(AddressManager).then(function() {
-        deployer.deploy(EventFactory, AddressManager.address);
+        return deployer.deploy(EventFactory, AddressManager.address);
     });
-    deployer.deploy(OracleFactory);
 };

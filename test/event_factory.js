@@ -25,16 +25,13 @@ contract('EventFactory', function(accounts) {
 
     beforeEach(async function() {
         let addressManagerTx = await AddressManager.deployed({ from: eventFactoryCreator });
-        console.log("address manager: " + addressManagerTx);
-
-        eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
-        console.log("eventfactory: " + eventFactory);
-
+        eventFactory = await EventFactory.deployed(addressManagerTx.address, { from: eventFactoryCreator });
+        
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
         topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
     });
 
-    describe.only('TopicEvent:', async function() {
+    describe('TopicEvent:', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
             assert.equal(web3.toUtf8(await topic.name.call()), testTopicParams._name, 'Topic name does not match.');

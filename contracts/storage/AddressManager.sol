@@ -1,8 +1,9 @@
 pragma solidity ^0.4.15;
 
+import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
 
-contract AddressManager is Ownable {
+contract AddressManager is IAddressManager, Ownable {
     address public bodhiTokenAddress;
     mapping(uint16 => address) public eventFactoryAddresses;
     mapping(uint16 => address) public oracleFactoryAddresses;
@@ -13,6 +14,8 @@ contract AddressManager is Ownable {
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
+
+    event IndexChanged(uint16 _index);
 
     function AddressManager() public Ownable(msg.sender) {
     }
@@ -35,14 +38,9 @@ contract AddressManager is Ownable {
         onlyOwner 
         validAddress(_contractAddress) 
     {
-        uint16 newIndex = currentEventFactoryIndex;
-        if (newIndex > 0) {
-            newIndex++;
-        }
-
-        currentEventFactoryIndex = newIndex;
-        eventFactoryAddresses[newIndex] = _contractAddress;
-        EventFactoryAddressAdded(newIndex, _contractAddress);
+        eventFactoryAddresses[currentEventFactoryIndex] = _contractAddress;
+        EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
+        currentEventFactoryIndex++;
     }
 
     /// @dev Allows the owner to set the address of an Oracle contract.
@@ -52,14 +50,9 @@ contract AddressManager is Ownable {
         onlyOwner 
         validAddress(_contractAddress) 
     {
-        uint16 newIndex = currentOracleFactoryIndex;
-        if (newIndex > 0) {
-            newIndex++;
-        }
-
-        currentOracleFactoryIndex = newIndex;
-        oracleFactoryAddresses[newIndex] = _contractAddress;
-        OracleFactoryAddressAdded(newIndex, _contractAddress);
+        oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
+        OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
+        currentOracleFactoryIndex++;
     }
 
     /// @notice Gets the current address of the Bodhi Token contract.

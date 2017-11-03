@@ -67,33 +67,22 @@ contract("AdddressManager", function(accounts) {
         it("should return the addresses if set", async function() {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address 0 should be unset");
             assert.equal(await instance.getEventFactoryAddress(1), 0, "Event address 1 should be unset");
-            assert.equal(await instance.getEventFactoryAddress(3), 0, "Event address 3 should be unset");
+            assert.equal(await instance.getEventFactoryAddress(2), 0, "Event address 2 should be unset");
 
-            await instance.setEventFactoryAddress(0, eventAddress1, { from: owner });
-            await instance.setEventFactoryAddress(1, eventAddress2, { from: owner });
-            await instance.setEventFactoryAddress(3, eventAddress3, { from: owner }); 
+            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress3, { from: owner }); 
 
             assert.equal(await instance.getEventFactoryAddress(0), eventAddress1, "Event address 0 does not match");
             assert.equal(await instance.getEventFactoryAddress(1), eventAddress2, "Event address 1 does not match");
-            assert.equal(await instance.getEventFactoryAddress(3), eventAddress3, "Event address 3 does not match");
-        });
-
-        it("allows replacing an existing address", async function() {
-            assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address 0 should be unset");
-
-            await instance.setEventFactoryAddress(0, eventAddress1, { from: owner });
-            assert.equal(await instance.getEventFactoryAddress(0), eventAddress1, "Event address does not match");
-
-            await instance.setEventFactoryAddress(0, eventAddress2, { from: owner });
-            assert.equal(await instance.getEventFactoryAddress(0), eventAddress2, 
-                "Event address replacement does not match");
+            assert.equal(await instance.getEventFactoryAddress(2), eventAddress3, "Event address 2 does not match");
         });
 
         it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address should be unset");
 
             try {
-                await instance.setEventFactoryAddress(0, eventAddress1, { from: accounts[1] });
+                await instance.setEventFactoryAddress(eventAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -106,7 +95,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address should be unset");
 
             try {
-                await instance.setEventFactoryAddress(0, 0, { from: owner });
+                await instance.setEventFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -116,35 +105,24 @@ contract("AdddressManager", function(accounts) {
 
     describe("OracleFactoryAddresses", async function() {
         it("should return the addresses if set", async function() {
-            assert.equal(await instance.getOracleFactoryAddress(2), 0, "Oracle address 2 should be unset");
-            assert.equal(await instance.getOracleFactoryAddress(3), 0, "Oracle address 3 should be unset");
-            assert.equal(await instance.getOracleFactoryAddress(6), 0, "Oracle address 6 should be unset");
-
-            await instance.setOracleFactoryAddress(2, oracleAddress1, { from: owner });
-            await instance.setOracleFactoryAddress(3, oracleAddress2, { from: owner });
-            await instance.setOracleFactoryAddress(6, oracleAddress3, { from: owner }); 
-
-            assert.equal(await instance.getOracleFactoryAddress(2), oracleAddress1, "Oracle address 2 does not match");
-            assert.equal(await instance.getOracleFactoryAddress(3), oracleAddress2, "Oracle address 3 does not match");
-            assert.equal(await instance.getOracleFactoryAddress(6), oracleAddress3, "Oracle address 6 does not match");
-        });
-
-        it("allows replacing an existing address", async function() {
             assert.equal(await instance.getOracleFactoryAddress(0), 0, "Oracle address 0 should be unset");
+            assert.equal(await instance.getOracleFactoryAddress(1), 0, "Oracle address 1 should be unset");
+            assert.equal(await instance.getOracleFactoryAddress(2), 0, "Oracle address 2 should be unset");
 
-            await instance.setOracleFactoryAddress(0, oracleAddress1, { from: owner });
-            assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1, "Oracle address does not match");
+            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner }); 
 
-            await instance.setOracleFactoryAddress(0, oracleAddress2, { from: owner });
-            assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress2, 
-                "Oracle address replacement does not match");
+            assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1, "Oracle address 0 does not match");
+            assert.equal(await instance.getOracleFactoryAddress(1), oracleAddress2, "Oracle address 1 does not match");
+            assert.equal(await instance.getOracleFactoryAddress(2), oracleAddress3, "Oracle address 2 does not match");
         });
 
         it("throws if a non-owner tries setting the address", async function() {
             assert.equal(await instance.getOracleFactoryAddress(0), 0, "Oracle address should be unset");
 
             try {
-                await instance.setOracleFactoryAddress(0, oracleAddress1, { from: accounts[1] });
+                await instance.setOracleFactoryAddress(oracleAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -157,7 +135,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), 0, "Oracle address should be unset");
 
             try {
-                await instance.setOracleFactoryAddress(0, 0, { from: owner });
+                await instance.setOracleFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);

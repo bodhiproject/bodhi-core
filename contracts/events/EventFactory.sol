@@ -1,20 +1,25 @@
 pragma solidity ^0.4.11;
 
-import "./TopicEvent.sol";
+import "../libs/Ownable.sol";
 import "../storage/IAddressManager.sol";
+import "./TopicEvent.sol";
 
-/// @title Event Factory contract - allows creation of individual prediction events
-contract EventFactory {
-    IAddressManager public addressManager;
+/// @title Event Factory allows the creation of individual prediction events.
+contract EventFactory is Ownable {
+    address public addressManager;
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
     event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes _name, bytes32[] _resultNames,
         uint256 _bettingEndBlock);
 
-    function EventFactory(address _addressManager) public {
-        addressManager = IAddressManager(_addressManager);
-        addressManager.setEventFactoryAddress(address(this));
+    function EventFactory(address _addressManager) Ownable(msg.sender) public {
+        addressManager = _addressManager;
+    }
+
+    function setAddressInAddressManager() public onlyOwner {
+        IAddressManager manager = IAddressManager(addressManager);
+        manager.setEventFactoryAddress(address(this));
     }
     
     function createTopic(
