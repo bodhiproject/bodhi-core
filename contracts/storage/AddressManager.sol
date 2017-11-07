@@ -30,12 +30,13 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
+    /// @param _sender The sender of the message.
     /// @param _contractAddress The address of the EventFactory contract.
-    function setEventFactoryAddress(address _contractAddress) 
+    function setEventFactoryAddress(address _sender, address _contractAddress) 
         public 
-        onlyOwner 
         validAddress(_contractAddress) 
     {
+        require(_sender == owner);
         eventFactoryAddresses[currentEventFactoryIndex] = _contractAddress;
         EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
         currentEventFactoryIndex++;

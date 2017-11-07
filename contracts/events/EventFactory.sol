@@ -15,11 +15,9 @@ contract EventFactory is Ownable {
 
     function EventFactory(address _addressManager) Ownable(msg.sender) public {
         addressManager = _addressManager;
-    }
 
-    function setAddressInAddressManager() public onlyOwner {
         IAddressManager manager = IAddressManager(addressManager);
-        manager.setEventFactoryAddress(address(this));
+        manager.setEventFactoryAddress(msg.sender, address(this));
     }
     
     function createTopic(
