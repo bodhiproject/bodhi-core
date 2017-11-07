@@ -4,11 +4,11 @@ import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
 
 contract AddressManager is IAddressManager, Ownable {
+    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
     address public bodhiTokenAddress;
     mapping(uint16 => address) public eventFactoryAddresses;
     mapping(uint16 => address) public oracleFactoryAddresses;
-    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
-    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
 
     // Events
     event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
