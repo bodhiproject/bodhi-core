@@ -5,7 +5,6 @@ import "./TopicEvent.sol";
 
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
-    address public addressManager;
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
@@ -13,10 +12,8 @@ contract EventFactory {
         uint256 _bettingEndBlock);
 
     function EventFactory(address _addressManager) public {
-        addressManager = _addressManager;
-
-        IAddressManager manager = IAddressManager(addressManager);
-        manager.setEventFactoryAddress(msg.sender, address(this));
+        IAddressManager addressManager = IAddressManager(_addressManager);
+        addressManager.setEventFactoryAddress(msg.sender, address(this));
     }
     
     function createTopic(
