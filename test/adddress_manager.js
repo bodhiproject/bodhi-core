@@ -69,9 +69,9 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(1), 0, "Event address 1 should be unset");
             assert.equal(await instance.getEventFactoryAddress(2), 0, "Event address 2 should be unset");
 
-            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
-            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
-            await instance.setEventFactoryAddress(eventAddress3, { from: owner }); 
+            await instance.setEventFactoryAddress(owner, eventAddress1, { from: owner });
+            await instance.setEventFactoryAddress(owner, eventAddress2, { from: owner });
+            await instance.setEventFactoryAddress(owner, eventAddress3, { from: owner }); 
 
             assert.equal(await instance.getEventFactoryAddress(0), eventAddress1, "Event address 0 does not match");
             assert.equal(await instance.getEventFactoryAddress(1), eventAddress2, "Event address 1 does not match");
@@ -81,13 +81,13 @@ contract("AdddressManager", function(accounts) {
         it("should return the last EventFactory index", async function() {
             assert.equal(await instance.getLastEventFactoryIndex(), 0, "lastEventFactoryIndex should be 0");
 
-            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
+            await instance.setEventFactoryAddress(owner, eventAddress1, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 0, "lastEventFactoryIndex should be 0");
 
-            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
+            await instance.setEventFactoryAddress(owner, eventAddress2, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 1, "lastEventFactoryIndex should be 1");
 
-            await instance.setEventFactoryAddress(eventAddress3, { from: owner });
+            await instance.setEventFactoryAddress(owner, eventAddress3, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 2, "lastEventFactoryIndex should be 2");
         });
 
@@ -95,7 +95,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address should be unset");
 
             try {
-                await instance.setEventFactoryAddress(eventAddress1, { from: accounts[1] });
+                await instance.setEventFactoryAddress(accounts[1], eventAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -108,7 +108,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(0), 0, "Event address should be unset");
 
             try {
-                await instance.setEventFactoryAddress(0, { from: owner });
+                await instance.setEventFactoryAddress(owner, 0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
