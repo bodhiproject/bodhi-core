@@ -1,3 +1,4 @@
+const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const Oracle = artifacts.require('./oracles/Oracle.sol');
 const BlockHeightManager = require('./helpers/block_height_manager');
@@ -24,6 +25,7 @@ contract('OracleFactory', function(accounts) {
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testParams._eventBettingEndBlock;
 
+    let addressManager;
     let oracleFactory;
     let oracle;
 
@@ -31,10 +33,20 @@ contract('OracleFactory', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracleFactory = await OracleFactory.deployed({ from: oracleFactoryCreator });
+        addressManager = await AddressManager.deployed({ from: oracleFactoryCreator });
+        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: oracleFactoryCreator });
+
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward });
         oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, '_oracle'));
+    });
+
+    describe('constructor', async function() {
+        it('should store the OracleFactory address in AddressManager', async function() {
+            let index = await addressManager.getLastOracleFactoryIndex();
+            assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address, 
+                'OracleFactory address does not match');
+        });
     });
 
     describe('createOracle', async function() {

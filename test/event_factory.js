@@ -32,7 +32,7 @@ contract('EventFactory', function(accounts) {
         topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
     });
 
-    describe('initialization', async function() {
+    describe('constructor', async function() {
         it('should store the EventFactory address in AddressManager', async function() {
             let index = await addressManager.getLastEventFactoryIndex();
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address, 

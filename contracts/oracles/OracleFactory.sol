@@ -1,5 +1,6 @@
 pragma solidity ^0.4.15;
 
+import "../storage/IAddressManager.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
@@ -9,6 +10,11 @@ contract OracleFactory {
     event OracleCreated(address indexed _creator, Oracle _oracle, bytes _eventName, bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, 
         uint256 _baseRewardAmount);
+
+    function OracleFactory(address _addressManager) public {
+        IAddressManager addressManager = IAddressManager(_addressManager);
+        addressManager.setOracleFactoryAddress(msg.sender, address(this));
+    }
 
     /// @notice Creates new Oracle contract.
     /// @param _eventName The name of the Event this Oracle will arbitrate.

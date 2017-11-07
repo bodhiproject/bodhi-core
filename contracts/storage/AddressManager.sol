@@ -30,7 +30,7 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
-    /// @param _sender The sender of the message.
+    /// @param _sender This should be the msg.sender of the EventFactory instantiation call.
     /// @param _contractAddress The address of the EventFactory contract.
     function setEventFactoryAddress(address _sender, address _contractAddress) 
         public 
@@ -43,12 +43,13 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /// @dev Allows the owner to set the address of an Oracle contract.
+    /// @param _sender This should be the msg.sender of the OracleFactory instantiation call.
     /// @param _contractAddress The address of the Oracle contract.
-    function setOracleFactoryAddress(address _contractAddress) 
+    function setOracleFactoryAddress(address _sender, address _contractAddress) 
         public 
-        onlyOwner 
         validAddress(_contractAddress) 
     {
+        require(_sender == owner);
         oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
         OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
         currentOracleFactoryIndex++;

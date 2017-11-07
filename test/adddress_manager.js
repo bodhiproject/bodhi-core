@@ -122,9 +122,9 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(1), 0, "Oracle address 1 should be unset");
             assert.equal(await instance.getOracleFactoryAddress(2), 0, "Oracle address 2 should be unset");
 
-            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
-            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
-            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner }); 
+            await instance.setOracleFactoryAddress(owner, oracleAddress1, { from: owner });
+            await instance.setOracleFactoryAddress(owner, oracleAddress2, { from: owner });
+            await instance.setOracleFactoryAddress(owner, oracleAddress3, { from: owner }); 
 
             assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1, "Oracle address 0 does not match");
             assert.equal(await instance.getOracleFactoryAddress(1), oracleAddress2, "Oracle address 1 does not match");
@@ -134,13 +134,13 @@ contract("AdddressManager", function(accounts) {
         it("should return the last OracleFactory index", async function() {
             assert.equal(await instance.getLastOracleFactoryIndex(), 0, "lastOracleFactoryIndex should be 0");
 
-            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
+            await instance.setOracleFactoryAddress(owner, oracleAddress1, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 0, "lastOracleFactoryIndex should be 0");
 
-            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
+            await instance.setOracleFactoryAddress(owner, oracleAddress2, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 1, "lastOracleFactoryIndex should be 1");
 
-            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner });
+            await instance.setOracleFactoryAddress(owner, oracleAddress3, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 2, "lastOracleFactoryIndex should be 2");
         });
 
@@ -148,7 +148,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), 0, "Oracle address should be unset");
 
             try {
-                await instance.setOracleFactoryAddress(oracleAddress1, { from: accounts[1] });
+                await instance.setOracleFactoryAddress(accounts[1], oracleAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -161,7 +161,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), 0, "Oracle address should be unset");
 
             try {
-                await instance.setOracleFactoryAddress(0, { from: owner });
+                await instance.setOracleFactoryAddress(owner, 0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
