@@ -15,7 +15,7 @@ contract AddressManager is IAddressManager, Ownable {
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
 
-    function AddressManager() public Ownable(msg.sender) {
+    function AddressManager() Ownable(msg.sender) public {
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
