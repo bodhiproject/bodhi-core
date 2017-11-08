@@ -1,5 +1,8 @@
 # bodhi-core
 
+## Wiki
+For more information, visit our wiki page: [https://bodhiproject.github.io/wiki/](https://bodhiproject.github.io/wiki/)
+
 ## Architecture Flowchart
 ![Architecture Flowchart](https://github.com/bodhiproject/bodhi-core/blob/master/architecture_flowchart.png)
 
