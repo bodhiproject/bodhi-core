@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import "../libs/IdUtils.sol";
+import "../storage/IAddressManager.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
@@ -10,6 +10,11 @@ contract OracleFactory {
     event OracleCreated(address indexed _creator, Oracle _oracle, bytes _eventName, bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, 
         uint256 _baseRewardAmount);
+
+    function OracleFactory(address _addressManager) public {
+        IAddressManager addressManager = IAddressManager(_addressManager);
+        addressManager.setOracleFactoryAddress(msg.sender, address(this));
+    }
 
     /// @notice Creates new Oracle contract.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
@@ -27,7 +32,7 @@ contract OracleFactory {
         payable
         returns (Oracle oracleAddress)
     {
-        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
         // Oracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
@@ -58,8 +63,22 @@ contract OracleFactory {
         constant
         returns (bool)
     {
-        bytes32 oracleHash = IdUtils.getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
         return address(oracles[oracleHash]) != 0;
+    }
+
+    function getOracleHash(
+        bytes _eventName, 
+        bytes32[] _eventResultNames,
+        uint256 _eventBettingEndBlock,
+        uint256 _decisionEndBlock,
+        uint256 _arbitrationOptionEndBlock) 
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+            _arbitrationOptionEndBlock);
     }
 }

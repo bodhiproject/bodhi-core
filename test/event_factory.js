@@ -1,3 +1,4 @@
+const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const EventFactory = artifacts.require("./events/EventFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const BlockHeightManager = require('./helpers/block_height_manager');
@@ -14,6 +15,7 @@ contract('EventFactory', function(accounts) {
         _bettingEndBlock: 100
     };
 
+    let addressManager;
     let eventFactory;
     let eventFactoryCreator = accounts[0];
     let topic;
@@ -23,9 +25,19 @@ contract('EventFactory', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        eventFactory = await EventFactory.deployed({ from: eventFactoryCreator });
+        addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
+        eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
+        
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
         topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
+    });
+
+    describe('constructor', async function() {
+        it('should store the EventFactory address in AddressManager', async function() {
+            let index = await addressManager.getLastEventFactoryIndex();
+            assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address, 
+                'EventFactory address does not match');
+        });
     });
 
     describe('TopicEvent:', async function() {
