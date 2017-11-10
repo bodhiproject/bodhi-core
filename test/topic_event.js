@@ -8,7 +8,7 @@ contract('TopicEvent', function(accounts) {
 
 	const testTopicParams = {
         _owner: accounts[0],
-        _resultSetter: accounts[1],
+        _oracle: accounts[1],
 		_name: "test",
 		_resultNames: ["first", "second", "third"],
 		_bettingEndBlock: 100
@@ -44,6 +44,10 @@ contract('TopicEvent', function(accounts) {
 			let resultName3 = await testTopic.getResultName(2);
 			assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
 	    });
+
+        it('sets the numOfResults correctly', async function() {
+            assert.equal((await testTopic.numOfResults.call()).toNumber(), 3, 'numOfResults does not match');
+        });
 
 	    it("sets the topic betting end block correctly", async function() {
 	    	let bettingEndBlock = await testTopic.bettingEndBlock.call();
@@ -120,7 +124,7 @@ contract('TopicEvent', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let testFinalResultIndex = 2;
-	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -144,7 +148,7 @@ contract('TopicEvent', function(accounts) {
 	    	
 	    	try {
 	    		let testFinalResultIndex = 2;
-		        await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+		        await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
 		        assert.fail();
 			} catch(e) {
 		        assert.match(e.message, /invalid opcode/);
@@ -176,7 +180,7 @@ contract('TopicEvent', function(accounts) {
             }
             assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
 
-            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
             assert.isTrue(await testTopic.finalResultSet.call(), "Final result should set.");
             assert.equal(await testTopic.getFinalResultIndex(), testFinalResultIndex, 
                 "Final result index does not match.");
@@ -220,7 +224,7 @@ contract('TopicEvent', function(accounts) {
 	    	
 	    	// Reveal result
 	    	let testFinalResultIndex = 1;
-	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._resultSetter });
+	    	await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
 
 	    	let finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -361,7 +365,7 @@ contract('TopicEvent', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let expectedFinalResultIndex = 1;
-	    	await testTopic.revealResult(expectedFinalResultIndex, { from: testTopicParams._resultSetter });
+	    	await testTopic.revealResult(expectedFinalResultIndex, { from: testTopicParams._oracle });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");
@@ -397,7 +401,7 @@ contract('TopicEvent', function(accounts) {
 	    	assert.isFalse(finalResultSet, "Final result should not be set.");
 
 	    	let finalResultIndex = 0;
-	    	await testTopic.revealResult(finalResultIndex, { from: testTopicParams._resultSetter });
+	    	await testTopic.revealResult(finalResultIndex, { from: testTopicParams._oracle });
 
 	    	finalResultSet = await testTopic.finalResultSet.call();
 	    	assert.isTrue(finalResultSet, "Final result should be set.");

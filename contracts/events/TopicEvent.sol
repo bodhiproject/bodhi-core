@@ -2,8 +2,10 @@ pragma solidity ^0.4.18;
 
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
+import "../libs/ByteUtils.sol";
 
 contract TopicEvent is Ownable {
+    using ByteUtils for bytes32;
     using SafeMath for uint256;
 
     struct Result {
@@ -14,6 +16,7 @@ contract TopicEvent is Ownable {
 
     bool public finalResultSet;
     uint8 private finalResultIndex;
+    uint8 public numOfResults;
     address public oracle;
     bytes32 public name;
     uint256 public bettingEndBlock;
@@ -21,9 +24,9 @@ contract TopicEvent is Ownable {
 
     // Events
     event TopicCreated(bytes32 _name);
-    event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
+    event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
-    event FinalResultSet(uint _finalResultIndex);
+    event FinalResultSet(uint8 _finalResultIndex);
 
     // Modifiers
     modifier onlyResultSetter() {
@@ -31,7 +34,7 @@ contract TopicEvent is Ownable {
         _;
     }
 
-    modifier validResultIndex(uint _resultIndex) {
+    modifier validResultIndex(uint8 _resultIndex) {
         require(_resultIndex >= 0);
         require(_resultIndex <= results.length - 1);
         _;
@@ -83,11 +86,12 @@ contract TopicEvent is Ownable {
         name = _name;
 
         for (uint i = 0; i < _resultNames.length; i++) {
-            if (_resultNames[i].length > 0) {
+            if (!_resultNames[i].isEmpty()) {
                 results[i] = Result({
                     name: _resultNames[i],
                     balance: 0
                 });
+                numOfResults++;
             } else {
                 break;
             }
@@ -98,7 +102,7 @@ contract TopicEvent is Ownable {
         TopicCreated(name);
     }
 
-    function bet(uint _resultIndex) public validBet payable {
+    function bet(uint8 _resultIndex) public validBet payable {
         Result storage updatedResult = results[_resultIndex];
         updatedResult.balance = updatedResult.balance.add(msg.value);
         updatedResult.betBalances[msg.sender] = updatedResult.betBalances[msg.sender].add(msg.value);
@@ -142,7 +146,7 @@ contract TopicEvent is Ownable {
         selfdestruct(owner);
     }
 
-    function getResultName(uint _resultIndex) 
+    function getResultName(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
         constant 
@@ -151,7 +155,7 @@ contract TopicEvent is Ownable {
         return results[_resultIndex].name;
     }
 
-    function getResultBalance(uint _resultIndex) 
+    function getResultBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
         constant 
@@ -160,7 +164,7 @@ contract TopicEvent is Ownable {
         return results[_resultIndex].balance;
     }
 
-    function getBetBalance(uint _resultIndex) 
+    function getBetBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
         constant 
