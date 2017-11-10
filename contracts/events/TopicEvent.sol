@@ -12,12 +12,12 @@ contract TopicEvent is Ownable {
         mapping (address => uint256) betBalances;
     }
 
+    bool public finalResultSet;
+    uint8 private finalResultIndex;
     address public oracle;
     bytes32 public name;
-    Result[10] results;
     uint256 public bettingEndBlock;
-    uint finalResultIndex;
-    bool public finalResultSet;
+    Result[10] results;
 
     // Events
     event TopicCreated(bytes32 _name);
@@ -107,7 +107,7 @@ contract TopicEvent is Ownable {
         BetAccepted(msg.sender, _resultIndex, msg.value, results[_resultIndex].betBalances[msg.sender]);
     }
 
-    function revealResult(uint _resultIndex)
+    function revealResult(uint8 _resultIndex)
         public
         onlyResultSetter
         hasEnded
@@ -181,7 +181,7 @@ contract TopicEvent is Ownable {
         public 
         finalResultIsSet 
         constant 
-        returns (uint) 
+        returns (uint8) 
     {
         return finalResultIndex;
     }
