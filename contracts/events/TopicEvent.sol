@@ -1,5 +1,6 @@
 pragma solidity ^0.4.11;
 
+import "../libs/Ownable";
 import "../libs/SafeMath.sol";
 
 contract TopicEvent {
@@ -11,24 +12,20 @@ contract TopicEvent {
         mapping (address => uint256) betBalances;
     }
 
-    address public owner;
-    address public resultSetter;
-    bytes public name;
-    Result[] results;
+    address public oracle;
+    bytes32 public name;
+    Result[10] results;
     uint256 public bettingEndBlock;
     uint finalResultIndex;
     bool public finalResultSet;
 
+    // Events
     event TopicCreated(bytes _name);
     event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint _finalResultIndex);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
+    // Modifiers
     modifier onlyResultSetter() {
         require(msg.sender == resultSetter);
         _;
@@ -61,29 +58,39 @@ contract TopicEvent {
         _;
     }
 
+    /// @notice Creates new TopicEvent contract.
+    /// @param _owner The address of the owner.
+    /// @param _oracle The address of the individual Oracle that will decide the result.
+    /// @param _name The question or statement of the TopicEvent.
+    /// @param _resultNames The possible results of the TopicEvent.
+    /// @param _bettingEndBlock The block when TopicEvent voting will end.
     function TopicEvent(
-        address _owner, 
-        address _resultSetter, 
-        bytes _name, 
-        bytes32[] _resultNames, 
-        uint256 _bettingEndBlock) 
+        address _owner,
+        address _oracle,
+        bytes32 _name, 
+        bytes32[10] _resultNames,
+        uint256 _bettingEndBlock)
+        Ownable(_owner)
         public
+        validAddress(_oracle)
     {
-        require(_owner != 0);
-        require(_resultSetter != 0);
         require(_name.length > 0);
         require(_resultNames.length > 1);
         require(_bettingEndBlock > block.number);
 
         owner = _owner;
-        resultSetter = _resultSetter;
+        oracle = _oracle;
         name = _name;
 
         for (uint i = 0; i < _resultNames.length; i++) {
-            results.push(Result({
-            name: _resultNames[i],
-            balance: 0
-            }));
+            if (_resultNames[i].length > 0) {
+                results.push(Result({
+                    name: _resultNames[i],
+                    balance: 0
+                }));
+            } else {
+                break;
+            }
         }
 
         bettingEndBlock = _bettingEndBlock;
