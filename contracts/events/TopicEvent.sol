@@ -87,7 +87,18 @@ contract TopicEvent is Ownable {
         TopicCreated(_owner, _oracle, name, _resultNames, _bettingEndBlock);
     }
 
-    function bet(uint8 _resultIndex) public payable {
+    // TODO: implement Returnable contract to be able to refund participants in case of frozen assets
+    // function destroy() 
+    //     external 
+    //     onlyOwner 
+    // {
+    //     selfdestruct(owner);
+    // }
+
+    function bet(uint8 _resultIndex) 
+        public 
+        payable 
+    {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
@@ -112,7 +123,11 @@ contract TopicEvent is Ownable {
         FinalResultSet(finalResultIndex);
     }
 
-    function withdrawWinnings() public hasEnded finalResultIsSet {
+    function withdrawWinnings() 
+        public 
+        hasEnded 
+        finalResultIsSet 
+    {
         uint256 totalTopicBalance = getTotalTopicBalance();
         require(totalTopicBalance > 0);
 
@@ -129,10 +144,6 @@ contract TopicEvent is Ownable {
         msg.sender.transfer(withdrawAmount);
 
         WinningsWithdrawn(withdrawAmount);
-    }
-
-    function destroy() external onlyOwner {
-        selfdestruct(owner);
     }
 
     function getResultName(uint8 _resultIndex) 
@@ -162,7 +173,11 @@ contract TopicEvent is Ownable {
         return results[_resultIndex].betBalances[msg.sender];
     }
 
-    function getTotalTopicBalance() public constant returns (uint256) {
+    function getTotalTopicBalance() 
+        public 
+        constant 
+        returns (uint256) 
+    {
         uint256 totalTopicBalance = 0;
         for (uint i = 0; i < results.length; i++) {
             totalTopicBalance = results[i].balance.add(totalTopicBalance);
