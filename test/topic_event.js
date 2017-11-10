@@ -16,7 +16,6 @@ contract('TopicEvent', function(accounts) {
 	};
 
 	let testTopic;
-    let nameString = testTopicParams._name.join('');
 
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
@@ -33,7 +32,7 @@ contract('TopicEvent', function(accounts) {
 
 	    it("sets the topic name correctly", async function() {
 	    	let name = await testTopic.name.call();
-	    	assert.equal(name, nameString, "Topic name does not match.");
+	    	assert.equal(name, testTopicParams._name.join(''), "Topic name does not match.");
 	    });
 
 	    it("sets the topic result names correctly", async function() {
