@@ -95,6 +95,8 @@ contract TopicEvent is Ownable {
     //     selfdestruct(owner);
     // }
 
+    /// @notice Allows betting on a specific result.
+    /// @param _resultIndex The index of result to bet on.
     function bet(uint8 _resultIndex) 
         public 
         payable 
@@ -110,6 +112,8 @@ contract TopicEvent is Ownable {
         BetAccepted(msg.sender, _resultIndex, msg.value, results[_resultIndex].betBalances[msg.sender]);
     }
 
+    /// @notice Allows the Oracle to reveal the result.
+    /// @param _resultIndex The index of result to reveal.
     function revealResult(uint8 _resultIndex)
         public
         hasEnded
@@ -120,9 +124,11 @@ contract TopicEvent is Ownable {
 
         finalResultIndex = _resultIndex;
         finalResultSet = true;
+
         FinalResultSet(finalResultIndex);
     }
 
+    /// @notice Allows winners of the event to withdraw their winnings after the final result is set.
     function withdrawWinnings() 
         public 
         hasEnded 
@@ -146,6 +152,9 @@ contract TopicEvent is Ownable {
         WinningsWithdrawn(withdrawAmount);
     }
 
+    /// @notice Gets the result's name given the index.
+    /// @param _resultIndex The index of the result.
+    /// @return The result name.
     function getResultName(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
@@ -155,15 +164,21 @@ contract TopicEvent is Ownable {
         return results[_resultIndex].name;
     }
 
+    /// @notice Gets the result's balance given the index.
+    /// @param _resultIndex The index of the result.
+    /// @return The result total bet balance.
     function getResultBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
-        view 
+        constant 
         returns (uint256) 
     {
         return results[_resultIndex].balance;
     }
 
+    /// @notice Gets the result's bet balance of the caller given the index.
+    /// @param _resultIndex The index of the result.
+    /// @return The result's bet balance for the caller.
     function getBetBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
@@ -173,6 +188,8 @@ contract TopicEvent is Ownable {
         return results[_resultIndex].betBalances[msg.sender];
     }
 
+    /// @notice Gets the total bet balance of the TopicEvent.
+    /// @return The total bet balance.
     function getTotalTopicBalance() 
         public 
         view 
@@ -185,6 +202,8 @@ contract TopicEvent is Ownable {
         return totalTopicBalance;
     }
 
+    /// @notice Gets the final result index set by the Oracle (if it was set).
+    /// @return The index of the final result.
     function getFinalResultIndex() 
         public 
         finalResultIsSet 
@@ -194,6 +213,8 @@ contract TopicEvent is Ownable {
         return finalResultIndex;
     }
 
+    /// @notice Gets the final result name if the final result was set.
+    /// @return The final result name.
     function getFinalResultName() 
         public 
         finalResultIsSet 
