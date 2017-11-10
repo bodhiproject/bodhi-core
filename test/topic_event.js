@@ -4,6 +4,7 @@ const assert = require('chai').assert;
 const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('TopicEvent', function(accounts) {
+    const regexInvalidOpcode = /invalid opcode/;
 	const blockHeightManager = new BlockHeightManager(web3);
 
 	const testTopicParams = {
@@ -43,6 +44,13 @@ contract('TopicEvent', function(accounts) {
 
 			let resultName3 = await testTopic.getResultName(2);
 			assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
+
+            try {
+                await testTopic.getResultName(3);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
 	    });
 
         it('sets the numOfResults correctly', async function() {
@@ -90,7 +98,7 @@ contract('TopicEvent', function(accounts) {
 		        await testTopic.bet(betResultIndex, { from: better, value: betAmount })
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
 	    });
 
@@ -107,7 +115,7 @@ contract('TopicEvent', function(accounts) {
 		        await testTopic.bet(betResultIndex, { from: better, value: betAmount })
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
 	    });
   	});
@@ -151,7 +159,7 @@ contract('TopicEvent', function(accounts) {
 		        await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
 	    });
 
@@ -168,7 +176,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.revealResult(testFinalResultIndex, { from: accounts[0] });
                 assert.fail("Account 0 should not be able to set the result.");
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assert.match(e.message, regexInvalidOpcode);
             }
             assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
 
@@ -176,7 +184,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.revealResult(testFinalResultIndex, { from: accounts[2] });
                 assert.fail("Account 2 should not be able to set the result.");
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assert.match(e.message, regexInvalidOpcode);
             }
             assert.isFalse(await testTopic.finalResultSet.call(), "Final result should not be set.");
 
@@ -272,7 +280,7 @@ contract('TopicEvent', function(accounts) {
 				let resultName3 = await testTopic.getResultName(3);
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
   		});
   	});
@@ -297,7 +305,7 @@ contract('TopicEvent', function(accounts) {
 				await testTopic.getResultBalance(3);
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
   		});
   	});
@@ -322,7 +330,7 @@ contract('TopicEvent', function(accounts) {
 				await testTopic.getBetBalance(3);
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
   		});
   	});
@@ -386,7 +394,7 @@ contract('TopicEvent', function(accounts) {
 		        await testTopic.getFinalResultIndex();
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
     	});
     });
@@ -423,7 +431,7 @@ contract('TopicEvent', function(accounts) {
 		        await testTopic.getFinalResultName();
 		        assert.fail();
 			} catch(e) {
-		        assert.match(e.message, /invalid opcode/);
+		        assert.match(e.message, regexInvalidOpcode);
 		    }
     	});
     });

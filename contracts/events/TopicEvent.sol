@@ -20,7 +20,7 @@ contract TopicEvent is Ownable {
     address public oracle;
     bytes32 public name;
     uint256 public bettingEndBlock;
-    Result[10] results;
+    Result[10] private results;
 
     // Events
     event TopicCreated(bytes32 _name);
