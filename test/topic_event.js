@@ -239,12 +239,14 @@ contract('TopicEvent', function(accounts) {
 	    	// Withdraw winnings: accounts[1]
 	    	var expectedWithdrawAmount = totalTopicBalance * account1BetAmount / resultBalance;
 	    	await testTopic.withdrawWinnings({ from: account1 });
-	    	var accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, { from: account1 }));
+	    	var accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, 
+                { from: account1 }));
 	    	assert.equal(accountBetBalance.toString(), 0, "Account1 bet balance should be 0.");
 
 	    	expectedWithdrawAmount = totalTopicBalance * account2BetAmount / resultBalance;
 	    	await testTopic.withdrawWinnings({ from: account2 });
-	    	accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, { from: account2 }));
+	    	accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, 
+                { from: account2 }));
 	    	assert.equal(accountBetBalance.toString(), 0, "Account2 bet balance should be 0.");
     	});
     });
