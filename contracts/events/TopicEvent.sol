@@ -18,12 +18,12 @@ contract TopicEvent is Ownable {
     uint8 private finalResultIndex;
     uint8 public numOfResults;
     address public oracle;
-    bytes32 public name;
     uint256 public bettingEndBlock;
     Result[10] private results;
+    string public name;
 
     // Events
-    event TopicCreated(address indexed _owner, address indexed _oracle, bytes32 _name, bytes32[10] _resultNames, 
+    event TopicCreated(address indexed _owner, address indexed _oracle, string _name, bytes32[10] _resultNames, 
         uint256 _bettingEndBlock);
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
@@ -48,26 +48,27 @@ contract TopicEvent is Ownable {
     /// @notice Creates new TopicEvent contract.
     /// @param _owner The address of the owner.
     /// @param _oracle The address of the individual Oracle that will decide the result.
-    /// @param _name The question or statement of the TopicEvent.
+    /// @param _name The question or statement of the TopicEvent broken down by multiple bytes32.
     /// @param _resultNames The possible results of the TopicEvent.
     /// @param _bettingEndBlock The block when TopicEvent voting will end.
     function TopicEvent(
         address _owner,
         address _oracle,
-        bytes32 _name, 
+        bytes32[10] _name,
         bytes32[10] _resultNames,
         uint256 _bettingEndBlock)
         Ownable(_owner)
         public
         validAddress(_oracle)
     {
-        require(_name.length > 0);
-        require(_resultNames.length > 1);
+        require(!_name[0].isEmpty());
+        require(!_resultNames[0].isEmpty());
+        require(!_resultNames[1].isEmpty());
         require(_bettingEndBlock > block.number);
 
         owner = _owner;
         oracle = _oracle;
-        name = _name;
+        name = ByteUtils.toString(_name);
 
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
@@ -83,7 +84,7 @@ contract TopicEvent is Ownable {
 
         bettingEndBlock = _bettingEndBlock;
 
-        TopicCreated(_owner, _oracle, _name, _resultNames, _bettingEndBlock);
+        TopicCreated(_owner, _oracle, name, _resultNames, _bettingEndBlock);
     }
 
     function bet(uint8 _resultIndex) public payable {

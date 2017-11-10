@@ -10,7 +10,7 @@ contract('EventFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const testTopicParams = {
         _resultSetter: accounts[1],
-        _name: 'test',
+        _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
         _bettingEndBlock: 100
     };
@@ -43,7 +43,7 @@ contract('EventFactory', function(accounts) {
     describe('TopicEvent:', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
-            assert.equal(web3.toUtf8(await topic.name.call()), testTopicParams._name, 'Topic name does not match.');
+            assert.equal(await topic.name.call(), testTopicParams._name.join(''), 'Topic name does not match.');
             assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], 
                 'Result name 1 does not match.');
             assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1],

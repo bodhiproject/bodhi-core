@@ -10,12 +10,13 @@ contract('TopicEvent', function(accounts) {
 	const testTopicParams = {
         _owner: accounts[0],
         _oracle: accounts[1],
-		_name: "test",
+		_name: ["Will Apple stock reach $300 by t", "he end of 2017?"],
 		_resultNames: ["first", "second", "third"],
 		_bettingEndBlock: 100
 	};
 
 	let testTopic;
+    let nameString = testTopicParams._name.join('');
 
 	beforeEach(blockHeightManager.snapshot);
   	afterEach(blockHeightManager.revert);
@@ -32,7 +33,7 @@ contract('TopicEvent', function(accounts) {
 
 	    it("sets the topic name correctly", async function() {
 	    	let name = await testTopic.name.call();
-	    	assert.equal(web3.toUtf8(name), testTopicParams._name, "Topic name does not match.");
+	    	assert.equal(name, nameString, "Topic name does not match.");
 	    });
 
 	    it("sets the topic result names correctly", async function() {
@@ -62,6 +63,23 @@ contract('TopicEvent', function(accounts) {
 			await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, 
 				"Topic betting end block does not match.");
 	    });
+
+        it('can handle using all 10 resultNames', async function() {
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
+                testTopicParams._bettingEndBlock);
+
+            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "resultName 0 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "resultName 1 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), "third", "resultName 2 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(3)), "fourth", "resultName 3 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(4)), "fifth", "resultName 4 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(5)), "sixth", "resultName 5 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(6)), "seventh", "resultName 6 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth", "resultName 7 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth", "resultName 8 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten", "resultName 9 does not match");
+        });
   	});
 
   	describe("Betting:", async function() {
