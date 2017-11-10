@@ -1,9 +1,9 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
-import "../libs/Ownable";
+import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 
-contract TopicEvent {
+contract TopicEvent is Ownable {
     using SafeMath for uint256;
 
     struct Result {
@@ -20,14 +20,14 @@ contract TopicEvent {
     bool public finalResultSet;
 
     // Events
-    event TopicCreated(bytes _name);
+    event TopicCreated(bytes32 _name);
     event BetAccepted(address _better, uint _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint _finalResultIndex);
 
     // Modifiers
     modifier onlyResultSetter() {
-        require(msg.sender == resultSetter);
+        require(msg.sender == oracle);
         _;
     }
 
@@ -84,10 +84,10 @@ contract TopicEvent {
 
         for (uint i = 0; i < _resultNames.length; i++) {
             if (_resultNames[i].length > 0) {
-                results.push(Result({
+                results[i] = Result({
                     name: _resultNames[i],
                     balance: 0
-                }));
+                });
             } else {
                 break;
             }
