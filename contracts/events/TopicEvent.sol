@@ -29,29 +29,13 @@ contract TopicEvent is Ownable {
     event FinalResultSet(uint8 _finalResultIndex);
 
     // Modifiers
-    modifier onlyResultSetter() {
-        require(msg.sender == oracle);
-        _;
-    }
-
     modifier validResultIndex(uint8 _resultIndex) {
         require (_resultIndex <= numOfResults - 1);
         _;
     }
 
-    modifier validBet() {
-        require(block.number < bettingEndBlock);
-        require(msg.value > 0);
-        _;
-    }
-
     modifier hasEnded() {
         require(block.number >= bettingEndBlock);
-        _;
-    }
-
-    modifier finalResultNotSet() {
-        require(!finalResultSet);
         _;
     }
 
@@ -101,7 +85,10 @@ contract TopicEvent is Ownable {
         TopicCreated(name);
     }
 
-    function bet(uint8 _resultIndex) public validBet payable {
+    function bet(uint8 _resultIndex) public payable {
+        require(block.number < bettingEndBlock);
+        require(msg.value > 0);
+
         Result storage updatedResult = results[_resultIndex];
         updatedResult.balance = updatedResult.balance.add(msg.value);
         updatedResult.betBalances[msg.sender] = updatedResult.betBalances[msg.sender].add(msg.value);
@@ -112,11 +99,12 @@ contract TopicEvent is Ownable {
 
     function revealResult(uint8 _resultIndex)
         public
-        onlyResultSetter
         hasEnded
         validResultIndex(_resultIndex)
-        finalResultNotSet
     {
+        require(msg.sender == oracle);
+        require(!finalResultSet);
+
         finalResultIndex = _resultIndex;
         finalResultSet = true;
         FinalResultSet(finalResultIndex);
