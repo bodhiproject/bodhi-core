@@ -35,8 +35,7 @@ contract TopicEvent is Ownable {
     }
 
     modifier validResultIndex(uint8 _resultIndex) {
-        require(_resultIndex >= 0);
-        require(_resultIndex <= results.length - 1);
+        require (_resultIndex <= numOfResults - 1);
         _;
     }
 
