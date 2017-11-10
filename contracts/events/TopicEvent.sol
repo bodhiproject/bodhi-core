@@ -149,7 +149,7 @@ contract TopicEvent is Ownable {
     function getResultName(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
-        constant 
+        view 
         returns (bytes32) 
     {
         return results[_resultIndex].name;
@@ -158,7 +158,7 @@ contract TopicEvent is Ownable {
     function getResultBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
-        constant 
+        view 
         returns (uint256) 
     {
         return results[_resultIndex].balance;
@@ -167,7 +167,7 @@ contract TopicEvent is Ownable {
     function getBetBalance(uint8 _resultIndex) 
         public 
         validResultIndex(_resultIndex) 
-        constant 
+        view
         returns (uint256) 
     {
         return results[_resultIndex].betBalances[msg.sender];
@@ -175,7 +175,7 @@ contract TopicEvent is Ownable {
 
     function getTotalTopicBalance() 
         public 
-        constant 
+        view 
         returns (uint256) 
     {
         uint256 totalTopicBalance = 0;
@@ -188,7 +188,7 @@ contract TopicEvent is Ownable {
     function getFinalResultIndex() 
         public 
         finalResultIsSet 
-        constant 
+        view 
         returns (uint8) 
     {
         return finalResultIndex;
@@ -197,7 +197,7 @@ contract TopicEvent is Ownable {
     function getFinalResultName() 
         public 
         finalResultIsSet 
-        constant 
+        view 
         returns (bytes32) 
     {
         return results[finalResultIndex].name;
