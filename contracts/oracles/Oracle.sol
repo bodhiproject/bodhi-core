@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
@@ -26,23 +26,23 @@ contract Oracle is Ownable {
     uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
+    uint8 public numOfResults;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
     string public eventName;
-    Result[] private eventResults;
+    Result[10] private eventResults;
     mapping(address => Participant) private participants;
 
     // Modifiers
-    modifier validResultIndex(uint _resultIndex) {
-        require(_resultIndex >= 0);
-        require(_resultIndex <= eventResults.length - 1);
+    modifier validResultIndex(uint8 _resultIndex) {
+        require (_resultIndex <= numOfResults - 1);
         _;
     }
 
     // Events
-    event OracleCreated(string _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(string _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
@@ -58,7 +58,7 @@ contract Oracle is Ownable {
     function Oracle(
         address _owner,
         bytes32[10] _eventName,
-        bytes32[] _eventResultNames, 
+        bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 
@@ -66,17 +66,23 @@ contract Oracle is Ownable {
         public
     {
         require(!_eventName[0].isEmpty());
-        require(_eventResultNames.length > 1);
+        require(!_eventResultNames[0].isEmpty());
+        require(!_eventResultNames[1].isEmpty());
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
         eventName = ByteUtils.toString(_eventName);
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
-            eventResults.push(Result({
-                name: _eventResultNames[i],
-                votedBalance: 0
-            }));
+            if (!_eventResultNames[i].isEmpty()) {
+                eventResults[i] = Result({
+                    name: _eventResultNames[i],
+                    votedBalance: 0
+                });
+                numOfResults++;
+            } else {
+                break;
+            }
         }
 
         eventBettingEndBlock = _eventBettingEndBlock;
