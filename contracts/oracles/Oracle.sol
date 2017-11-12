@@ -2,9 +2,11 @@ pragma solidity ^0.4.15;
 
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
+import "../libs/ByteUtils.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable {
+    using ByteUtils for bytes32;
     using SafeMath for uint256;
 
     struct Participant {
@@ -24,12 +26,11 @@ contract Oracle is Ownable {
     uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
-    bytes public eventName;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
-
+    string public eventName;
     Result[] private eventResults;
     mapping(address => Participant) private participants;
 
@@ -41,7 +42,7 @@ contract Oracle is Ownable {
     }
 
     // Events
-    event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(string _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
@@ -56,7 +57,7 @@ contract Oracle is Ownable {
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
         address _owner,
-        bytes _eventName,
+        bytes32[10] _eventName,
         bytes32[] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
@@ -64,12 +65,12 @@ contract Oracle is Ownable {
         Ownable(_owner)
         public
     {
-        require(_eventName.length > 0);
+        require(!_eventName[0].isEmpty());
         require(_eventResultNames.length > 1);
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
-        eventName = _eventName;
+        eventName = ByteUtils.toString(_eventName);
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
             eventResults.push(Result({
@@ -82,7 +83,7 @@ contract Oracle is Ownable {
         decisionEndBlock = _decisionEndBlock;
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
-        OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+        OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock);
     }
 
