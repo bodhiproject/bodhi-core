@@ -11,7 +11,7 @@ module.exports = function(deployer) {
     deployer.link(SafeMath, [TopicEvent, Oracle]);
 
     deployer.deploy(ByteUtils);
-    deployer.link(ByteUtils, [TopicEvent]);
+    deployer.link(ByteUtils, [TopicEvent, Oracle]);
     
     deployer.deploy(AddressManager).then(function() {
         return deployer.deploy(EventFactory, AddressManager.address).then(function() {
