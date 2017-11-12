@@ -23,7 +23,7 @@ contract('Oracle', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const testOracleParams = {
         _owner: oracleCreator,
-        _eventName: "test",
+        _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ["first", "second", "third"],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
@@ -46,7 +46,7 @@ contract('Oracle', function(accounts) {
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
-            assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
+            assert.equal(await oracle.eventName.call(), testOracleParams._eventName.join(''), 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
                 "eventResultName 1 does not match");
@@ -60,20 +60,6 @@ contract('Oracle', function(accounts) {
                 "decisionEndBlock does not match");
             assert.equal(await oracle.arbitrationOptionEndBlock.call(), testOracleParams._arbitrationOptionEndBlock, 
                 "arbitrationEndBlock does not match");
-        });
-
-        it("can handle a long eventName", async function() {
-            let params = {
-                _owner: oracleCreator,
-                _eventName: "This is a super long event name that is longer than 32 bytes. It should still work.",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 140
-            };
-
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
-            assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
         });
 
         it("throws if the eventName is empty", async function() {

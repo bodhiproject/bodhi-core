@@ -16,7 +16,7 @@ contract('OracleFactory', function(accounts) {
     const oracleCreator = accounts[1];
 
     const testParams = {
-        _eventName: 'Test Oracle',
+        _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ['first', 'second', 'third'],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
@@ -52,8 +52,7 @@ contract('OracleFactory', function(accounts) {
     describe('createOracle', async function() {
         it('initializes all the values of the new Oracle', async function() {
             assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
-            assert.equal(web3.toUtf8(await oracle.eventName.call()), testParams._eventName, 
-                'eventName does not match');
+            assert.equal(await oracle.eventName.call(), testParams._eventName.join(''), 'eventName does not match');
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testParams._eventResultNames[0], 
                 'eventResultName 0 does not match.');
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testParams._eventResultNames[1], 
@@ -91,7 +90,7 @@ contract('OracleFactory', function(accounts) {
             var oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
             assert.isTrue(oracleExists, 'Oracle 1 should already exist');
 
-            var oracleExists = await oracleFactory.doesOracleExist('oracle 2', ['first', 'second', 'third'], 100, 120, 
+            var oracleExists = await oracleFactory.doesOracleExist(['oracle 2'], ['first', 'second', 'third'], 100, 120, 
                 140);
             assert.isFalse(oracleExists, 'Oracle 2 should not exist');
         });
