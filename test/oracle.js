@@ -95,6 +95,27 @@ contract('Oracle', function(accounts) {
             assert.equal(await oracle.eventName.call(), expected, 'eventName does not match');
         });
 
+        it('should allow a space as the last character of a name array item', async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
+            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+        });
+
+        it('should allow a space as the first character if the next character is not empty in a name array item', 
+            async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
+            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+        });
+
         it('can handle using all 10 eventResultNames', async function() {
             oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],

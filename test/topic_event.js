@@ -94,6 +94,25 @@ contract('TopicEvent', function(accounts) {
             assert.equal(await testTopic.name.call(), expected, 'Topic name does not match');
         });
 
+        it('should allow a space as the last character of a name array item', async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+        });
+
+        it('should allow a space as the first character if the next character is not empty in a name array item', 
+            async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+        });
+
         it('can handle using all 10 resultNames', async function() {
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
