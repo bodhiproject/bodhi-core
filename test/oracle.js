@@ -94,6 +94,32 @@ contract('Oracle', function(accounts) {
             assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
         });
 
+        it('should only set the first 10 eventResultNames', async function() {
+            let eventResultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", 
+                "ninth", "ten", "eleven"];
+            oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
+                eventResultNames, testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), "third", "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(3)), "fourth", "eventResultName 3 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(4)), "fifth", "eventResultName 4 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(5)), "sixth", "eventResultName 5 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(6)), "seventh", "eventResultName 6 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(7)), "eighth", "eventResultName 7 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(8)), "ninth", "eventResultName 8 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
+
+            try {
+                await oracle.getEventResultName(10);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
+
         it("throws if the eventName is empty", async function() {
             let params = {
                 _owner: oracleCreator,

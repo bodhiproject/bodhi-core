@@ -23,26 +23,26 @@ contract('ByteUtils', function(accounts) {
         });
     });
 
-    describe('toString', async function() {
-        it('should return the correct concatenated string', async function() {
-            var test = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
-            assert.equal(await instance.toString(test), test.join(''), 'test 1 does not match');
+    // describe('toString', async function() {
+    //     it('should return the correct concatenated string', async function() {
+    //         var test = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+    //             'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+    //             'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+    //             'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+    //             'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
+    //         assert.equal(await instance.toString(test), test.join(''), 'test 1 does not match');
 
-            test = ["Who will be the next president i", "n the 2020 election?"];
-            assert.equal(await instance.toString(test), test.join(''), 'test 2 does not match');
+    //         test = ["Who will be the next president i", "n the 2020 election?"];
+    //         assert.equal(await instance.toString(test), test.join(''), 'test 2 does not match');
 
-            test = ["Who will be the next president i", " n the 2020 election?"];
-            assert.equal(await instance.toString(test), test.join(''), 'test 3 does not match');
+    //         test = ["Who will be the next president i", " n the 2020 election?"];
+    //         assert.equal(await instance.toString(test), test.join(''), 'test 3 does not match');
 
-            test = ["Hello world!"];
-            assert.equal(await instance.toString(test), test.join(''), 'test 4 does not match');
+    //         test = ["Hello world!"];
+    //         assert.equal(await instance.toString(test), test.join(''), 'test 4 does not match');
 
-            test = [];
-            assert.equal(await instance.toString(test), test.join(''), 'test 5 does not match');
-        });
-    });
+    //         test = [];
+    //         assert.equal(await instance.toString(test), test.join(''), 'test 5 does not match');
+    //     });
+    // });
 });

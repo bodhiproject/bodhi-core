@@ -92,6 +92,31 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth", "resultName 8 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten", "resultName 9 does not match");
         });
+
+        it('should only set the first 10 resultNames', async function() {
+            let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
+                "ten", "eleven"];
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "eventResultName 0 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), "third", "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(3)), "fourth", "eventResultName 3 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(4)), "fifth", "eventResultName 4 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(5)), "sixth", "eventResultName 5 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(6)), "seventh", "eventResultName 6 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth", "eventResultName 7 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth", "eventResultName 8 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten", "eventResultName 9 does not match");
+
+            try {
+                await testTopic.getResultName(10);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
     });
 
     describe("Betting:", async function() {
