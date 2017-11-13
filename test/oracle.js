@@ -76,6 +76,25 @@ contract('Oracle', function(accounts) {
             assert.equal(await oracle.eventName.call(), name.join(''), 'eventName does not match');
         });
 
+        it('should only concatenate first 10 array slots of the name array', async function() {
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef'];
+
+            oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
+            assert.equal(await oracle.eventName.call(), expected, 'eventName does not match');
+        });
+
         it('can handle using all 10 eventResultNames', async function() {
             oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
