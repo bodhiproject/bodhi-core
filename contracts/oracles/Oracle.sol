@@ -34,9 +34,9 @@ contract Oracle is Ownable, ReentrancyGuard {
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
     Result[10] private eventResults;
+    IAddressManager private addressManager;
     string public eventName;
     mapping(address => Participant) private participants;
-    IAddressManager addressManager;
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {

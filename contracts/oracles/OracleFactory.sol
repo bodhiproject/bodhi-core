@@ -17,8 +17,8 @@ contract OracleFactory {
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
         addressManager = _addressManager;
-        IAddressManager addressManager = IAddressManager(addressManager);
-        addressManager.setOracleFactoryAddress(msg.sender, address(this));
+        IAddressManager addressManagerInterface = IAddressManager(addressManager);
+        addressManagerInterface.setOracleFactoryAddress(msg.sender, address(this));
     }
 
     /// @notice Creates new Oracle contract.
