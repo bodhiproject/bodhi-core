@@ -294,7 +294,7 @@ contract('Oracle', function(accounts) {
 
             let votedResultIndex = 2;
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
             assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
@@ -315,7 +315,7 @@ contract('Oracle', function(accounts) {
             try {
                 let votedResultIndex = 3;
                 let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -332,7 +332,7 @@ contract('Oracle', function(accounts) {
 
             try {
                 let votedResultIndex = 0;
-                await oracle.voteResult(votedResultIndex, { from: participant1 });
+                await oracle.voteResult(votedResultIndex, 0, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -346,7 +346,7 @@ contract('Oracle', function(accounts) {
             try {
                 let votedResultIndex = 1;
                 let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -361,7 +361,7 @@ contract('Oracle', function(accounts) {
             try {
                 let votedResultIndex = 1;
                 let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -381,14 +381,14 @@ contract('Oracle', function(accounts) {
 
             let votedResultIndex = 2;
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
             assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
                 "participant1 voted resultIndex does not match");
 
             try {
-                await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -411,11 +411,11 @@ contract('Oracle', function(accounts) {
             assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
                 "Block should be below decisionEndBlock");
 
-            await oracle.voteResult(0, { from: participant1, value: winningStake1 });            
-            await oracle.voteResult(0, { from: participant2, value: winningStake2 });
-            await oracle.voteResult(0, { from: participant3, value: winningStake3 });
-            await oracle.voteResult(1, { from: participant4, value: losingStake1 });
-            await oracle.voteResult(2, { from: participant5, value: losingStake2 });
+            await oracle.voteResult(0, winningStake1, { from: participant1 });            
+            await oracle.voteResult(0, winningStake2, { from: participant2 });
+            await oracle.voteResult(0, winningStake3, { from: participant3 });
+            await oracle.voteResult(1, losingStake1, { from: participant4 });
+            await oracle.voteResult(2, losingStake2, { from: participant5 });
         });
 
         it("allows withdrawing if they picked the winning result", async function() {
@@ -530,7 +530,7 @@ contract('Oracle', function(accounts) {
                 "Block should be below decisionEndBlock");
 
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(0, { from: participant1, value: stakeContributed });
+            await oracle.voteResult(0, stakeContributed, { from: participant1 });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
             assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
@@ -551,7 +551,7 @@ contract('Oracle', function(accounts) {
                 "participant1 should not have set result");
 
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(0, { from: participant1, value: stakeContributed });
+            await oracle.voteResult(0, stakeContributed, { from: participant1 });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should have set result");
@@ -572,7 +572,7 @@ contract('Oracle', function(accounts) {
 
             let votedResultIndex = 1;
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, { from: participant1, value: stakeContributed });
+            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should have set result");
@@ -602,11 +602,11 @@ contract('Oracle', function(accounts) {
             let decisionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
             assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
 
-            await oracle.voteResult(0, { from: participant1, value: Utils.getBigNumberWithDecimals(3, botDecimals) });            
-            await oracle.voteResult(1, { from: participant2, value: Utils.getBigNumberWithDecimals(4, botDecimals) });
-            await oracle.voteResult(1, { from: participant3, value: Utils.getBigNumberWithDecimals(5, botDecimals) });
-            await oracle.voteResult(2, { from: participant4, value: Utils.getBigNumberWithDecimals(10, botDecimals) });
-            await oracle.voteResult(2, { from: participant5, value: Utils.getBigNumberWithDecimals(1, botDecimals) });
+            await oracle.voteResult(0, Utils.getBigNumberWithDecimals(3, botDecimals), { from: participant1 });            
+            await oracle.voteResult(1, Utils.getBigNumberWithDecimals(4, botDecimals), { from: participant2 });
+            await oracle.voteResult(1, Utils.getBigNumberWithDecimals(5, botDecimals), { from: participant3 });
+            await oracle.voteResult(2, Utils.getBigNumberWithDecimals(10, botDecimals), { from: participant4 });
+            await oracle.voteResult(2, Utils.getBigNumberWithDecimals(1, botDecimals), { from: participant5 });
             
             await blockHeightManager.mineTo(decisionEndBlock);
             assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
@@ -647,12 +647,12 @@ contract('Oracle', function(accounts) {
             let decisionEndBlock = (await oracle.decisionEndBlock.call()).toNumber();
             assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
 
-            await oracle.voteResult(1, { from: participant1, value: winningStake1 });            
-            await oracle.voteResult(1, { from: participant2, value: winningStake2 });
-            await oracle.voteResult(1, { from: participant3, value: winningStake3 });
-            await oracle.voteResult(0, { from: participant4, value: losingStake1 });
-            await oracle.voteResult(2, { from: participant5, value: losingStake2 });
-            await oracle.voteResult(0, { from: participant6, value: losingStake3 });
+            await oracle.voteResult(1, winningStake1, { from: participant1 });            
+            await oracle.voteResult(1, winningStake2, { from: participant2 });
+            await oracle.voteResult(1, winningStake3, { from: participant3 });
+            await oracle.voteResult(0, losingStake1, { from: participant4 });
+            await oracle.voteResult(2, losingStake2, { from: participant5 });
+            await oracle.voteResult(0, losingStake3, { from: participant6 });
 
             await blockHeightManager.mineTo(decisionEndBlock);
             assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
