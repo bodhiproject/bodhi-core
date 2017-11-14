@@ -322,7 +322,7 @@ contract('Oracle', function(accounts) {
             }
         });
 
-        it("throws if the value is 0", async function() {
+        it("throws if the botAmount is 0", async function() {
             await blockHeightManager.mineTo(validVotingBlock);
             let blockNumber = web3.eth.blockNumber;
             assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
