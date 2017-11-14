@@ -1,5 +1,6 @@
 const web3 = global.web3;
 const Oracle = artifacts.require("./Oracle.sol");
+const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
@@ -33,13 +34,15 @@ contract('Oracle', function(accounts) {
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
 
     let oracle;
+    let addressManager;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        oracle = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+        addressManager = await AddressManager.deployed({ from: accounts[10] });
+        oracle = await Oracle.new(...Object.values(testOracleParams), addressManager.address, { from: oracleCreator });
         await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
 
@@ -71,7 +74,7 @@ contract('Oracle', function(accounts) {
 
             oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             assert.equal(await oracle.eventName.call(), name.join(''), 'eventName does not match');
         });
@@ -86,7 +89,7 @@ contract('Oracle', function(accounts) {
 
             oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
@@ -100,7 +103,7 @@ contract('Oracle', function(accounts) {
             let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
             oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
         });
@@ -111,7 +114,7 @@ contract('Oracle', function(accounts) {
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
             oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
         });
@@ -120,7 +123,7 @@ contract('Oracle', function(accounts) {
             oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
@@ -139,7 +142,7 @@ contract('Oracle', function(accounts) {
                 "ninth", "ten", "eleven"];
             oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 eventResultNames, testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
@@ -172,7 +175,7 @@ contract('Oracle', function(accounts) {
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -190,7 +193,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -208,7 +211,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -226,7 +229,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -262,7 +265,8 @@ contract('Oracle', function(accounts) {
                 web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
                 "Invalid minBaseReward should be below minBaseReward");
 
-            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+            let o = await Oracle.new(...Object.values(testOracleParams), addressManager.address, 
+                { from: oracleCreator });
 
             try {
                 await o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
