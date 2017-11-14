@@ -11,10 +11,10 @@ contract Oracle is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
     struct Participant {
-        uint256 stakeContributed;
         bool didSetResult;
-        uint8 resultIndex;
         bool didWithdrawEarnings;
+        uint8 resultIndex;
+        uint256 stakeContributed;
     }
 
     struct Result {
