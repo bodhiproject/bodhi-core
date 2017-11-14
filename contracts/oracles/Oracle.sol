@@ -4,6 +4,7 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../ReentrancyGuard.sol";
+import "../storage/IAddressManager.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable, ReentrancyGuard {
@@ -35,6 +36,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     Result[10] private eventResults;
     string public eventName;
     mapping(address => Participant) private participants;
+    IAddressManager addressManager;
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -62,9 +64,11 @@ contract Oracle is Ownable, ReentrancyGuard {
         bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
-        uint256 _arbitrationOptionEndBlock) 
+        uint256 _arbitrationOptionEndBlock,
+        address _addressManager)
         Ownable(_owner)
         public
+        validAddress(_addressManager)
     {
         require(!_eventName[0].isEmpty());
         require(!_eventResultNames[0].isEmpty());
@@ -92,6 +96,8 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock);
+
+        addressManager = IAddressManager(_addressManager);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -129,6 +135,8 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
+
+        // TODO: delegatecall transfer() to BodhiToken 
 
         ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }
