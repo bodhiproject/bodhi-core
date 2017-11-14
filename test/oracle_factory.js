@@ -50,7 +50,7 @@ contract('OracleFactory', function(accounts) {
 
         it('throws if the AddressManager address is invalid', async function() {
             try {
-                await OracleFactory.new(0, { from: oracleFactoryCreator });
+                await OracleFactory.deployed(0, { from: oracleFactoryCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);

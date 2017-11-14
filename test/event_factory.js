@@ -42,7 +42,7 @@ contract('EventFactory', function(accounts) {
 
         it('throws if the AddressManager address is invalid', async function() {
             try {
-                await EventFactory.new(0, { from: eventFactoryCreator });
+                await EventFactory.deployed(0, { from: eventFactoryCreator });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);

@@ -235,6 +235,25 @@ contract('Oracle', function(accounts) {
                 assert.match(e.message, /invalid opcode/);
             }
         });
+        
+        it('throws if the AddressManager address is invalid', async function() {
+            let params = {
+                _owner: oracleCreator,
+                _eventName: "test",
+                _eventResultNames: ["first", "second", "third"],
+                _eventBettingEndBlock: 100,
+                _decisionEndBlock: 120,
+                _arbitrationOptionEndBlock: 140,
+                _addressManager: 0
+            };
+
+            try {
+                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
     });
 
     describe("fallback function", async function() {
