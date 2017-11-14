@@ -111,25 +111,26 @@ contract Oracle is Ownable, ReentrancyGuard {
 
     /// @notice Vote an Event result which requires BOT payment.
     /// @param _eventResultIndex The Event result which is being voted on.
-    function voteResult(uint8 _eventResultIndex) 
+    /// @param _botAmount The amount of BOT to use for voting.
+    function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
         public 
-        payable 
         validResultIndex(_eventResultIndex) 
     {
-        require(msg.value > 0);
+        require(_botAmount > 0);
+        require(totalStakeContributed.add(_botAmount) <= maxStakeContribution);
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);
         require(!participants[msg.sender].didSetResult);
 
         Participant storage participant = participants[msg.sender];
-        participant.stakeContributed = participant.stakeContributed.add(msg.value);
+        participant.stakeContributed = participant.stakeContributed.add(_botAmount);
         participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
 
-        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(msg.value);
-        totalStakeContributed = totalStakeContributed.add(msg.value);
+        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
+        totalStakeContributed = totalStakeContributed.add(_botAmount);
 
-        ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
+        ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }
 
     /// @notice Withdraw earnings if you picked the correct result.
