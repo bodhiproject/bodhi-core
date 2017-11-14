@@ -21,25 +21,25 @@ contract("AdddressManager", function(accounts) {
 
     describe("BodhiTokenAddress", async function() {
         it("should return the correct address if set", async function() {
-            assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should be unset");
+            assert.equal(await instance.bodhiTokenAddress.call(), 0, "Token address should be unset");
 
             await instance.setBodhiTokenAddress(tokenAddress1, { from: owner });
-            assert.equal(await instance.getBodhiTokenAddress(), tokenAddress1, "Token address does not match");
+            assert.equal(await instance.bodhiTokenAddress.call(), tokenAddress1, "Token address does not match");
         });
 
         it("allows replacing an existing address", async function() {
-            assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should be unset");
+            assert.equal(await instance.bodhiTokenAddress.call(), 0, "Token address should be unset");
 
             await instance.setBodhiTokenAddress(tokenAddress1, { from: owner });
-            assert.equal(await instance.getBodhiTokenAddress(), tokenAddress1, "Token address does not match");
+            assert.equal(await instance.bodhiTokenAddress.call(), tokenAddress1, "Token address does not match");
 
             await instance.setBodhiTokenAddress(tokenAddress2, { from: owner });
-            assert.equal(await instance.getBodhiTokenAddress(), tokenAddress2, 
+            assert.equal(await instance.bodhiTokenAddress.call(), tokenAddress2, 
                 "Token address replacement does not match");
         });
 
         it("throws if a non-owner tries setting the address", async function() {
-            assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should be unset");
+            assert.equal(await instance.bodhiTokenAddress.call(), 0, "Token address should be unset");
 
             try {
                 await instance.setBodhiTokenAddress(tokenAddress1, { from: accounts[1] });
@@ -48,11 +48,11 @@ contract("AdddressManager", function(accounts) {
                 assert.match(e.message, /invalid opcode/);
             }
 
-            assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should still be unset");
+            assert.equal(await instance.bodhiTokenAddress.call(), 0, "Token address should still be unset");
         });
 
         it("throws if trying to set an invalid address", async function() {
-            assert.equal(await instance.getBodhiTokenAddress(), 0, "Token address should be unset");
+            assert.equal(await instance.bodhiTokenAddress.call(), 0, "Token address should be unset");
 
             try {
                 await instance.setBodhiTokenAddress(0, { from: owner });
