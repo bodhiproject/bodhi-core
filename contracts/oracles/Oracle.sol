@@ -58,6 +58,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
+    /// @param _addressManager The address of the AddressManager contract.
     function Oracle(
         address _owner,
         bytes32[10] _eventName,

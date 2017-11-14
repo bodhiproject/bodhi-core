@@ -1,9 +1,10 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "../storage/IAddressManager.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
+    address private addressManager;
     mapping (bytes32 => Oracle) public oracles;
 
     // Events
@@ -11,9 +12,12 @@ contract OracleFactory {
         bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, 
         uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
 
+    /// @notice Creates new OracleFactory contract.
+    /// @param _addressManager The address of the AddressManager contract.
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
-        IAddressManager addressManager = IAddressManager(_addressManager);
+        addressManager = _addressManager;
+        IAddressManager addressManager = IAddressManager(addressManager);
         addressManager.setOracleFactoryAddress(msg.sender, address(this));
     }
 
@@ -39,7 +43,7 @@ contract OracleFactory {
         require(address(oracles[oracleHash]) == 0);
 
         Oracle oracle = new Oracle(msg.sender, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            _arbitrationOptionEndBlock);
+            _arbitrationOptionEndBlock, addressManager);
         oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;
         OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _eventBettingEndBlock, 
