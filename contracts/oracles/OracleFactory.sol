@@ -7,7 +7,7 @@ contract OracleFactory {
     mapping (bytes32 => Oracle) public oracles;
 
     // Events
-    event OracleCreated(address indexed _creator, Oracle _oracle, bytes _eventName, bytes32[] _eventResultNames, 
+    event OracleCreated(address indexed _creator, Oracle _oracle, bytes32[10] _eventName, bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, 
         uint256 _baseRewardAmount);
 
@@ -23,8 +23,8 @@ contract OracleFactory {
     /// @param _decisionEndBlock The block when Oracle voting will end.
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function createOracle(
-        bytes _eventName, 
-        bytes32[] _eventResultNames, 
+        bytes32[10] _eventName, 
+        bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock)
@@ -54,8 +54,8 @@ contract OracleFactory {
     /// @param _decisionEndBlock The block when Oracle voting will end.
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function doesOracleExist(
-        bytes _eventName, 
-        bytes32[] _eventResultNames, 
+        bytes32[10] _eventName, 
+        bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock)
@@ -69,8 +69,8 @@ contract OracleFactory {
     }
 
     function getOracleHash(
-        bytes _eventName, 
-        bytes32[] _eventResultNames,
+        bytes32[10] _eventName, 
+        bytes32[10] _eventResultNames,
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 

@@ -6,32 +6,23 @@ library ByteUtils {
     }
 
     function toString(bytes32[10] _data) internal pure returns (string) {
-        uint8 nonEmptySlots = 0;
-        for (uint i = 0; i < _data.length; i++) {
-            if (_data[i] != 0x0) {
-                nonEmptySlots++;
-            } else {
-                break;
-            }
-        }
-
-        bytes memory bytesString = new bytes(nonEmptySlots * 32);
+        bytes memory allBytes = new bytes(10 * 32);
         uint length;
-        for (i = 0; i < nonEmptySlots; i++) {
+        for (uint i = 0; i < 10; i++) {
             for (uint j = 0; j < 32; j++) {
-                byte char = byte(bytes32(uint(_data[i]) * 2 ** (8 * j)));
+                byte char = _data[i][j];
                 if (char != 0) {
-                    bytesString[length] = char;
-                    length += 1;
+                    allBytes[length] = char;
+                    length++;
                 }
             }
         }
 
-        bytes memory bytesStringTrimmed = new bytes(length);
+        bytes memory trimmedBytes = new bytes(length + 1);
         for (i = 0; i < length; i++) {
-            bytesStringTrimmed[i] = bytesString[i];
+            trimmedBytes[i] = allBytes[i];
         }
 
-        return string(bytesStringTrimmed);
+        return string(trimmedBytes);
     }
 }

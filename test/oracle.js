@@ -23,7 +23,7 @@ contract('Oracle', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const testOracleParams = {
         _owner: oracleCreator,
-        _eventName: "test",
+        _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ["first", "second", "third"],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
@@ -46,7 +46,7 @@ contract('Oracle', function(accounts) {
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
-            assert.equal(web3.toUtf8(await oracle.eventName.call()), testOracleParams._eventName, 
+            assert.equal(await oracle.eventName.call(), testOracleParams._eventName.join(''), 
                 "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
                 "eventResultName 1 does not match");
@@ -62,18 +62,102 @@ contract('Oracle', function(accounts) {
                 "arbitrationEndBlock does not match");
         });
 
-        it("can handle a long eventName", async function() {
-            let params = {
-                _owner: oracleCreator,
-                _eventName: "This is a super long event name that is longer than 32 bytes. It should still work.",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 140
-            };
+        it('can handle a long name using all 10 array slots', async function() {
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
-            let o = await Oracle.new(...Object.values(params), { from: oracleCreator });
-            assert.equal(web3.toUtf8(await o.eventName.call()), params._eventName);
+            oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(await oracle.eventName.call(), name.join(''), 'eventName does not match');
+        });
+
+        it('should only concatenate first 10 array slots of the name array', async function() {
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef'];
+
+            oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
+            assert.equal(await oracle.eventName.call(), expected, 'eventName does not match');
+        });
+
+        it('should allow a space as the last character of a name array item', async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
+            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+        });
+
+        it('should allow a space as the first character if the next character is not empty in a name array item', 
+            async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
+            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+        });
+
+        it('can handle using all 10 eventResultNames', async function() {
+            oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
+                ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
+                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), "third", "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(3)), "fourth", "eventResultName 3 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(4)), "fifth", "eventResultName 4 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(5)), "sixth", "eventResultName 5 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(6)), "seventh", "eventResultName 6 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(7)), "eighth", "eventResultName 7 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(8)), "ninth", "eventResultName 8 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
+        });
+
+        it('should only set the first 10 eventResultNames', async function() {
+            let eventResultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", 
+                "ninth", "ten", "eleven"];
+            oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
+                eventResultNames, testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
+                testOracleParams._arbitrationOptionEndBlock, { from: oracleCreator });
+
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), "third", "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(3)), "fourth", "eventResultName 3 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(4)), "fifth", "eventResultName 4 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(5)), "sixth", "eventResultName 5 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(6)), "seventh", "eventResultName 6 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(7)), "eighth", "eventResultName 7 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(8)), "ninth", "eventResultName 8 does not match");
+            assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
+
+            try {
+                await oracle.getEventResultName(10);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
 
         it("throws if the eventName is empty", async function() {

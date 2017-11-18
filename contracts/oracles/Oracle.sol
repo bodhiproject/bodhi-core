@@ -1,10 +1,12 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
+import "../libs/ByteUtils.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable {
+    using ByteUtils for bytes32;
     using SafeMath for uint256;
 
     struct Participant {
@@ -24,24 +26,23 @@ contract Oracle is Ownable {
     uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
-    bytes public eventName;
+    uint8 public numOfResults;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
-
-    Result[] private eventResults;
+    Result[10] private eventResults;
+    string public eventName;
     mapping(address => Participant) private participants;
 
     // Modifiers
-    modifier validResultIndex(uint _resultIndex) {
-        require(_resultIndex >= 0);
-        require(_resultIndex <= eventResults.length - 1);
+    modifier validResultIndex(uint8 _resultIndex) {
+        require (_resultIndex <= numOfResults - 1);
         _;
     }
 
     // Events
-    event OracleCreated(bytes _eventName, bytes32[] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(string _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
@@ -56,33 +57,39 @@ contract Oracle is Ownable {
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function Oracle(
         address _owner,
-        bytes _eventName,
-        bytes32[] _eventResultNames, 
+        bytes32[10] _eventName,
+        bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock) 
         Ownable(_owner)
         public
     {
-        require(_eventName.length > 0);
-        require(_eventResultNames.length > 1);
+        require(!_eventName[0].isEmpty());
+        require(!_eventResultNames[0].isEmpty());
+        require(!_eventResultNames[1].isEmpty());
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
-        eventName = _eventName;
+        eventName = ByteUtils.toString(_eventName);
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
-            eventResults.push(Result({
-                name: _eventResultNames[i],
-                votedBalance: 0
-            }));
+            if (!_eventResultNames[i].isEmpty()) {
+                eventResults[i] = Result({
+                    name: _eventResultNames[i],
+                    votedBalance: 0
+                });
+                numOfResults++;
+            } else {
+                break;
+            }
         }
 
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
 
-        OracleCreated(_eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
+        OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock);
     }
 
@@ -92,7 +99,10 @@ contract Oracle is Ownable {
     }
 
     /// @notice Deposit the base reward for the Oracle.
-    function addBaseReward() public payable {
+    function addBaseReward() 
+        public 
+        payable 
+    {
         require(msg.value >= minBaseReward);
         OracleFunded(msg.value);
     }
@@ -121,7 +131,9 @@ contract Oracle is Ownable {
     }
 
     /// @notice Withdraw earnings if you picked the correct result.
-    function withdrawEarnings() public {
+    function withdrawEarnings() 
+        public 
+    {
         require(block.number >= arbitrationOptionEndBlock);
         require(participants[msg.sender].stakeContributed > 0);
         require(totalStakeContributed > 0);
@@ -142,7 +154,7 @@ contract Oracle is Ownable {
     function getEventResultName(uint8 _eventResultIndex) 
         public 
         validResultIndex(_eventResultIndex) 
-        constant 
+        view 
         returns (bytes32) 
     {
         return eventResults[_eventResultIndex].name;
@@ -150,26 +162,42 @@ contract Oracle is Ownable {
 
     /// @notice Gets the stake contributed by the Oracle participant.
     /// @return The amount of stake contributed by the Oracle participant.
-    function getStakeContributed() public constant returns(uint256) {
+    function getStakeContributed() 
+        public 
+        view 
+        returns(uint256) 
+    {
         return participants[msg.sender].stakeContributed;
     }
 
     /// @notice Shows if the Oracle participant has voted yet.
     /// @return Flag that shows if the Oracle participant has voted yet.
-    function didSetResult() public constant returns(bool) {
+    function didSetResult() 
+        public 
+        view 
+        returns(bool) 
+    {
         return participants[msg.sender].didSetResult;
     }
 
     /// @notice Gets the result index the Oracle participant previously voted on.
     /// @return The voted result index.
-    function getVotedResultIndex() public constant returns(uint8) {
+    function getVotedResultIndex() 
+        public 
+        view 
+        returns(uint8) 
+    {
         require(participants[msg.sender].didSetResult);
         return participants[msg.sender].resultIndex;
     }
 
     /// @notice Gets the final result index set by the Oracle participants.
     /// @return The index of the final result set by Oracle participants.
-    function getFinalResultIndex() public constant returns (uint8) {
+    function getFinalResultIndex() 
+        public 
+        view 
+        returns (uint8) 
+    {
         require(block.number >= decisionEndBlock);
 
         uint8 finalResultIndex = 0;
@@ -187,7 +215,11 @@ contract Oracle is Ownable {
 
     /// @notice Gets the amount of earnings you can withdraw.
     /// @return The amount of earnings you can withdraw.
-    function getEarningsAmount() public constant returns(uint256) {
+    function getEarningsAmount() 
+        public 
+        view 
+        returns(uint256) 
+    {
         uint256 stakeContributed = participants[msg.sender].stakeContributed;
         if (stakeContributed == 0) {
             return 0;

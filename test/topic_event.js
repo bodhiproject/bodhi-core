@@ -63,6 +63,56 @@ contract('TopicEvent', function(accounts) {
                 "Topic betting end block does not match.");
         });
 
+        it('can handle a long name using all 10 array slots', async function() {
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
+
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(await testTopic.name.call(), name.join(''), 'Topic name does not match');
+        });
+
+        it('should only concatenate first 10 array slots of the name array', async function() {
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
+                'abcdefghijklmnopqrstuvwxyzabcdef'];
+
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
+                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
+            assert.equal(await testTopic.name.call(), expected, 'Topic name does not match');
+        });
+
+        it('should allow a space as the last character of a name array item', async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+        });
+
+        it('should allow a space as the first character if the next character is not empty in a name array item', 
+            async function() {
+            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
+            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+        });
+
         it('can handle using all 10 resultNames', async function() {
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
@@ -78,6 +128,31 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth", "resultName 7 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth", "resultName 8 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten", "resultName 9 does not match");
+        });
+
+        it('should only set the first 10 resultNames', async function() {
+            let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
+                "ten", "eleven"];
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                resultNames, testTopicParams._bettingEndBlock);
+
+            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "eventResultName 0 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "eventResultName 1 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), "third", "eventResultName 2 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(3)), "fourth", "eventResultName 3 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(4)), "fifth", "eventResultName 4 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(5)), "sixth", "eventResultName 5 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(6)), "seventh", "eventResultName 6 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth", "eventResultName 7 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth", "eventResultName 8 does not match");
+            assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten", "eventResultName 9 does not match");
+
+            try {
+                await testTopic.getResultName(10);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
         });
     });
 
