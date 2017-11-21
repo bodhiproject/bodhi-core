@@ -8,8 +8,8 @@ contract EventFactory {
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _creator, TopicEvent _topicEvent, bytes32[10] _name, bytes32[10] _resultNames,
-        uint256 _bettingEndBlock);
+    event TopicCreated(address indexed _creator, address indexed _topicAddress, bytes32[10] indexed _name, 
+        bytes32[10] _resultNames, uint256 _bettingEndBlock);
 
     function EventFactory(address _addressManager) public {
         IAddressManager addressManager = IAddressManager(_addressManager);
@@ -31,7 +31,7 @@ contract EventFactory {
         TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
 
-        TopicCreated(msg.sender, topic, _name, _resultNames, _bettingEndBlock);
+        TopicCreated(msg.sender, address(topic), _name, _resultNames, _bettingEndBlock);
         return topic;
     }
 
