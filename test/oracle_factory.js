@@ -38,7 +38,7 @@ contract('OracleFactory', function(accounts) {
 
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward });
-        oracle = await Oracle.at(transaction.logs[0].address);
+        oracle = await Oracle.at(transaction.logs[0].args._oracleAddress);
     });
 
     describe('constructor', async function() {
