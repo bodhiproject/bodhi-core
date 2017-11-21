@@ -30,8 +30,8 @@ contract EventFactory {
 
         TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
-
         TopicCreated(msg.sender, address(topic), _name, _resultNames, _bettingEndBlock);
+
         return topic;
     }
 

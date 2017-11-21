@@ -7,9 +7,9 @@ contract OracleFactory {
     mapping (bytes32 => Oracle) public oracles;
 
     // Events
-    event OracleCreated(address indexed _creator, Oracle _oracle, bytes32[10] _eventName, bytes32[10] _eventResultNames, 
-        uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock, 
-        uint256 _baseRewardAmount);
+    event OracleCreated(address indexed _creator, address indexed _oracleAddress, bytes32[10] _eventName, 
+        bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, 
+        uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
 
     function OracleFactory(address _addressManager) public {
         IAddressManager addressManager = IAddressManager(_addressManager);
@@ -41,9 +41,9 @@ contract OracleFactory {
             _arbitrationOptionEndBlock);
         oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;
+        OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _eventBettingEndBlock, 
+            _decisionEndBlock, _arbitrationOptionEndBlock, msg.value);
 
-        OracleCreated(msg.sender, oracle, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            _arbitrationOptionEndBlock, msg.value);
         return oracle;
     }
 
