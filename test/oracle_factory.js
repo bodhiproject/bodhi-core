@@ -34,11 +34,11 @@ contract('OracleFactory', function(accounts) {
 
     beforeEach(async function() {
         addressManager = await AddressManager.deployed({ from: oracleFactoryCreator });
-        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: oracleFactoryCreator });
+        oracleFactory = await OracleFactory.deployed(addressManager.contract.address, { from: oracleFactoryCreator });
 
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward });
-        oracle = await Oracle.at(Utils.getParamFromTransaction(transaction, '_oracle'));
+        oracle = await Oracle.at(transaction.logs[0].address);
     });
 
     describe('constructor', async function() {

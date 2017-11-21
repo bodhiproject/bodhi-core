@@ -29,7 +29,7 @@ contract('EventFactory', function(accounts) {
         eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
         
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
-        topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
+        topic = await TopicEvent.at(transaction.logs[0].address);
     });
 
     describe('constructor', async function() {
