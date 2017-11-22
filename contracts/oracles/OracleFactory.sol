@@ -73,6 +73,12 @@ contract OracleFactory {
         return address(oracles[oracleHash]) != 0;
     }
 
+    /// @dev Gets the Oracle hash given the inputs.
+    /// @param _eventName The name of the Event this Oracle will arbitrate.
+    /// @param _eventResultNames The result options of the Event.
+    /// @param _eventBettingEndBlock The block when Event betting ended.
+    /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function getOracleHash(
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames,
