@@ -96,7 +96,7 @@ contract Oracle is Ownable, ReentrancyGuard {
 
     /// @notice Fallback function that rejects any amount sent to the contract.
     function() external payable {
-        throw;
+        revert();
     }
 
     /// @notice Deposit the base reward for the Oracle.

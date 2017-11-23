@@ -91,7 +91,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
     /// @notice Fallback function that rejects any amount sent to the contract.
     function() external payable {
-        throw;
+        revert();
     }
 
     /// @notice Allows betting on a specific result.
