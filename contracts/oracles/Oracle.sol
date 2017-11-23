@@ -3,9 +3,10 @@ pragma solidity ^0.4.18;
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
+import "../ReentrancyGuard.sol";
 
 /// @title Base Oracle contract
-contract Oracle is Ownable {
+contract Oracle is Ownable, ReentrancyGuard {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -93,15 +94,16 @@ contract Oracle is Ownable {
             arbitrationOptionEndBlock);
     }
 
-    /// @notice Fallback function that adds the base reward.
+    /// @notice Fallback function that rejects any amount sent to the contract.
     function() external payable {
-        addBaseReward();
+        throw;
     }
 
     /// @notice Deposit the base reward for the Oracle.
-    function addBaseReward() 
-        public 
-        payable 
+    function addBaseReward()
+        external
+        payable
+        nonReentrant()
     {
         require(msg.value >= minBaseReward);
         OracleFunded(msg.value);
