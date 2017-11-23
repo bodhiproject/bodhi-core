@@ -83,14 +83,6 @@ contract TopicEvent is Ownable {
         bettingEndBlock = _bettingEndBlock;
     }
 
-    // TODO: implement Returnable contract to be able to refund participants in case of frozen assets
-    // function destroy() 
-    //     external 
-    //     onlyOwner 
-    // {
-    //     selfdestruct(owner);
-    // }
-
     /// @notice Allows betting on a specific result.
     /// @param _resultIndex The index of result to bet on.
     function bet(uint8 _resultIndex) 
