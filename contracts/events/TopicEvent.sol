@@ -89,6 +89,11 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
     }
 
+    /// @notice Fallback function that rejects any amount sent to the contract.
+    function() external payable {
+        throw;
+    }
+
     /// @notice Allows betting on a specific result.
     /// @param _resultIndex The index of result to bet on.
     function bet(uint8 _resultIndex) 
