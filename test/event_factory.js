@@ -38,6 +38,15 @@ contract('EventFactory', function(accounts) {
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address, 
                 'EventFactory address does not match');
         });
+
+        it('throws if the AddressManager address is invalid', async function() {
+            try {
+                await EventFactory.new(0, { from: eventFactoryCreator });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
     });
 
     describe('TopicEvent:', async function() {

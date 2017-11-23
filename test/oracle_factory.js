@@ -47,6 +47,15 @@ contract('OracleFactory', function(accounts) {
             assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address, 
                 'OracleFactory address does not match');
         });
+
+        it('throws if the AddressManager address is invalid', async function() {
+            try {
+                await OracleFactory.new(0, { from: oracleFactoryCreator });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
+        });
     });
 
     describe('createOracle', async function() {
