@@ -12,7 +12,8 @@ contract('EventFactory', function(accounts) {
         _resultSetter: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
-        _bettingEndBlock: 100
+        _bettingEndBlock: 100,
+        _arbitrationOptionEndBlock: 110
     };
 
     let addressManager;
@@ -65,7 +66,7 @@ contract('EventFactory', function(accounts) {
 
         it('does not allow recreating the same topic twice', async function() {
             let topicExists = await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingEndBlock);
+                testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
             assert.isTrue(topicExists, 'Topic should already exist.');
 
             try {

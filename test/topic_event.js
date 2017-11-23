@@ -12,7 +12,8 @@ contract('TopicEvent', function(accounts) {
         _oracle: accounts[1],
         _name: ["Will Apple stock reach $300 by t", "he end of 2017?"],
         _resultNames: ["first", "second", "third"],
-        _bettingEndBlock: 100
+        _bettingEndBlock: 100,
+        _arbitrationOptionEndBlock: 110
     };
 
     let testTopic;
@@ -71,7 +72,8 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), name.join(''), 'Topic name does not match');
         });
@@ -85,7 +87,8 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
@@ -98,7 +101,8 @@ contract('TopicEvent', function(accounts) {
             let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
         });
@@ -108,7 +112,8 @@ contract('TopicEvent', function(accounts) {
             let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
         });
@@ -116,7 +121,7 @@ contract('TopicEvent', function(accounts) {
         it('can handle using all 10 resultNames', async function() {
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
-                testTopicParams._bettingEndBlock);
+                testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "resultName 0 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "resultName 1 does not match");
@@ -134,7 +139,7 @@ contract('TopicEvent', function(accounts) {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
-                resultNames, testTopicParams._bettingEndBlock);
+                resultNames, testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "eventResultName 1 does not match");

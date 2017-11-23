@@ -19,6 +19,7 @@ contract TopicEvent is Ownable {
     uint8 public numOfResults;
     address public oracle;
     uint256 public bettingEndBlock;
+    uint256 public arbitrationOptionEndBlock;
     Result[10] private results;
     string public name;
 
@@ -49,12 +50,14 @@ contract TopicEvent is Ownable {
     /// @param _name The question or statement of the TopicEvent broken down by multiple bytes32.
     /// @param _resultNames The possible results of the TopicEvent.
     /// @param _bettingEndBlock The block when TopicEvent voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function TopicEvent(
         address _owner,
         address _oracle,
         bytes32[10] _name,
         bytes32[10] _resultNames,
-        uint256 _bettingEndBlock)
+        uint256 _bettingEndBlock,
+        uint256 _arbitrationOptionEndBlock)
         Ownable(_owner)
         public
         validAddress(_oracle)
@@ -63,6 +66,7 @@ contract TopicEvent is Ownable {
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
         require(_bettingEndBlock > block.number);
+        require(_arbitrationOptionEndBlock > _bettingEndBlock);
 
         owner = _owner;
         oracle = _oracle;
@@ -81,6 +85,7 @@ contract TopicEvent is Ownable {
         }
 
         bettingEndBlock = _bettingEndBlock;
+        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
     }
 
     /// @notice Allows betting on a specific result.
