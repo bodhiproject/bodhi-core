@@ -64,6 +64,11 @@ contract('TopicEvent', function(accounts) {
                 "Topic betting end block does not match.");
         });
 
+        it("sets the arbitrationOptionEndBlock correctly", async function() {
+            await assert.equal(await testTopic.arbitrationOptionEndBlock.call(), 
+                testTopicParams._arbitrationOptionEndBlock, 'Topic arbitrationOptionEndBlock does not match');
+        });
+
         it('can handle a long name using all 10 array slots', async function() {
             let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',

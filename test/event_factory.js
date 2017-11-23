@@ -62,6 +62,8 @@ contract('EventFactory', function(accounts) {
                 'Result name 3 does not match.');
             assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock,
                 'Topic betting end block does not match.');
+            assert.equal(await topic.arbitrationOptionEndBlock.call(), testTopicParams._arbitrationOptionEndBlock, 
+                'arbitrationOptionEndBlock does not match');
         });
 
         it('does not allow recreating the same topic twice', async function() {
