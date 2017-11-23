@@ -12,6 +12,7 @@ contract OracleFactory {
         uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
 
     function OracleFactory(address _addressManager) public {
+        require(_addressManager != address(0));
         IAddressManager addressManager = IAddressManager(_addressManager);
         addressManager.setOracleFactoryAddress(msg.sender, address(this));
     }

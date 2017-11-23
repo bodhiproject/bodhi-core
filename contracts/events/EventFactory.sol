@@ -12,6 +12,7 @@ contract EventFactory {
         bytes32[10] _name, bytes32[10] _resultNames, uint256 _bettingEndBlock);
 
     function EventFactory(address _addressManager) public {
+        require(_addressManager != address(0));
         IAddressManager addressManager = IAddressManager(_addressManager);
         addressManager.setEventFactoryAddress(msg.sender, address(this));
     }
