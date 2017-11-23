@@ -1,15 +1,9 @@
 const ByteUtilsMock = artifacts.require('./mocks/ByteUtilsMock.sol');
-const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('ByteUtils', function(accounts) {
-    const blockHeightManager = new BlockHeightManager(web3);
-
     let instance;
 
-    beforeEach(blockHeightManager.snapshot);
-    afterEach(blockHeightManager.revert);
-
-    beforeEach(async function() {
+    before(async function() {
         instance = await ByteUtilsMock.new();
     });
 
