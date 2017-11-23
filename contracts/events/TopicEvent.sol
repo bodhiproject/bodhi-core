@@ -23,8 +23,6 @@ contract TopicEvent is Ownable {
     string public name;
 
     // Events
-    event TopicCreated(address indexed _owner, address indexed _oracle, string _name, bytes32[10] _resultNames, 
-        uint256 _bettingEndBlock);
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint8 _finalResultIndex);
@@ -83,8 +81,6 @@ contract TopicEvent is Ownable {
         }
 
         bettingEndBlock = _bettingEndBlock;
-
-        TopicCreated(_owner, _oracle, name, _resultNames, _bettingEndBlock);
     }
 
     // TODO: implement Returnable contract to be able to refund participants in case of frozen assets

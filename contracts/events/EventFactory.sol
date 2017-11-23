@@ -8,8 +8,8 @@ contract EventFactory {
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _creator, address indexed _topicAddress, bytes32[10] _name, 
-        bytes32[10] _resultNames, uint256 _bettingEndBlock);
+    event TopicCreated(address indexed _topicAddress, address indexed _creator, address indexed _oracle,
+        bytes32[10] _name, bytes32[10] _resultNames, uint256 _bettingEndBlock);
 
     function EventFactory(address _addressManager) public {
         IAddressManager addressManager = IAddressManager(_addressManager);
@@ -17,7 +17,7 @@ contract EventFactory {
     }
     
     function createTopic(
-        address _resultSetter, 
+        address _oracle, 
         bytes32[10] _name, 
         bytes32[10] _resultNames, 
         uint256 _bettingEndBlock)
@@ -28,9 +28,9 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        TopicEvent topic = new TopicEvent(msg.sender, _resultSetter, _name, _resultNames, _bettingEndBlock);
+        TopicEvent topic = new TopicEvent(msg.sender, _oracle, _name, _resultNames, _bettingEndBlock);
         topics[topicHash] = topic;
-        TopicCreated(msg.sender, address(topic), _name, _resultNames, _bettingEndBlock);
+        TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames, _bettingEndBlock);
 
         return topic;
     }
