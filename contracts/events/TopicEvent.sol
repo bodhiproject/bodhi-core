@@ -3,8 +3,9 @@ pragma solidity ^0.4.18;
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
+import "../ReentrancyGuard.sol";
 
-contract TopicEvent is Ownable {
+contract TopicEvent is Ownable, ReentrancyGuard {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -88,11 +89,17 @@ contract TopicEvent is Ownable {
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
     }
 
+    /// @notice Fallback function that rejects any amount sent to the contract.
+    function() external payable {
+        revert();
+    }
+
     /// @notice Allows betting on a specific result.
     /// @param _resultIndex The index of result to bet on.
     function bet(uint8 _resultIndex) 
-        public 
-        payable 
+        external 
+        payable
+        nonReentrant()
     {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);

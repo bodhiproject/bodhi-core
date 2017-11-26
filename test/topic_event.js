@@ -3,6 +3,7 @@ const TopicEvent = artifacts.require("./TopicEvent.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
+const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('TopicEvent', function(accounts) {
     const regexInvalidOpcode = /invalid opcode/;
@@ -218,6 +219,22 @@ contract('TopicEvent', function(accounts) {
             try {
                 await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
                     testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock - 1);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
+    });
+
+    describe("fallback function", async function() {
+        it("throws upon calling", async function() {
+            let topic = await TopicEvent.new(...Object.values(testTopicParams), { from: testTopicParams._owner });
+            try {
+                await ethAsync.sendTransactionAsync({
+                    to: topic.address,
+                    from: accounts[2],
+                    value: 1
+                });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, regexInvalidOpcode);
