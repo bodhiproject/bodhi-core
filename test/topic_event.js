@@ -1,6 +1,7 @@
 const web3 = global.web3;
 const TopicEvent = artifacts.require("./TopicEvent.sol");
 const assert = require('chai').assert;
+const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
 
 contract('TopicEvent', function(accounts) {
@@ -12,10 +13,12 @@ contract('TopicEvent', function(accounts) {
         _oracle: accounts[1],
         _name: ["Will Apple stock reach $300 by t", "he end of 2017?"],
         _resultNames: ["first", "second", "third"],
-        _bettingEndBlock: 100
+        _bettingEndBlock: 100,
+        _arbitrationOptionEndBlock: 110
     };
 
     let testTopic;
+    let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
@@ -25,42 +28,29 @@ contract('TopicEvent', function(accounts) {
             testTopic = await TopicEvent.new(...Object.values(testTopicParams));
         });
 
-        it("sets the first account as the contract creator", async function() {
-            let owner = await testTopic.owner.call();
-            assert.equal(owner, accounts[0], "Topic owner does not match.");
-        });
+        it("initializes all the values", async function() {
+            assert.equal(await testTopic.owner.call(), testTopicParams._owner, 'owner does not match');
+            assert.equal(await testTopic.oracle.call(), testTopicParams._oracle, 'oracle does not match');
+            assert.equal(await testTopic.name.call(), testTopicParams._name.join(''), 'name does not match');
 
-        it("sets the topic name correctly", async function() {
-            let name = await testTopic.name.call();
-            assert.equal(name, testTopicParams._name.join(''), "Topic name does not match.");
-        });
-
-        it("sets the topic result names correctly", async function() {
-            let resultName1 = await testTopic.getResultName(0);
-            assert.equal(web3.toUtf8(resultName1), testTopicParams._resultNames[0], "Result name 1 does not match.");
-
-            let resultName2 = await testTopic.getResultName(1);
-            assert.equal(web3.toUtf8(resultName2), testTopicParams._resultNames[1], "Result name 2 does not match.");
-
-            let resultName3 = await testTopic.getResultName(2);
-            assert.equal(web3.toUtf8(resultName3), testTopicParams._resultNames[2], "Result name 3 does not match.");
-
+            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0], 
+                'resultName0 does not match');
+            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), testTopicParams._resultNames[1], 
+                'resultName1 does not match');
+            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), testTopicParams._resultNames[2], 
+                'resultName2 does not match');
             try {
                 await testTopic.getResultName(3);
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, regexInvalidOpcode);
             }
-        });
 
-        it('sets the numOfResults correctly', async function() {
             assert.equal((await testTopic.numOfResults.call()).toNumber(), 3, 'numOfResults does not match');
-        });
-
-        it("sets the topic betting end block correctly", async function() {
-            let bettingEndBlock = await testTopic.bettingEndBlock.call();
-            await assert.equal(bettingEndBlock, testTopicParams._bettingEndBlock, 
-                "Topic betting end block does not match.");
+            await assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock, 
+                'bettingEndBlock does not match');
+            await assert.equal(await testTopic.arbitrationOptionEndBlock.call(), 
+                testTopicParams._arbitrationOptionEndBlock, 'arbitrationOptionEndBlock does not match');
         });
 
         it('can handle a long name using all 10 array slots', async function() {
@@ -71,7 +61,8 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), name.join(''), 'Topic name does not match');
         });
@@ -85,7 +76,8 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
@@ -98,7 +90,8 @@ contract('TopicEvent', function(accounts) {
             let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
         });
@@ -108,7 +101,8 @@ contract('TopicEvent', function(accounts) {
             let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
-                testTopicParams._resultNames, testTopicParams._bettingEndBlock);
+                testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
         });
@@ -116,7 +110,7 @@ contract('TopicEvent', function(accounts) {
         it('can handle using all 10 resultNames', async function() {
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
-                testTopicParams._bettingEndBlock);
+                testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "resultName 0 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "resultName 1 does not match");
@@ -134,7 +128,7 @@ contract('TopicEvent', function(accounts) {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
-                resultNames, testTopicParams._bettingEndBlock);
+                resultNames, testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
 
             assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second", "eventResultName 1 does not match");
@@ -149,6 +143,81 @@ contract('TopicEvent', function(accounts) {
 
             try {
                 await testTopic.getResultName(10);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
+
+        it('throws if name is empty', async function() {
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
+
+        it('throws if resultNames 0 or 1 are empty', async function() {
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, [], 
+                    testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, ["first"], 
+                    testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                    ["", "second"], testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
+
+        it('throws if bettingEndBlock is less than or equal to current block', async function() {
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
+
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock - 1, testTopicParams._arbitrationOptionEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+        });
+
+        it('throws if arbitrationOptionEndBlock is less than or equal to bettingEndBlock', async function() {
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock);
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, regexInvalidOpcode);
+            }
+
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock - 1);
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, regexInvalidOpcode);

@@ -12,7 +12,8 @@ contract('EventFactory', function(accounts) {
         _resultSetter: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
-        _bettingEndBlock: 100
+        _bettingEndBlock: 100,
+        _arbitrationOptionEndBlock: 110
     };
 
     let addressManager;
@@ -29,7 +30,7 @@ contract('EventFactory', function(accounts) {
         eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
         
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
-        topic = await TopicEvent.at(Utils.getParamFromTransaction(transaction, '_topicEvent'));
+        topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
     });
 
     describe('constructor', async function() {
@@ -37,6 +38,15 @@ contract('EventFactory', function(accounts) {
             let index = await addressManager.getLastEventFactoryIndex();
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address, 
                 'EventFactory address does not match');
+        });
+
+        it('throws if the AddressManager address is invalid', async function() {
+            try {
+                await EventFactory.new(0, { from: eventFactoryCreator });
+                assert.fail();
+            } catch(e) {
+                assert.match(e.message, /invalid opcode/);
+            }
         });
     });
 
@@ -52,11 +62,13 @@ contract('EventFactory', function(accounts) {
                 'Result name 3 does not match.');
             assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock,
                 'Topic betting end block does not match.');
+            assert.equal(await topic.arbitrationOptionEndBlock.call(), testTopicParams._arbitrationOptionEndBlock, 
+                'arbitrationOptionEndBlock does not match');
         });
 
         it('does not allow recreating the same topic twice', async function() {
             let topicExists = await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingEndBlock);
+                testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
             assert.isTrue(topicExists, 'Topic should already exist.');
 
             try {

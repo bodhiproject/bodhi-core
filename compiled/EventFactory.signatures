@@ -1,0 +1,3 @@
+d0613dce: createTopic(address,bytes32[10],bytes32[10],uint256,uint256)
+fe782f51: doesTopicExist(bytes32[10],bytes32[10],uint256,uint256)
+0f2fbeec: topics(bytes32)
