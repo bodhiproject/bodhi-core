@@ -1,6 +1,7 @@
 const web3 = global.web3;
 const Oracle = artifacts.require("./Oracle.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
+const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
@@ -13,13 +14,15 @@ contract('Oracle', function(accounts) {
     const nativeDecimals = 18;
     const botDecimals = 8;
 
-    const oracleCreator = accounts[0];
-    const participant1 = accounts[1];
-    const participant2 = accounts[2];
-    const participant3 = accounts[3];
-    const participant4 = accounts[4];
-    const participant5 = accounts[5];
-    const participant6 = accounts[6];
+    const admin = accounts[0];
+    const oracleCreator = accounts[1];
+    const participant1 = accounts[2];
+    const participant2 = accounts[3];
+    const participant3 = accounts[4];
+    const participant4 = accounts[5];
+    const participant5 = accounts[6];
+    const participant6 = accounts[7];
+    const botBalance = Utils.getBigNumberWithDecimals(20, botDecimals);
 
     const blockHeightManager = new BlockHeightManager(web3);
     const testOracleParams = {
@@ -33,6 +36,7 @@ contract('Oracle', function(accounts) {
     const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
 
+    let token;
     let oracle;
     let addressManager;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
@@ -41,7 +45,36 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        addressManager = await AddressManager.deployed({ from: accounts[10] });
+        token = await BodhiToken.deployed({ from: admin });
+
+        await token.mintByOwner(participant1, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant1)).toString(), botBalance.toString(), 
+            'participant1 balance does not match');
+
+        await token.mintByOwner(participant2, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant2)).toString(), botBalance.toString(), 
+            'participant2 balance does not match');
+
+        await token.mintByOwner(participant3, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant3)).toString(), botBalance.toString(), 
+            'participant3 balance does not match');
+
+        await token.mintByOwner(participant4, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant4)).toString(), botBalance.toString(), 
+            'participant4 balance does not match');
+
+        await token.mintByOwner(participant5, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant5)).toString(), botBalance.toString(), 
+            'participant5 balance does not match');
+
+        await token.mintByOwner(participant6, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(participant6)).toString(), botBalance.toString(), 
+            'participant6 balance does not match');
+        
+        addressManager = await AddressManager.deployed({ from: admin });
+        await addressManager.setBodhiTokenAddress(token.address, { from: admin });
+        assert.equal(await addressManager.bodhiTokenAddress.call(), token.address, 'BodhiToken address does not match');
+
         oracle = await Oracle.new(...Object.values(testOracleParams), addressManager.address, { from: oracleCreator });
         await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
@@ -312,8 +345,12 @@ contract('Oracle', function(accounts) {
                 "participant1 should not have set result");
             assert.equal(await oracle.totalStakeContributed.call(), 0, "totalStakeContributed should be 0");
 
-            let votedResultIndex = 2;
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
+            await token.approve(oracle.address, stakeContributed, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stakeContributed.toString(), 
+                'allowance does not match approved stake');
+
+            let votedResultIndex = 2;
             await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
@@ -399,16 +436,23 @@ contract('Oracle', function(accounts) {
             assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should not have set result");
 
+            let stake = Utils.getBigNumberWithDecimals(5, botDecimals);
+            await token.approve(oracle.address, stake, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stake.toString(), 
+                'first allowance does not match approved stake');
+
             let votedResultIndex = 2;
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+            await oracle.voteResult(votedResultIndex, stake, { from: participant1 });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
             assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
                 "participant1 voted resultIndex does not match");
 
+            await token.approve(oracle.address, stake, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stake.toString(), 
+                'second allowance does not match approved stake');
             try {
-                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+                await oracle.voteResult(votedResultIndex, stake, { from: participant1 });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -431,10 +475,30 @@ contract('Oracle', function(accounts) {
             assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
                 "Block should be below decisionEndBlock");
 
+            // staking
+            await token.approve(oracle.address, winningStake1, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), winningStake1.toString(), 
+                'participant1 allowance does not match approved');
             await oracle.voteResult(0, winningStake1, { from: participant1 });            
+
+            await token.approve(oracle.address, winningStake2, { from: participant2 });
+            assert.equal((await token.allowance(participant2, oracle.address)).toString(), winningStake2.toString(), 
+                'participant2 allowance does not match approved');
             await oracle.voteResult(0, winningStake2, { from: participant2 });
+
+            await token.approve(oracle.address, winningStake3, { from: participant3 });
+            assert.equal((await token.allowance(participant3, oracle.address)).toString(), winningStake3.toString(), 
+                'participant3 allowance does not match approved');
             await oracle.voteResult(0, winningStake3, { from: participant3 });
+
+            await token.approve(oracle.address, losingStake1, { from: participant4 });
+            assert.equal((await token.allowance(participant4, oracle.address)).toString(), losingStake1.toString(), 
+                'participant4 allowance does not match approved');
             await oracle.voteResult(1, losingStake1, { from: participant4 });
+
+            await token.approve(oracle.address, losingStake2, { from: participant5 });
+            assert.equal((await token.allowance(participant5, oracle.address)).toString(), losingStake2.toString(), 
+                'participant5 allowance does not match approved');
             await oracle.voteResult(2, losingStake2, { from: participant5 });
         });
 
@@ -549,11 +613,14 @@ contract('Oracle', function(accounts) {
             assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
                 "Block should be below decisionEndBlock");
 
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(0, stakeContributed, { from: participant1 });
+            await token.approve(oracle.address, botBalance, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), botBalance.toString(), 
+                'allowance does not match approved');
+
+            await oracle.voteResult(0, botBalance, { from: participant1 });
 
             let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
-            assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
+            assert.equal(actualStakeContributed.toString(), botBalance.toString(), 
                 "stakeContributed does not match");
         });
     });
@@ -570,11 +637,12 @@ contract('Oracle', function(accounts) {
             assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should not have set result");
 
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(0, stakeContributed, { from: participant1 });
+            await token.approve(oracle.address, botBalance, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), botBalance.toString(), 
+                'allowance does not match approved');
 
-            assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
-                "participant1 should have set result");
+            await oracle.voteResult(0, botBalance, { from: participant1 });
+            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
         });
     });
 
@@ -590,9 +658,12 @@ contract('Oracle', function(accounts) {
             assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should not have set result");
 
+            await token.approve(oracle.address, botBalance, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), botBalance.toString(), 
+                'allowance does not match approved');
+
             let votedResultIndex = 1;
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+            await oracle.voteResult(votedResultIndex, botBalance, { from: participant1 });
 
             assert.isTrue(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should have set result");
@@ -622,11 +693,35 @@ contract('Oracle', function(accounts) {
             let decisionEndBlock = (await oracle.arbitrationOptionEndBlock.call()).toNumber();
             assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
 
-            await oracle.voteResult(0, Utils.getBigNumberWithDecimals(3, botDecimals), { from: participant1 });            
-            await oracle.voteResult(1, Utils.getBigNumberWithDecimals(4, botDecimals), { from: participant2 });
-            await oracle.voteResult(1, Utils.getBigNumberWithDecimals(5, botDecimals), { from: participant3 });
-            await oracle.voteResult(2, Utils.getBigNumberWithDecimals(10, botDecimals), { from: participant4 });
-            await oracle.voteResult(2, Utils.getBigNumberWithDecimals(1, botDecimals), { from: participant5 });
+            let stake1 = Utils.getBigNumberWithDecimals(3, botDecimals);
+            await token.approve(oracle.address, stake1, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stake1.toString(), 
+                'participant1 allowance does not match approved');
+            await oracle.voteResult(0, stake1, { from: participant1 });           
+
+            let stake2 = Utils.getBigNumberWithDecimals(4, botDecimals);
+            await token.approve(oracle.address, stake2, { from: participant2 });
+            assert.equal((await token.allowance(participant2, oracle.address)).toString(), stake2.toString(), 
+                'participant2 allowance does not match approved');
+            await oracle.voteResult(1, stake2, { from: participant2 });
+
+            let stake3 = Utils.getBigNumberWithDecimals(5, botDecimals);
+            await token.approve(oracle.address, stake3, { from: participant3 });
+            assert.equal((await token.allowance(participant3, oracle.address)).toString(), stake3.toString(), 
+                'participant3 allowance does not match approved');
+            await oracle.voteResult(1, stake3, { from: participant3 });
+
+            let stake4 = Utils.getBigNumberWithDecimals(10, botDecimals);
+            await token.approve(oracle.address, stake4, { from: participant4 });
+            assert.equal((await token.allowance(participant4, oracle.address)).toString(), stake4.toString(), 
+                'participant4 allowance does not match approved');
+            await oracle.voteResult(2, stake4, { from: participant4 });
+
+            let stake5 = Utils.getBigNumberWithDecimals(1, botDecimals);
+            await token.approve(oracle.address, stake5, { from: participant5 });
+            assert.equal((await token.allowance(participant5, oracle.address)).toString(), stake5.toString(), 
+                'participant5 allowance does not match approved');
+            await oracle.voteResult(2, stake5, { from: participant5 });
             
             await blockHeightManager.mineTo(decisionEndBlock);
             assert.isAtLeast(await getBlockNumber(), decisionEndBlock, "Block should be at least decisionEndBlock");
@@ -667,11 +762,35 @@ contract('Oracle', function(accounts) {
             let decisionEndBlock = (await oracle.decisionEndBlock.call()).toNumber();
             assert.isBelow(blockNumber, decisionEndBlock, "Block should be below decisionEndBlock");
 
+            // staking
+            await token.approve(oracle.address, winningStake1, { from: participant1 });
+            assert.equal((await token.allowance(participant1, oracle.address)).toString(), winningStake1.toString(), 
+                'participant1 allowance does not match approved');
             await oracle.voteResult(1, winningStake1, { from: participant1 });            
+
+            await token.approve(oracle.address, winningStake2, { from: participant2 });
+            assert.equal((await token.allowance(participant2, oracle.address)).toString(), winningStake2.toString(), 
+                'participant2 allowance does not match approved');
             await oracle.voteResult(1, winningStake2, { from: participant2 });
+
+            await token.approve(oracle.address, winningStake3, { from: participant3 });
+            assert.equal((await token.allowance(participant3, oracle.address)).toString(), winningStake3.toString(), 
+                'participant3 allowance does not match approved');
             await oracle.voteResult(1, winningStake3, { from: participant3 });
+
+            await token.approve(oracle.address, losingStake1, { from: participant4 });
+            assert.equal((await token.allowance(participant4, oracle.address)).toString(), losingStake1.toString(), 
+                'participant4 allowance does not match approved');
             await oracle.voteResult(0, losingStake1, { from: participant4 });
+
+            await token.approve(oracle.address, losingStake2, { from: participant5 });
+            assert.equal((await token.allowance(participant5, oracle.address)).toString(), losingStake2.toString(), 
+                'participant5 allowance does not match approved');
             await oracle.voteResult(2, losingStake2, { from: participant5 });
+          
+            await token.approve(oracle.address, losingStake3, { from: participant6 });
+            assert.equal((await token.allowance(participant6, oracle.address)).toString(), losingStake3.toString(), 
+                'participant6 allowance does not match approved');
             await oracle.voteResult(0, losingStake3, { from: participant6 });
 
             await blockHeightManager.mineTo(decisionEndBlock);

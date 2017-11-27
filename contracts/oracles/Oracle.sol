@@ -5,6 +5,7 @@ import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../ReentrancyGuard.sol";
 import "../storage/IAddressManager.sol";
+import "../tokens/ERC20.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable, ReentrancyGuard {
@@ -129,6 +130,9 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(block.number < decisionEndBlock);
         require(!participants[msg.sender].didSetResult);
 
+        address tokenAddress = addressManager.bodhiTokenAddress();
+        require(ERC20(tokenAddress).transferFrom(msg.sender, address(this), _botAmount));
+
         Participant storage participant = participants[msg.sender];
         participant.stakeContributed = participant.stakeContributed.add(_botAmount);
         participant.resultIndex = _eventResultIndex;
@@ -136,13 +140,6 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
-
-        address bodhiTokenAddress = addressManager.bodhiTokenAddress();
-        bool didTransfer = bodhiTokenAddress.delegatecall(bytes4(keccak256("transfer(address,uint256)")), address(this), 
-            _botAmount);
-        if (!didTransfer) {
-            revert();
-        }
 
         ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }
