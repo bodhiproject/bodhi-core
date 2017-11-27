@@ -459,6 +459,22 @@ contract('Oracle', function(accounts) {
                 assertInvalidOpcode(e);
             }
         });
+
+        it('throws if the transferFrom() call fails', async function() {
+            await blockHeightManager.mineTo(validVotingBlock);
+            let blockNumber = web3.eth.blockNumber;
+            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
+                'Block should be at or after eventBettingEndBlock');
+            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
+                'Block should be below decisionEndBlock');
+
+            try {
+                await oracle.voteResult(0, Utils.getBigNumberWithDecimals(5, botDecimals), { from: participant1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
     });
 
     describe("withdrawEarnings", async function() {
