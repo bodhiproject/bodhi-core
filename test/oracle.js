@@ -6,6 +6,7 @@ const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BlockHeightManager = require('./helpers/block_height_manager');
 const Utils = require('./helpers/utils');
+const assertInvalidOpcode = require('./helpers/assert_invalid_opcode');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -192,7 +193,7 @@ contract('Oracle', function(accounts) {
                 await oracle.getEventResultName(10);
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -211,7 +212,7 @@ contract('Oracle', function(accounts) {
                 await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -229,7 +230,7 @@ contract('Oracle', function(accounts) {
                 await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -247,7 +248,7 @@ contract('Oracle', function(accounts) {
                 await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -265,7 +266,7 @@ contract('Oracle', function(accounts) {
                 await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
         
@@ -284,7 +285,7 @@ contract('Oracle', function(accounts) {
                 await Oracle.new(...Object.values(params), { from: oracleCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -301,7 +302,7 @@ contract('Oracle', function(accounts) {
                 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -325,7 +326,7 @@ contract('Oracle', function(accounts) {
                 await o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -375,7 +376,7 @@ contract('Oracle', function(accounts) {
                 await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -392,7 +393,7 @@ contract('Oracle', function(accounts) {
                 await oracle.voteResult(votedResultIndex, 0, { from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -406,7 +407,7 @@ contract('Oracle', function(accounts) {
                 await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -421,7 +422,7 @@ contract('Oracle', function(accounts) {
                 await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -455,7 +456,7 @@ contract('Oracle', function(accounts) {
                 await oracle.voteResult(votedResultIndex, stake, { from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -553,7 +554,7 @@ contract('Oracle', function(accounts) {
                 await oracle.withdrawEarnings({ from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -565,7 +566,7 @@ contract('Oracle', function(accounts) {
                 await oracle.withdrawEarnings({ from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
@@ -579,7 +580,7 @@ contract('Oracle', function(accounts) {
                 await oracle.withdrawEarnings({ from: participant6 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -599,7 +600,7 @@ contract('Oracle', function(accounts) {
                 await oracle.getEventResultName(3);
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -679,7 +680,7 @@ contract('Oracle', function(accounts) {
                 await oracle.getVotedResultIndex({ from: participant1 });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
@@ -741,7 +742,7 @@ contract('Oracle', function(accounts) {
                 await oracle.getFinalResultIndex();
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
