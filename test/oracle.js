@@ -258,7 +258,8 @@ contract('Oracle', function(accounts) {
 
     describe("fallback function", async function() {
         it("throws upon calling", async function() {
-            let o = await Oracle.new(...Object.values(testOracleParams), { from: oracleCreator });
+            let o = await Oracle.new(...Object.values(testOracleParams), addressManager.address, 
+                { from: oracleCreator });
             try {
                 await ethAsync.sendTransactionAsync({
                     to: o.address,
