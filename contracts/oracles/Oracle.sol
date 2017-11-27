@@ -140,7 +140,7 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         address bodhiTokenAddress = addressManager.bodhiTokenAddress();
         ERC20 bodhiToken = ERC20(bodhiTokenAddress);
-        // TODO: delegatecall transfer() to BodhiToken
+        bodhiToken.delegatecall(bytes4(keccak256("transfer(address,uint256)")), address(this), _botAmount);
 
         ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }
