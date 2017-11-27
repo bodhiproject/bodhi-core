@@ -15,7 +15,7 @@ contract BodhiToken is StandardToken, Ownable {
     event Mint(uint256 supply, address indexed to, uint256 amount);
 
     /// @notice Creates new BodhiToken contract
-    function BodhiToken() public {
+    function BodhiToken() Ownable(msg.sender) public {
     }
 
     /// @notice Allows the owner to mint new tokens
