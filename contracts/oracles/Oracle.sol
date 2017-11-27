@@ -129,9 +129,8 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);
         require(!participants[msg.sender].didSetResult);
-
-        address tokenAddress = addressManager.bodhiTokenAddress();
-        require(ERC20(tokenAddress).transferFrom(msg.sender, address(this), _botAmount));
+        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
+        require(token.allowance(msg.sender, address(this)) >= _botAmount);
 
         Participant storage participant = participants[msg.sender];
         participant.stakeContributed = participant.stakeContributed.add(_botAmount);
@@ -140,6 +139,8 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
+
+        token.transferFrom(msg.sender, address(this), _botAmount);
 
         ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }

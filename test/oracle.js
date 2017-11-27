@@ -460,7 +460,7 @@ contract('Oracle', function(accounts) {
             }
         });
 
-        it('throws if the transferFrom() call fails', async function() {
+        it('throws if the transferFrom allowance is less than the staking amount', async function() {
             await blockHeightManager.mineTo(validVotingBlock);
             let blockNumber = web3.eth.blockNumber;
             assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
