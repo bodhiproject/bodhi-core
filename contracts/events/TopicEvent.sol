@@ -1,5 +1,7 @@
 pragma solidity ^0.4.18;
 
+import "../storage/IAddressManager.sol";
+import "../oracles/IOracleFactory.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
@@ -151,6 +153,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
         if (msg.sender == oracles[0].oracleAddress) {
             status = Status.OracleVoting;
+            // TODO: create Oracle
         }
 
         resultSet = true;
@@ -299,5 +302,13 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         returns (bytes32) 
     {
         return results[finalResultIndex].name;
+    }
+
+    function createOracle() 
+        private 
+    {
+        // uint16 index = IAddressManager(_addressManager).getLastOracleFactoryIndex();
+        // address oracleFactory = IAddressManager(_addressManager).getOracleFactoryAddress(index);
+        // return IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, _resultSettingEndBlock);
     }
 }

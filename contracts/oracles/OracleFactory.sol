@@ -1,9 +1,10 @@
 pragma solidity ^0.4.18;
 
-import "../storage/IAddressManager.sol";
+import "./IOracleFactory.sol";
 import "./Oracle.sol";
+import "../storage/IAddressManager.sol";
 
-contract OracleFactory {
+contract OracleFactory is IOracleFactory {
     address private addressManager;
     mapping (bytes32 => Oracle) public oracles;
 
