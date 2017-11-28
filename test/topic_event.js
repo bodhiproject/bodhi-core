@@ -31,7 +31,7 @@ contract('TopicEvent', function(accounts) {
 
         it("initializes all the values", async function() {
             assert.equal(await testTopic.owner.call(), testTopicParams._owner, 'owner does not match');
-            assert.equal(await testTopic.oracle.call(), testTopicParams._oracle, 'oracle does not match');
+            assert.equal(await testTopic.oracles.call(0), testTopicParams._oracle, 'oracle does not match');
             assert.equal(await testTopic.name.call(), testTopicParams._name.join(''), 'name does not match');
 
             assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0], 

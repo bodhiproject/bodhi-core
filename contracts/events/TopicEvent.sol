@@ -27,13 +27,14 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         mapping (address => uint256) betBalances;
     }
 
+    Status public status = Status.Betting;
     bool public finalResultSet;
     uint8 private finalResultIndex;
     uint8 public numOfResults;
-    address public oracle;
     uint256 public bettingEndBlock;
     uint256 public arbitrationOptionEndBlock;
     Result[10] private results;
+    address[] public oracles;
     string public name;
 
     // Events
@@ -82,7 +83,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         require(_arbitrationOptionEndBlock > _bettingEndBlock);
 
         owner = _owner;
-        oracle = _oracle;
+        oracles.push(_oracle);
         name = ByteUtils.toString(_name);
 
         for (uint i = 0; i < _resultNames.length; i++) {
@@ -131,7 +132,14 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         hasEnded
         validResultIndex(_resultIndex)
     {
-        require(msg.sender == oracle);
+        bool isValidOracle = false;
+        for (uint8 i = 0; i < oracles.length; i++) {
+            if (msg.sender == oracles[i]) {
+                isValidOracle = true;
+                break;
+            }
+        }
+        require(isValidOracle);
         require(!finalResultSet);
 
         finalResultIndex = _resultIndex;
