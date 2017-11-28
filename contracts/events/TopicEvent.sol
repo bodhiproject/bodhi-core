@@ -17,7 +17,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     */
     enum Status {
         Betting,
-        Arbitration,
+        OracleVoting,
         Collection
     }
 
@@ -27,14 +27,19 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         mapping (address => uint256) betBalances;
     }
 
+    struct Oracle {
+        bool didSetResult;
+        address oracleAddress;
+    }
+
+    bool public resultSet;
     Status public status = Status.Betting;
-    bool public finalResultSet;
     uint8 private finalResultIndex;
     uint8 public numOfResults;
     uint256 public bettingEndBlock;
     uint256 public arbitrationOptionEndBlock;
     Result[10] private results;
-    address[] public oracles;
+    Oracle[] public oracles;
     string public name;
 
     // Events
@@ -53,8 +58,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier finalResultIsSet() {
-        require(finalResultSet);
+    modifier resultIsSet() {
+        require(resultSet);
         _;
     }
 
@@ -83,7 +88,10 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         require(_arbitrationOptionEndBlock > _bettingEndBlock);
 
         owner = _owner;
-        oracles.push(_oracle);
+        oracles.push(Oracle({
+            oracleAddress: _oracle,
+            didSetResult: false
+            }));
         name = ByteUtils.toString(_name);
 
         for (uint i = 0; i < _resultNames.length; i++) {
@@ -91,7 +99,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
                 results[i] = Result({
                     name: _resultNames[i],
                     balance: 0
-                });
+                    });
                 numOfResults++;
             } else {
                 break;
@@ -129,21 +137,24 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @param _resultIndex The index of result to reveal.
     function revealResult(uint8 _resultIndex)
         public
-        hasEnded
         validResultIndex(_resultIndex)
     {
         bool isValidOracle = false;
         for (uint8 i = 0; i < oracles.length; i++) {
-            if (msg.sender == oracles[i]) {
+            if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
                 isValidOracle = true;
                 break;
             }
         }
         require(isValidOracle);
-        require(!finalResultSet);
+        require(block.number >= bettingEndBlock);
 
+        if (msg.sender == oracles[0].oracleAddress) {
+            status = Status.OracleVoting;
+        }
+
+        resultSet = true;
         finalResultIndex = _resultIndex;
-        finalResultSet = true;
 
         FinalResultSet(finalResultIndex);
     }
@@ -152,7 +163,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     function withdrawWinnings() 
         public 
         hasEnded 
-        finalResultIsSet 
+        resultIsSet
     {
         uint256 totalTopicBalance = getTotalTopicBalance();
         require(totalTopicBalance > 0);
@@ -177,8 +188,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @return The result name.
     function getResultName(uint8 _resultIndex) 
         public 
-        validResultIndex(_resultIndex) 
         view 
+        validResultIndex(_resultIndex) 
         returns (bytes32) 
     {
         return results[_resultIndex].name;
@@ -189,8 +200,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @return The result total bet balance.
     function getResultBalance(uint8 _resultIndex) 
         public 
+        view 
         validResultIndex(_resultIndex) 
-        constant 
         returns (uint256) 
     {
         return results[_resultIndex].balance;
@@ -200,9 +211,9 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @param _resultIndex The index of the result.
     /// @return The result's bet balance for the caller.
     function getBetBalance(uint8 _resultIndex) 
-        public 
-        validResultIndex(_resultIndex) 
+        public
         view
+        validResultIndex(_resultIndex) 
         returns (uint256) 
     {
         return results[_resultIndex].betBalances[msg.sender];
@@ -226,8 +237,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @return The index of the final result.
     function getFinalResultIndex() 
         public 
-        finalResultIsSet 
-        view 
+        view
+        resultIsSet
         returns (uint8) 
     {
         return finalResultIndex;
@@ -237,8 +248,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @return The final result name.
     function getFinalResultName() 
         public 
-        finalResultIsSet 
-        view 
+        view
+        resultIsSet
         returns (bytes32) 
     {
         return results[finalResultIndex].name;
