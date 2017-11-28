@@ -140,6 +140,16 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         BetAccepted(msg.sender, _resultIndex, msg.value, results[_resultIndex].betBalances[msg.sender]);
     }
 
+    /// @notice Allows anyone to start a Voting Oracle if the Individual Oracle did not set a result in time.
+    /// @dev This insures the funds don't get locked up in the contract. The Voting Oracle allows voting on all results.
+    function invalidateOracle() external {
+        require(block.number >= resultSettingEndBlock);
+        require(status == Status.Betting);
+
+        status = Status.OracleVoting;
+        createOracle();
+    }
+
     /// @notice Allows the Oracle to reveal the result.
     /// @param _resultIndex The index of result to reveal.
     function revealResult(uint8 _resultIndex)
@@ -158,7 +168,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
         if (msg.sender == oracles[0].oracleAddress) {
             status = Status.OracleVoting;
-            // TODO: create Oracle
+            createOracle();
         }
 
         resultSet = true;
@@ -316,7 +326,13 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         // TODO: fetch block number offset
-        return IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, _resultSettingEndBlock, 
-            block.number + 100);
+        address newOracle = IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, 
+            _resultSettingEndBlock, block.number + 100);
+        
+        assert(newOracle != address(0));
+        oracles.push(Oracle({
+            oracleAddress: _oracle,
+            didSetResult: false
+            }));
     }
 }
