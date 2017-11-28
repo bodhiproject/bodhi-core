@@ -61,7 +61,7 @@ contract('OracleFactory', function(accounts) {
     describe('createOracle', async function() {
         it('initializes all the values of the new Oracle', async function() {
             assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
-            assert.equal(await oracle.eventName.call(), testParams._eventName.join(''), 'eventName does not match');
+            assert.equal(await oracle.getEventName(), testParams._eventName.join(''), 'eventName does not match');
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testParams._eventResultNames[0], 
                 'eventResultName 0 does not match.');
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testParams._eventResultNames[1], 

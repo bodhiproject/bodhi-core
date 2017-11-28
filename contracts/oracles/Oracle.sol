@@ -30,7 +30,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     uint8 public numOfResults;
-    bytes32[10] public eventName;
+    bytes32[10] private eventName;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
@@ -133,9 +133,9 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(token.allowance(msg.sender, address(this)) >= _botAmount);
 
         Participant storage participant = participants[msg.sender];
-        participant.stakeContributed = participant.stakeContributed.add(_botAmount);
-        participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
+        participant.resultIndex = _eventResultIndex;
+        participant.stakeContributed = _botAmount;
 
         eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
@@ -161,6 +161,16 @@ contract Oracle is Ownable, ReentrancyGuard {
         msg.sender.transfer(withdrawAmount);
 
         EarningsWithdrawn(withdrawAmount);
+    }
+
+    /// @notice Gets the Event name as a string.
+    /// @return The name of the Event.
+    function getEventName() 
+        public 
+        view 
+        returns (string) 
+    {
+        return ByteUtils.toString(eventName);
     }
 
     /// @notice Gets the Event result name given a valid index.

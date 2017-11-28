@@ -83,8 +83,7 @@ contract('Oracle', function(accounts) {
     describe("New Oracle", async function() {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
-            assert.equal(await oracle.eventName.call(), testOracleParams._eventName.join(''), 
-                "eventName does not match");
+            assert.equal(await oracle.getEventName(), testOracleParams._eventName.join(''), "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
                 "eventResultName 1 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testOracleParams._eventResultNames[1], 
@@ -110,7 +109,7 @@ contract('Oracle', function(accounts) {
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
                 testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
-            assert.equal(await oracle.eventName.call(), name.join(''), 'eventName does not match');
+            assert.equal(await oracle.getEventName(), name.join(''), 'eventName does not match');
         });
 
         it('should only concatenate first 10 array slots of the name array', async function() {
@@ -129,7 +128,7 @@ contract('Oracle', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
-            assert.equal(await oracle.eventName.call(), expected, 'eventName does not match');
+            assert.equal(await oracle.getEventName(), expected, 'eventName does not match');
         });
 
         it('should allow a space as the last character of a name array item', async function() {
@@ -139,7 +138,7 @@ contract('Oracle', function(accounts) {
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
                 testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
-            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+            assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
         });
 
         it('should allow a space as the first character if the next character is not empty in a name array item', 
@@ -150,7 +149,7 @@ contract('Oracle', function(accounts) {
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
                 testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
 
-            assert.equal(await oracle.eventName.call(), expected, 'Expected string does not match');
+            assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
         });
 
         it('can handle using all 10 eventResultNames', async function() {
