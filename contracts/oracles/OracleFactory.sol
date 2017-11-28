@@ -36,7 +36,7 @@ contract OracleFactory is IOracleFactory {
         uint256 _arbitrationOptionEndBlock)
         public
         payable
-        returns (Oracle oracleAddress)
+        returns (address)
     {
         bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
@@ -50,7 +50,7 @@ contract OracleFactory is IOracleFactory {
         OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock, msg.value);
 
-        return oracle;
+        return address(oracle);
     }
 
     /// @notice Returns if the Oracle has already been created for a specific Event.
