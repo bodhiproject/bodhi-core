@@ -30,13 +30,13 @@ contract Oracle is Ownable, ReentrancyGuard {
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     uint8 public numOfResults;
+    bytes32[10] public eventName;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
     Result[10] private eventResults;
     IAddressManager private addressManager;
-    string public eventName;
     mapping(address => Participant) private participants;
 
     // Modifiers
@@ -46,7 +46,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     }
 
     // Events
-    event OracleCreated(string _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(bytes32[10] _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
@@ -78,7 +78,7 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
-        eventName = ByteUtils.toString(_eventName);
+        eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
             if (!_eventResultNames[i].isEmpty()) {
