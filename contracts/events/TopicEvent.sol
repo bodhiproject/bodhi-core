@@ -183,6 +183,30 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         WinningsWithdrawn(withdrawAmount);
     }
 
+    /*
+    * @notice This method can be called by anyone from any of the Oracle contracts and will set the Status: Collection 
+    *   to allow winners to withdraw.
+    * @dev This should be called by last Oracle contract. Validation of being able to finalize will be in the Oracle.
+    * @return Flag to indicate success of finalizing the result.
+    */
+    function finalizeResult() 
+        public 
+        return (bool)
+    {
+        bool isValidSender = false;
+        for (uint8 i = 1; i < oracles.length; i++) {
+            if (msg.sender == oracles[i].oracleAddress) {
+                isValidSender = true;
+                break;
+            }
+        }
+        require(isValidSender);
+        require(status == Status.OracleVoting);
+
+        status = Status.Collection;
+        return true;
+    }
+
     /// @notice Gets the result's name given the index.
     /// @param _resultIndex The index of the result.
     /// @return The result name.
