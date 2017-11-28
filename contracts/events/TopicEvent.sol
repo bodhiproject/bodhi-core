@@ -38,9 +38,9 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     Status public status = Status.Betting;
     uint256 public bettingEndBlock;
     uint256 public arbitrationOptionEndBlock;
+    bytes32[10] private name;
     Result[10] private results;
     Oracle[] public oracles;
-    string public name;
 
     // Events
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
@@ -92,7 +92,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
             oracleAddress: _oracle,
             didSetResult: false
             }));
-        name = ByteUtils.toString(_name);
+        name = _name;
 
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
@@ -217,6 +217,16 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         returns (address, bool)
     {
         return (oracles[_oracleIndex].oracleAddress, oracles[_oracleIndex].didSetResult);
+    }
+
+    /// @notice Gets the Event name as a string.
+    /// @return The name of the Event.
+    function getEventName() 
+        public 
+        view 
+        returns (string) 
+    {
+        return ByteUtils.toString(name);
     }
 
     /// @notice Gets the result's name given the index.

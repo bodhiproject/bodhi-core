@@ -31,28 +31,24 @@ contract('TopicEvent', function(accounts) {
 
     describe("New TopicEvent:", async function() {
         it("initializes all the values", async function() {
-            assert.equal(await testTopic.owner.call(), testTopicParams._owner, 'owner does not match');
-            assert.equal((await testTopic.getOracle(0))[0], testTopicParams._oracle, 'oracle does not match');
-            assert.equal(await testTopic.name.call(), testTopicParams._name.join(''), 'name does not match');
+            assert.equal(await testTopic.owner.call(), testTopicParams._owner);
+            assert.equal((await testTopic.getOracle(0))[0], testTopicParams._oracle);
+            assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
 
-            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0], 
-                'resultName0 does not match');
-            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), testTopicParams._resultNames[1], 
-                'resultName1 does not match');
-            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), testTopicParams._resultNames[2], 
-                'resultName2 does not match');
+            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), testTopicParams._resultNames[2]);
             try {
                 await testTopic.getResultName(3);
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, regexInvalidOpcode);
+                assertInvalidOpcode(e);
             }
 
-            assert.equal((await testTopic.numOfResults.call()).toNumber(), 3, 'numOfResults does not match');
-            await assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock, 
-                'bettingEndBlock does not match');
+            assert.equal((await testTopic.numOfResults.call()).toNumber(), 3);
+            await assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
             await assert.equal(await testTopic.arbitrationOptionEndBlock.call(), 
-                testTopicParams._arbitrationOptionEndBlock, 'arbitrationOptionEndBlock does not match');
+                testTopicParams._arbitrationOptionEndBlock);
         });
 
         it('can handle a long name using all 10 array slots', async function() {
@@ -61,12 +57,11 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
-
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._arbitrationOptionEndBlock);
 
-            assert.equal(await testTopic.name.call(), name.join(''), 'Topic name does not match');
+            assert.equal(await testTopic.getEventName(), name.join(''));
         });
 
         it('should only concatenate first 10 array slots of the name array', async function() {
@@ -76,7 +71,6 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
-
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._arbitrationOptionEndBlock);
@@ -85,7 +79,7 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
-            assert.equal(await testTopic.name.call(), expected, 'Topic name does not match');
+            assert.equal(await testTopic.getEventName(), expected);
         });
 
         it('should allow a space as the last character of a name array item', async function() {
@@ -94,8 +88,7 @@ contract('TopicEvent', function(accounts) {
             testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._arbitrationOptionEndBlock);
-
-            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+            assert.equal(await testTopic.getEventName(), expected);
         });
 
         it('should allow a space as the first character if the next character is not empty in a name array item', 
@@ -106,7 +99,7 @@ contract('TopicEvent', function(accounts) {
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._arbitrationOptionEndBlock);
 
-            assert.equal(await testTopic.name.call(), expected, 'Expected string does not match');
+            assert.equal(await testTopic.getEventName(), expected);
         });
 
         it('can handle using all 10 resultNames', async function() {
