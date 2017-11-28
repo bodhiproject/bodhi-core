@@ -1,9 +1,9 @@
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const EventFactory = artifacts.require("./events/EventFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
-const BlockHeightManager = require('./helpers/block_height_manager');
-const assertInvalidOpcode = require('./helpers/assert_invalid_opcode');
-const Utils = require('./helpers/utils');
+const BlockHeightManager = require('../helpers/block_height_manager');
+const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const Utils = require('../helpers/utils');
 const web3 = global.web3;
 const assert = require('chai').assert;
 

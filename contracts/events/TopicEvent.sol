@@ -42,6 +42,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     uint256 public resultSettingEndBlock;
     bytes32[10] private name;
     Result[10] private results;
+    IAddressManager private addressManager;
     Oracle[] public oracles;
 
     // Events
@@ -78,10 +79,12 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         bytes32[10] _name,
         bytes32[10] _resultNames,
         uint256 _bettingEndBlock,
-        uint256 _resultSettingEndBlock)
+        uint256 _resultSettingEndBlock,
+        address _addressManager)
         Ownable(_owner)
         public
         validAddress(_oracle)
+        validAddress(_addressManager)
     {
         require(!_name[0].isEmpty());
         require(!_resultNames[0].isEmpty());
@@ -110,6 +113,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
         bettingEndBlock = _bettingEndBlock;
         resultSettingEndBlock = _resultSettingEndBlock;
+
+        addressManager = IAddressManager(_addressManager);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.

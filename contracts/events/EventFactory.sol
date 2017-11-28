@@ -1,10 +1,11 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "../storage/IAddressManager.sol";
 import "./TopicEvent.sol";
 
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
+    address private addressManager;
     mapping (bytes32 => TopicEvent) public topics;
 
     // Events
@@ -13,8 +14,8 @@ contract EventFactory {
 
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
-        IAddressManager addressManager = IAddressManager(_addressManager);
-        addressManager.setEventFactoryAddress(msg.sender, address(this));
+        addressManager = _addressManager;
+        IAddressManager(addressManager).setEventFactoryAddress(msg.sender, address(this));
     }
     
     function createTopic(
@@ -31,7 +32,7 @@ contract EventFactory {
         require(address(topics[topicHash]) == 0);
 
         TopicEvent topic = new TopicEvent(msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
-            _resultSettingEndBlock);
+            _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
         TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
             _resultSettingEndBlock);

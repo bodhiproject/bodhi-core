@@ -4,9 +4,9 @@ const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
-const BlockHeightManager = require('./helpers/block_height_manager');
-const Utils = require('./helpers/utils');
-const assertInvalidOpcode = require('./helpers/assert_invalid_opcode');
+const BlockHeightManager = require('../helpers/block_height_manager');
+const Utils = require('../helpers/utils');
+const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -80,7 +80,7 @@ contract('Oracle', function(accounts) {
         await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
 
-    describe("New Oracle", async function() {
+    describe("constructor", async function() {
         it("inits the Oracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
             assert.equal(await oracle.getEventName(), testOracleParams._eventName.join(''), "eventName does not match");
