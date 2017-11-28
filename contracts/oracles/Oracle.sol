@@ -4,6 +4,8 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../ReentrancyGuard.sol";
+import "../storage/IAddressManager.sol";
+import "../tokens/ERC20.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable, ReentrancyGuard {
@@ -11,10 +13,10 @@ contract Oracle is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
     struct Participant {
-        uint256 stakeContributed;
         bool didSetResult;
-        uint8 resultIndex;
         bool didWithdrawEarnings;
+        uint8 resultIndex;
+        uint256 stakeContributed;
     }
 
     struct Result {
@@ -28,12 +30,13 @@ contract Oracle is Ownable, ReentrancyGuard {
     uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
 
     uint8 public numOfResults;
+    bytes32[10] private eventName;
     uint256 public eventBettingEndBlock;
     uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
     uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
     uint256 public totalStakeContributed;
     Result[10] private eventResults;
-    string public eventName;
+    IAddressManager private addressManager;
     mapping(address => Participant) private participants;
 
     // Modifiers
@@ -43,7 +46,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     }
 
     // Events
-    event OracleCreated(string _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
+    event OracleCreated(bytes32[10] _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
         uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
@@ -56,15 +59,18 @@ contract Oracle is Ownable, ReentrancyGuard {
     /// @param _eventBettingEndBlock The block when Event betting ended.
     /// @param _decisionEndBlock The block when Oracle voting will end.
     /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
+    /// @param _addressManager The address of the AddressManager contract.
     function Oracle(
         address _owner,
         bytes32[10] _eventName,
         bytes32[10] _eventResultNames, 
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock,
-        uint256 _arbitrationOptionEndBlock) 
+        uint256 _arbitrationOptionEndBlock,
+        address _addressManager)
         Ownable(_owner)
         public
+        validAddress(_addressManager)
     {
         require(!_eventName[0].isEmpty());
         require(!_eventResultNames[0].isEmpty());
@@ -72,7 +78,7 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(_decisionEndBlock > _eventBettingEndBlock);
         require(_arbitrationOptionEndBlock > _decisionEndBlock);
 
-        eventName = ByteUtils.toString(_eventName);
+        eventName = _eventName;
 
         for (uint i = 0; i < _eventResultNames.length; i++) {
             if (!_eventResultNames[i].isEmpty()) {
@@ -92,6 +98,8 @@ contract Oracle is Ownable, ReentrancyGuard {
 
         OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             arbitrationOptionEndBlock);
+
+        addressManager = IAddressManager(_addressManager);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -111,25 +119,30 @@ contract Oracle is Ownable, ReentrancyGuard {
 
     /// @notice Vote an Event result which requires BOT payment.
     /// @param _eventResultIndex The Event result which is being voted on.
-    function voteResult(uint8 _eventResultIndex) 
+    /// @param _botAmount The amount of BOT to use for voting.
+    function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
         public 
-        payable 
         validResultIndex(_eventResultIndex) 
     {
-        require(msg.value > 0);
+        require(_botAmount > 0);
+        require(totalStakeContributed.add(_botAmount) <= maxStakeContribution);
         require(block.number >= eventBettingEndBlock);
         require(block.number < decisionEndBlock);
         require(!participants[msg.sender].didSetResult);
+        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
+        require(token.allowance(msg.sender, address(this)) >= _botAmount);
 
         Participant storage participant = participants[msg.sender];
-        participant.stakeContributed = participant.stakeContributed.add(msg.value);
-        participant.resultIndex = _eventResultIndex;
         participant.didSetResult = true;
+        participant.resultIndex = _eventResultIndex;
+        participant.stakeContributed = _botAmount;
 
-        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(msg.value);
-        totalStakeContributed = totalStakeContributed.add(msg.value);
+        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
+        totalStakeContributed = totalStakeContributed.add(_botAmount);
 
-        ParticipantVoted(msg.sender, msg.value, _eventResultIndex);
+        token.transferFrom(msg.sender, address(this), _botAmount);
+
+        ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
     }
 
     /// @notice Withdraw earnings if you picked the correct result.
@@ -148,6 +161,16 @@ contract Oracle is Ownable, ReentrancyGuard {
         msg.sender.transfer(withdrawAmount);
 
         EarningsWithdrawn(withdrawAmount);
+    }
+
+    /// @notice Gets the Event name as a string.
+    /// @return The name of the Event.
+    function getEventName() 
+        public 
+        view 
+        returns (string) 
+    {
+        return ByteUtils.toString(eventName);
     }
 
     /// @notice Gets the Event result name given a valid index.

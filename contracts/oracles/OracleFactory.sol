@@ -1,9 +1,10 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "../storage/IAddressManager.sol";
 import "./Oracle.sol";
 
 contract OracleFactory {
+    address private addressManager;
     mapping (bytes32 => Oracle) public oracles;
 
     // Events
@@ -11,10 +12,13 @@ contract OracleFactory {
         bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, uint256 _decisionEndBlock, 
         uint256 _arbitrationOptionEndBlock, uint256 _baseRewardAmount);
 
+    /// @notice Creates new OracleFactory contract.
+    /// @param _addressManager The address of the AddressManager contract.
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
-        IAddressManager addressManager = IAddressManager(_addressManager);
-        addressManager.setOracleFactoryAddress(msg.sender, address(this));
+        addressManager = _addressManager;
+        IAddressManager addressManagerInterface = IAddressManager(addressManager);
+        addressManagerInterface.setOracleFactoryAddress(msg.sender, address(this));
     }
 
     /// @notice Creates new Oracle contract.
@@ -39,7 +43,7 @@ contract OracleFactory {
         require(address(oracles[oracleHash]) == 0);
 
         Oracle oracle = new Oracle(msg.sender, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            _arbitrationOptionEndBlock);
+            _arbitrationOptionEndBlock, addressManager);
         oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;
         OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _eventBettingEndBlock, 
@@ -69,6 +73,12 @@ contract OracleFactory {
         return address(oracles[oracleHash]) != 0;
     }
 
+    /// @dev Gets the Oracle hash given the inputs.
+    /// @param _eventName The name of the Event this Oracle will arbitrate.
+    /// @param _eventResultNames The result options of the Event.
+    /// @param _eventBettingEndBlock The block when Event betting ended.
+    /// @param _decisionEndBlock The block when Oracle voting will end.
+    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
     function getOracleHash(
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames,
