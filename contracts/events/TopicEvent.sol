@@ -308,12 +308,15 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     {
         return results[finalResultIndex].name;
     }
-
+ 
+    /// @dev Creates an Oracle for this Event.
     function createOracle() 
         private 
     {
-        // uint16 index = IAddressManager(_addressManager).getLastOracleFactoryIndex();
-        // address oracleFactory = IAddressManager(_addressManager).getOracleFactoryAddress(index);
-        // return IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, _resultSettingEndBlock);
+        uint16 index = addressManager.getLastOracleFactoryIndex();
+        address oracleFactory = addressManager.getOracleFactoryAddress(index);
+        // TODO: fetch block number offset
+        return IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, _resultSettingEndBlock, 
+            block.number + 100);
     }
 }
