@@ -37,7 +37,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     uint8 public numOfResults;
     Status public status = Status.Betting;
     uint256 public bettingEndBlock;
-    uint256 public arbitrationOptionEndBlock;
+    uint256 public resultSettingEndBlock;
     bytes32[10] private name;
     Result[10] private results;
     Oracle[] public oracles;
@@ -69,14 +69,14 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     /// @param _name The question or statement of the TopicEvent broken down by multiple bytes32.
     /// @param _resultNames The possible results of the TopicEvent.
     /// @param _bettingEndBlock The block when TopicEvent voting will end.
-    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
+    /// @param _resultSettingEndBlock The last block the Individual Oracle can set the result.
     function TopicEvent(
         address _owner,
         address _oracle,
         bytes32[10] _name,
         bytes32[10] _resultNames,
         uint256 _bettingEndBlock,
-        uint256 _arbitrationOptionEndBlock)
+        uint256 _resultSettingEndBlock)
         Ownable(_owner)
         public
         validAddress(_oracle)
@@ -85,7 +85,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
         require(_bettingEndBlock > block.number);
-        require(_arbitrationOptionEndBlock > _bettingEndBlock);
+        require(_resultSettingEndBlock > _bettingEndBlock);
 
         owner = _owner;
         oracles.push(Oracle({
@@ -107,7 +107,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         }
 
         bettingEndBlock = _bettingEndBlock;
-        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
+        resultSettingEndBlock = _resultSettingEndBlock;
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.

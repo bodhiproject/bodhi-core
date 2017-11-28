@@ -2,6 +2,7 @@ const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const EventFactory = artifacts.require("./events/EventFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const BlockHeightManager = require('./helpers/block_height_manager');
+const assertInvalidOpcode = require('./helpers/assert_invalid_opcode');
 const Utils = require('./helpers/utils');
 const web3 = global.web3;
 const assert = require('chai').assert;
@@ -9,11 +10,11 @@ const assert = require('chai').assert;
 contract('EventFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const testTopicParams = {
-        _resultSetter: accounts[1],
+        _oracle: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
         _bettingEndBlock: 100,
-        _arbitrationOptionEndBlock: 110
+        _resultSettingEndBlock: 110
     };
 
     let addressManager;
@@ -36,8 +37,7 @@ contract('EventFactory', function(accounts) {
     describe('constructor', async function() {
         it('should store the EventFactory address in AddressManager', async function() {
             let index = await addressManager.getLastEventFactoryIndex();
-            assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address, 
-                'EventFactory address does not match');
+            assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address);
         });
 
         it('throws if the AddressManager address is invalid', async function() {
@@ -45,42 +45,38 @@ contract('EventFactory', function(accounts) {
                 await EventFactory.new(0, { from: eventFactoryCreator });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
     });
 
     describe('TopicEvent:', async function() {
         it('initializes all the values of the new topic correctly', async function() {
-            assert.equal(await topic.owner.call(), topicCreator, 'Topic owner does not match.');
-            assert.equal(await topic.name.call(), testTopicParams._name.join(''), 'Topic name does not match.');
-            assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0], 
-                'Result name 1 does not match.');
-            assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1],
-                'Result name 2 does not match.');
-            assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2],
-                'Result name 3 does not match.');
-            assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock,
-                'Topic betting end block does not match.');
-            assert.equal(await topic.arbitrationOptionEndBlock.call(), testTopicParams._arbitrationOptionEndBlock, 
-                'arbitrationOptionEndBlock does not match');
+            assert.equal(await topic.owner.call(), topicCreator);
+            assert.equal((await topic.getOracle(0))[0], testTopicParams._oracle);
+            assert.equal(await topic.getEventName(), testTopicParams._name.join(''));
+            assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2]);
+            assert.equal((await topic.numOfResults.call()).toNumber(), 3);
+            assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
+            assert.equal(await topic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
         });
 
         it('does not allow recreating the same topic twice', async function() {
             let topicExists = await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingEndBlock, testTopicParams._arbitrationOptionEndBlock);
-            assert.isTrue(topicExists, 'Topic should already exist.');
+                testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock);
+            assert.isTrue(topicExists);
 
             try {
                 await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                assertInvalidOpcode(e);
             }
         });
 
         it('allows betting if the bettingEndBlock has not been reached', async function() {
-            assert.isBelow(web3.eth.blockNumber, testTopicParams._bettingEndBlock, 
-                'Current block is greater than or equal to bettingEndBlock.');
+            assert.isBelow(web3.eth.blockNumber, testTopicParams._bettingEndBlock);
 
             let initialBalance = web3.eth.getBalance(topic.address).toNumber();
             let betResultIndex = 0;
@@ -96,16 +92,16 @@ contract('EventFactory', function(accounts) {
 
             let newBalance = web3.eth.getBalance(topic.address).toNumber();
             let difference = newBalance - initialBalance;
-            assert.equal(difference, totalBetAmount, 'New result balance does not match added bet.');
+            assert.equal(difference, totalBetAmount);
 
             let resultBalance = await topic.getResultBalance(betResultIndex);
-            assert.equal(resultBalance.toString(), totalBetAmount.toString(), 'Result balance does not match.');
+            assert.equal(resultBalance.toString(), totalBetAmount.toString());
 
             var betBalance = await topic.getBetBalance(betResultIndex, { from: better1 });
-            assert.equal(betBalance.toString(), betAmount1.toString(), 'Better1 bet balance does not match.');
+            assert.equal(betBalance.toString(), betAmount1.toString());
 
             betBalance = await topic.getBetBalance(betResultIndex, { from: better2 });
-            assert.equal(betBalance.toString(), betAmount2.toString(), 'Better2 bet balance does not match.');
+            assert.equal(betBalance.toString(), betAmount2.toString());
         });
 
         it('allows the Oracle to reveal the result if the bettingEndBlock has been reached', async function() {
