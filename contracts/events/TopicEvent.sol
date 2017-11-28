@@ -9,6 +9,18 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
+    /*
+    * @notice Status types
+    *   Betting: betting phase on the TopicEvent
+    *   Arbitration: Voting Oracle phase
+    *   Collection: winners can collect their winnings
+    */
+    enum Status {
+        Betting,
+        Arbitration,
+        Collection
+    }
+
     struct Result {
         bytes32 name;
         uint256 balance;
