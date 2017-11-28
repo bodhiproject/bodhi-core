@@ -49,6 +49,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event WinningsWithdrawn(uint256 _amountWithdrawn);
     event FinalResultSet(uint8 _finalResultIndex);
+    event OracleCreated(address indexed _oracleAddress);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -203,8 +204,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice This method can be called by anyone from any of the Oracle contracts and will set the Status: Collection 
-    *   to allow winners to withdraw.
+    * @notice This can be called by anyone from the last Voting Oracle if it did not meet the threshold 
+    *   and will set Status: Collection to allow winners to withdraw from this Event and all it's Oracles.
     * @dev This should be called by last Oracle contract. Validation of being able to finalize will be in the Oracle.
     * @return Flag to indicate success of finalizing the result.
     */
@@ -334,5 +335,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
             oracleAddress: _oracle,
             didSetResult: false
             }));
+
+        OracleCreated(newOracle);
     }
 }
