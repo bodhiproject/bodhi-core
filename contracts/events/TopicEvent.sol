@@ -165,19 +165,15 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         hasEnded 
         resultIsSet
     {
-        uint256 totalTopicBalance = getTotalTopicBalance();
-        require(totalTopicBalance > 0);
-
-        Result storage finalResult = results[finalResultIndex];
-        uint256 betBalance = finalResult.betBalances[msg.sender];
-        require(betBalance > 0);
-
-        // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
-        finalResult.betBalances[msg.sender] = 0;
+        require(status == Status.Collection);
+        require(getTotalTopicBalance() > 0);
+        require(results[finalResultIndex].betBalances[msg.sender] > 0);
 
         uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(finalResult.balance);
         require(withdrawAmount > 0);
 
+        // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
+        finalResult.betBalances[msg.sender] = 0;
         msg.sender.transfer(withdrawAmount);
 
         WinningsWithdrawn(withdrawAmount);
