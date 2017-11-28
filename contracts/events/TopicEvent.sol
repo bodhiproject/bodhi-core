@@ -33,9 +33,9 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     }
 
     bool public resultSet;
-    Status public status = Status.Betting;
     uint8 private finalResultIndex;
     uint8 public numOfResults;
+    Status public status = Status.Betting;
     uint256 public bettingEndBlock;
     uint256 public arbitrationOptionEndBlock;
     Result[10] private results;
@@ -166,8 +166,13 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         resultIsSet
     {
         require(status == Status.Collection);
-        require(getTotalTopicBalance() > 0);
-        require(results[finalResultIndex].betBalances[msg.sender] > 0);
+
+        Result storage finalResult = results[finalResultIndex];
+        uint256 betBalance = finalResult.betBalances[msg.sender];
+        require(betBalance > 0);
+
+        uint256 totalTopicBalance = getTotalTopicBalance();
+        require(totalTopicBalance > 0);
 
         uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(finalResult.balance);
         require(withdrawAmount > 0);
@@ -187,7 +192,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     */
     function finalizeResult() 
         public 
-        return (bool)
+        returns (bool)
     {
         bool isValidSender = false;
         for (uint8 i = 1; i < oracles.length; i++) {
@@ -201,6 +206,17 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
         status = Status.Collection;
         return true;
+    }
+
+    /// @notice Gets the Oracle's address and flag indicating if it set it's result.
+    /// @param _oracleIndex The index of the Oracle in the array.
+    /// @return The Oracle address and boolean indicating if it set it's result.
+    function getOracle(uint8 _oracleIndex)
+        public 
+        view 
+        returns (address, bool)
+    {
+        return (oracles[_oracleIndex].oracleAddress, oracles[_oracleIndex].didSetResult);
     }
 
     /// @notice Gets the result's name given the index.
