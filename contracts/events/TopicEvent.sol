@@ -256,7 +256,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
+        return createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
 
     /*
@@ -390,6 +390,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     /// @dev Creates an Oracle for this Event.
     function createVotingOracle(uint256 _consensusThreshold) 
         private 
+        returns (bool)
     {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
@@ -402,5 +403,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             oracleAddress: newOracle,
             didSetResult: false
             }));
+
+        return true;
     }
 }
