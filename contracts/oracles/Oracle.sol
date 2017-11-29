@@ -42,6 +42,11 @@ contract Oracle is Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier isNotFinished() {
+        require(!isFinished);
+        _;
+    }
+
     // Events
     event OracleResultVoted(address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
     event OracleResultSet(uint8 _resultIndex);
@@ -106,8 +111,8 @@ contract Oracle is Ownable, ReentrancyGuard {
     function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
         external 
         validResultIndex(_eventResultIndex) 
+        isNotFinished()
     {
-        require(!isFinished);
         require(_botAmount > 0);
         require(!participants[msg.sender].didSetResult);
         require(block.number < arbitrationEndBlock);
@@ -130,6 +135,25 @@ contract Oracle is Ownable, ReentrancyGuard {
             isFinished = true;
             OracleResultSet(_eventResultIndex);
         }   
+    }
+
+    /*
+    * @notice This can be called by anyone if this VotingOracle did not meet the consensus threshold and has reached 
+    *   the arbitration end block.
+    * @return Flag to indicate success of finalizing the result.
+    */
+    function finalizeResult() 
+        external 
+        isNotFinished()
+    {
+        require(totalStakeContributed < consensusThreshold);
+        require(block.number >= arbitrationEndBlock);
+
+        isFinished = true;
+
+        if (!ITopicEvent(eventAddress).finalizeResult()) {
+            revert();
+        }
     }
 
     /// @notice Gets the Event name as a string.

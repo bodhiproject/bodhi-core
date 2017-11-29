@@ -274,6 +274,9 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(status == Status.OracleVoting);
 
         status = Status.Collection;
+
+        FinalResultSet(finalResultIndex);
+
         return true;
     }
 
