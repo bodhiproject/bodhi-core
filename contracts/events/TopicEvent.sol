@@ -1,5 +1,6 @@
 pragma solidity ^0.4.18;
 
+import "./ITopicEvent.sol";
 import "../storage/IAddressManager.sol";
 import "../oracles/IOracleFactory.sol";
 import "../tokens/ERC20.sol";
@@ -8,7 +9,7 @@ import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../ReentrancyGuard.sol";
 
-contract TopicEvent is Ownable, ReentrancyGuard {
+contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -44,6 +45,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     bytes32[10] public resultNames;
     ResultBalance[10] private balances;
     IAddressManager private addressManager;
+    ERC20 private token;
     Oracle[] public oracles;
 
     // Events
@@ -65,6 +67,18 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
     modifier resultIsSet() {
         require(resultSet);
+        _;
+    }
+
+    modifier validSender(address _sender) {
+        bool isValidSender = false;
+        for (uint8 i = 1; i < oracles.length; i++) {
+            if (_sender == oracles[i].oracleAddress) {
+                isValidSender = true;
+                break;
+            }
+        }
+        require(isValidSender);
         _;
     }
 
@@ -118,6 +132,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         resultSettingEndBlock = _resultSettingEndBlock;
 
         addressManager = IAddressManager(_addressManager);
+        token = ERC20(addressManager.bodhiTokenAddress());
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -144,45 +159,101 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         BetAccepted(msg.sender, _resultIndex, msg.value, balances[_resultIndex].betBalances[msg.sender]);
     }
 
-    /// @notice Allows anyone to start a Voting Oracle if the Individual Oracle did not set a result in time.
-    /// @dev This insures the funds don't get locked up in the contract. The Voting Oracle allows voting on all results.
-    function invalidateOracle() external {
+    function transferBot(address _sender, uint256 _amount)
+        external
+        validSender(msg.sender) 
+        returns (bool)
+    {
+        require(_amount > 0);
+        require(token.allowance(_sender, address(this)) >= _amount);
+
+        // TODO: log amount of BOT voted by _sender
+
+        return token.transferFrom(_sender, address(this), _amount);
+    }
+
+    /* 
+    * @notice Allows anyone to set the Result based on majority vote if the CentralizedOracle does not set the Result 
+    *   in time.
+    * @dev This insures the funds don't get locked up in the contract. The will create a VotingOracle as usual.
+    */
+    function invalidateCentralizedOracle() 
+        external 
+    {
         require(block.number >= resultSettingEndBlock);
         require(status == Status.Betting);
 
+        oracles[0].didSetResult = true;
+        resultSet = true;
         status = Status.OracleVoting;
-        createOracle();
+
+        // Calculates the winning Result index based on balances of each Result
+        uint8 finalResultIndex = 0;
+        uint256 winningIndexAmount = 0;
+        for (uint8 i = 0; i < balances.length; i++) {
+            uint256 resultBalance = balances[i].balance;
+            if (resultBalance > winningIndexAmount) {
+                winningIndexAmount = resultBalance;
+                finalResultIndex = i;
+            }
+        }
+
+        createVotingOracle(addressManager.startingOracleThreshold());
     }
 
-    /// @notice Allows the Oracle to reveal the result.
-    /// @param _resultIndex The index of result to reveal.
-    function revealResult(uint8 _resultIndex)
-        public
+    /* 
+    * @notice CentralizedOracle should call this to set the Result.
+    * @param _resultIndex The index of the Result to set.
+    * @param _botAmount The amount of BOT to transfer to this Event.
+    */
+    function centralizedOracleSetResult(uint8 _resultIndex, uint256 _botAmount)
+        external 
         validResultIndex(_resultIndex)
     {
-        bool isValidOracle = false;
-        for (uint8 i = 0; i < oracles.length; i++) {
+        require(msg.sender == oracles[0].oracleAddress && !oracles[0].didSetResult);
+        require(block.number >= bettingEndBlock);
+        require(block.number < resultSettingEndBlock);
+        require(_botAmount >= addressManager.startingOracleThreshold());
+        require(token.allowance(msg.sender, address(this)) >= _botAmount);
+
+        oracles[0].didSetResult = true;
+        resultSet = true;
+        status = Status.OracleVoting;
+        finalResultIndex = _resultIndex;
+
+        if (!token.transferFrom(msg.sender, address(this), _botAmount)) {
+            revert();
+        }
+        createVotingOracle(addressManager.startingOracleThreshold());
+    }
+
+    /* 
+    * @notice VotingOracle should call this to set the Result.
+    * @param _resultIndex The index of the Result to set.
+    * @param _currentConsensusThreshold The new consensus threshold amount for the next Oracle.
+    */
+    function votingOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
+        external 
+        validResultIndex(_resultIndex)
+    {
+        bool isValidVotingOracle = false;
+        uint8 oracleIndex;
+        for (uint8 i = 1; i < oracles.length; i++) {
             if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
-                isValidOracle = true;
+                isValidVotingOracle = true;
+                oracleIndex = i;
                 break;
             }
         }
-        require(isValidOracle);
+        require(isValidVotingOracle);
         require(block.number >= bettingEndBlock);
 
-        // CentralizedOracle is revealing result
-        if (msg.sender == oracles[0].oracleAddress) {
-            ERC20 token = ERC20(addressManager.bodhiTokenAddress());
-            require(token.allowance(msg.sender, address(this)) >= addressManager.startingOracleThreshold);
-
-            status = Status.OracleVoting;
-            createOracle();
-        }
-
+        oracles[oracleIndex].didSetResult = true;
         resultSet = true;
+        status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        FinalResultSet(finalResultIndex);
+        createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
 
     /// @notice Allows winners of the event to withdraw their winnings after the final result is set.
@@ -211,23 +282,17 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice This can be called by anyone from the last Voting Oracle if it did not meet the threshold 
-    *   and will set Status: Collection to allow winners to withdraw from this Event and all it's Oracles.
-    * @dev This should be called by last Oracle contract. Validation of being able to finalize will be in the Oracle.
+    * @notice This can be called by anyone from the last VotingOracle if it did not meet the consensus threshold 
+    *   and will set Status: Collection to allow winners to withdraw winnings from this Event.
+    * @dev This should be called by last VotingOracle contract. Validation of being able to finalize will be in the 
+    *   VotingOracle contract.
     * @return Flag to indicate success of finalizing the result.
     */
     function finalizeResult() 
         public 
+        validSender(msg.sender)
         returns (bool)
     {
-        bool isValidSender = false;
-        for (uint8 i = 1; i < oracles.length; i++) {
-            if (msg.sender == oracles[i].oracleAddress) {
-                isValidSender = true;
-                break;
-            }
-        }
-        require(isValidSender);
         require(status == Status.OracleVoting);
 
         status = Status.Collection;
@@ -314,16 +379,16 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     {
         return resultNames[finalResultIndex];
     }
- 
+
     /// @dev Creates an Oracle for this Event.
-    function createOracle() 
+    function createVotingOracle(uint256 _consensusThreshold) 
         private 
     {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
-        address newOracle = IOracleFactory(oracleFactory).createOracle(name, resultNames, bettingEndBlock, 
-            resultSettingEndBlock, block.number.add(arbitrationBlockLength));
+        address newOracle = IOracleFactory(oracleFactory).createOracle(address(this), name, resultNames, 
+            finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({

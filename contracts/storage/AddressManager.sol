@@ -10,6 +10,7 @@ contract AddressManager is IAddressManager, Ownable {
     uint16 private currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
     uint16 private currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
     uint256 public startingOracleThreshold = 100 * (10**botDecimals);
+    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals);
     mapping(uint16 => address) private eventFactoryAddresses;
     mapping(uint16 => address) private oracleFactoryAddresses;
 
