@@ -2,6 +2,7 @@ pragma solidity ^0.4.18;
 
 import "../storage/IAddressManager.sol";
 import "../oracles/IOracleFactory.sol";
+import "../tokens/ERC20.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
@@ -169,7 +170,11 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         require(isValidOracle);
         require(block.number >= bettingEndBlock);
 
+        // CentralizedOracle is revealing result
         if (msg.sender == oracles[0].oracleAddress) {
+            ERC20 token = ERC20(addressManager.bodhiTokenAddress());
+            require(token.allowance(msg.sender, address(this)) >= addressManager.startingOracleThreshold);
+
             status = Status.OracleVoting;
             createOracle();
         }
