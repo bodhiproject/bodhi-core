@@ -70,18 +70,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier validSender(address _sender) {
-        bool isValidSender = false;
-        for (uint8 i = 1; i < oracles.length; i++) {
-            if (_sender == oracles[i].oracleAddress) {
-                isValidSender = true;
-                break;
-            }
-        }
-        require(isValidSender);
-        _;
-    }
-
     /// @notice Creates new TopicEvent contract.
     /// @param _owner The address of the owner.
     /// @param _oracle The address of the individual Oracle that will decide the result.
@@ -161,11 +149,18 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     function transferBot(address _sender, uint256 _amount)
         external
-        validSender(msg.sender) 
         returns (bool)
     {
+        bool isValidOracle = false;
+        for (uint8 i = 1; i < oracles.length; i++) {
+            if (msg.sender == oracles[i].oracleAddress) {
+                isValidOracle = true;
+                break;
+            }
+        }
+        require(isValidOracle);
         require(_amount > 0);
-        require(token.allowance(_sender, address(this)) >= _amount);
+        require(token.allowance(msg.sender, address(this)) >= _amount);
 
         // TODO: log amount of BOT voted by _sender
 
@@ -188,7 +183,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         status = Status.OracleVoting;
 
         // Calculates the winning Result index based on balances of each Result
-        uint8 finalResultIndex = 0;
         uint256 winningIndexAmount = 0;
         for (uint8 i = 0; i < balances.length; i++) {
             uint256 resultBalance = balances[i].balance;
@@ -256,6 +250,24 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
 
+    /*
+    * @notice This can be called by anyone from the last VotingOracle if it did not meet the consensus threshold 
+    *   and will set Status: Collection to allow winners to withdraw winnings from this Event.
+    * @dev This should be called by last VotingOracle contract. Validation of being able to finalize will be in the 
+    *   VotingOracle contract.
+    * @return Flag to indicate success of finalizing the result.
+    */
+    function finalizeResult() 
+        public 
+        returns (bool)
+    {
+        require(msg.sender == oracles[oracles.length - 1].oracleAddress);
+        require(status == Status.OracleVoting);
+
+        status = Status.Collection;
+        return true;
+    }
+
     /// @notice Allows winners of the event to withdraw their winnings after the final result is set.
     function withdrawWinnings() 
         public 
@@ -279,24 +291,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         msg.sender.transfer(withdrawAmount);
 
         WinningsWithdrawn(withdrawAmount);
-    }
-
-    /*
-    * @notice This can be called by anyone from the last VotingOracle if it did not meet the consensus threshold 
-    *   and will set Status: Collection to allow winners to withdraw winnings from this Event.
-    * @dev This should be called by last VotingOracle contract. Validation of being able to finalize will be in the 
-    *   VotingOracle contract.
-    * @return Flag to indicate success of finalizing the result.
-    */
-    function finalizeResult() 
-        public 
-        validSender(msg.sender)
-        returns (bool)
-    {
-        require(status == Status.OracleVoting);
-
-        status = Status.Collection;
-        return true;
     }
 
     /// @notice Gets the Oracle's address and flag indicating if it set it's result.

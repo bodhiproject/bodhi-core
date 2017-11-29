@@ -58,8 +58,8 @@ contract OracleFactory is IOracleFactory {
         constant
         returns (bool)
     {
-        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _eventBettingEndBlock, 
-            _decisionEndBlock, _arbitrationOptionEndBlock);
+        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
+            _arbitrationEndBlock, _consensusThreshold);
         return address(oracles[oracleHash]) != 0;
     }
 

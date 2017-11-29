@@ -180,8 +180,6 @@ contract Oracle is Ownable, ReentrancyGuard {
         view 
         returns (uint8) 
     {
-        require(block.number >= decisionEndBlock);
-
         uint8 finalResultIndex = 0;
         uint256 winningIndexAmount = 0;
         for (uint8 i = 0; i < resultBalances.length; i++) {
