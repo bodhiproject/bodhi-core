@@ -54,6 +54,7 @@ contract Oracle is Ownable, ReentrancyGuard {
 
     /// @notice Creates new Oracle contract.
     /// @param _owner The address of the owner.
+    /// @param _eventAddress The address of the Event this Oracle will arbitrate.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
     /// @param _eventResultNames The result options of the Event.
     /// @param _lastResultIndex The last result index set by the Oracle.
@@ -62,6 +63,7 @@ contract Oracle is Ownable, ReentrancyGuard {
     /// @param _addressManager The address of the AddressManager contract.
     function Oracle(
         address _owner,
+        address _eventAddress,
         bytes32[10] _eventName,
         bytes32[10] _eventResultNames,
         uint8 _lastResultIndex,

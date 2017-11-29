@@ -9,8 +9,8 @@ contract OracleFactory is IOracleFactory {
     mapping (bytes32 => Oracle) public oracles;
 
     // Events
-    event OracleCreated(address indexed _creator, address indexed _oracleAddress, bytes32[10] _eventName, 
-        bytes32[10] _eventResultNames, uint8 _lastResultIndex, uint256 _arbitrationEndBlock, 
+    event OracleCreated(address indexed _creator, address indexed _oracleAddress, address indexed _eventAddress,
+        bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _lastResultIndex, uint256 _arbitrationEndBlock, 
         uint256 _consensusThreshold);
 
     /// @notice Creates new OracleFactory contract.
@@ -23,6 +23,7 @@ contract OracleFactory is IOracleFactory {
     }
 
     function createOracle(
+        address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
         uint8 _lastResultIndex,
@@ -31,22 +32,23 @@ contract OracleFactory is IOracleFactory {
         public
         returns (address)
     {
-        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _lastResultIndex, _arbitrationEndBlock, 
-            _consensusThreshold);
+        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
+            _arbitrationEndBlock, _consensusThreshold);
         // Oracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
 
-        Oracle oracle = new Oracle(msg.sender, _eventName, _eventResultNames, _lastResultIndex, _arbitrationEndBlock, 
-            _consensusThreshold, addressManager);
+        Oracle oracle = new Oracle(msg.sender, _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
+            _arbitrationEndBlock, _consensusThreshold, addressManager);
         oracles[oracleHash] = oracle;
 
-        OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _lastResultIndex, 
+        OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
             _arbitrationEndBlock, _consensusThreshold);
 
         return address(oracle);
     }
 
     function doesOracleExist(
+        address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
         uint8 _lastResultIndex,
@@ -56,12 +58,13 @@ contract OracleFactory is IOracleFactory {
         constant
         returns (bool)
     {
-        bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
+        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock);
         return address(oracles[oracleHash]) != 0;
     }
 
     function getOracleHash(
+        address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
         uint8 _lastResultIndex,
@@ -71,6 +74,7 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventName, _eventResultNames, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+        return keccak256(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, _arbitrationEndBlock, 
+            _consensusThreshold);
     }
 }
