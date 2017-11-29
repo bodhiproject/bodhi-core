@@ -46,8 +46,6 @@ contract Oracle is Ownable, ReentrancyGuard {
     }
 
     // Events
-    event OracleCreated(bytes32[10] _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
-        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
     event OracleFunded(uint256 _baseRewardAmount);
     event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
     event EarningsWithdrawn(uint256 _amountWithdrawn);
@@ -97,9 +95,6 @@ contract Oracle is Ownable, ReentrancyGuard {
         eventBettingEndBlock = _eventBettingEndBlock;
         decisionEndBlock = _decisionEndBlock;
         arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
-
-        OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            arbitrationOptionEndBlock);
 
         addressManager = IAddressManager(_addressManager);
     }

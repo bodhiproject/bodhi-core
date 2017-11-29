@@ -48,9 +48,9 @@ contract TopicEvent is Ownable, ReentrancyGuard {
 
     // Events
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
-    event WinningsWithdrawn(uint256 _amountWithdrawn);
+    event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
-    event OracleCreated(address indexed _oracleAddress);
+    event WinningsWithdrawn(uint256 _amountWithdrawn);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -330,7 +330,5 @@ contract TopicEvent is Ownable, ReentrancyGuard {
             oracleAddress: newOracle,
             didSetResult: false
             }));
-
-        OracleCreated(newOracle);
     }
 }
