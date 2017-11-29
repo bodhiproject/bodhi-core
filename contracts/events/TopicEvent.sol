@@ -60,11 +60,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier hasEnded() {
-        require(block.number >= bettingEndBlock);
-        _;
-    }
-
     modifier resultIsSet() {
         require(resultSet);
         _;
@@ -128,8 +123,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         revert();
     }
 
-    /// @notice Allows betting on a specific result.
-    /// @param _resultIndex The index of result to bet on.
+    /*
+    * @notice Allows betting on a Result using the blockchain token.
+    * @param _resultIndex The index of result to bet on.
+    */
     function bet(uint8 _resultIndex) 
         external 
         payable
@@ -147,6 +144,13 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         BetAccepted(msg.sender, _resultIndex, msg.value, balances[_resultIndex].betBalances[msg.sender]);
     }
 
+    /*
+    * @dev VotingOracles will call this to vote on a Result on behalf of a participant. Participants must BOT approve()
+    *   with the amount before voting.
+    * @param _sender The address of the person voting on a Result.
+    * @param _amount The BOT amount used to vote.
+    * @return Flag indicating a successful transfer.
+    */
     function transferBot(address _sender, uint256 _amount)
         external
         returns (bool)
@@ -160,7 +164,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         }
         require(isValidOracle);
         require(_amount > 0);
-        require(token.allowance(msg.sender, address(this)) >= _amount);
+        require(token.allowance(_sender, address(this)) >= _amount);
 
         // TODO: log amount of BOT voted by _sender
 
@@ -175,6 +179,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     function invalidateCentralizedOracle() 
         external 
     {
+        require(!oracles[0].didSetResult);
         require(block.number >= resultSettingEndBlock);
         require(status == Status.Betting);
 
@@ -196,7 +201,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /* 
-    * @notice CentralizedOracle should call this to set the Result.
+    * @dev CentralizedOracle should call this to set the Result. Requires minimum BOT approve() of 
+    *   startingOracleThreshold.
     * @param _resultIndex The index of the Result to set.
     * @param _botAmount The amount of BOT to transfer to this Event.
     */
@@ -207,24 +213,27 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(msg.sender == oracles[0].oracleAddress && !oracles[0].didSetResult);
         require(block.number >= bettingEndBlock);
         require(block.number < resultSettingEndBlock);
-        require(_botAmount >= addressManager.startingOracleThreshold());
-        require(token.allowance(msg.sender, address(this)) >= _botAmount);
+        uint256 startingOracleThreshold = addressManager.startingOracleThreshold();
+        assert(startingOracleThreshold > 0);
+        require(_botAmount >= startingOracleThreshold);
+        require(token.allowance(msg.sender, address(this)) >= startingOracleThreshold);
 
         oracles[0].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        if (!token.transferFrom(msg.sender, address(this), _botAmount)) {
+        if (!token.transferFrom(msg.sender, address(this), startingOracleThreshold)) {
             revert();
         }
         createVotingOracle(addressManager.startingOracleThreshold());
     }
 
     /* 
-    * @notice VotingOracle should call this to set the Result.
+    * @dev VotingOracle should call this to set the Result. Should be allowed when the Oracle passes the 
+    *   consensus threshold.
     * @param _resultIndex The index of the Result to set.
-    * @param _currentConsensusThreshold The new consensus threshold amount for the next Oracle.
+    * @param _currentConsensusThreshold The current consensus threshold amount for this Oracle.
     */
     function votingOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
         external 
@@ -258,7 +267,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     * @return Flag to indicate success of finalizing the result.
     */
     function finalizeResult() 
-        public 
+        external 
         returns (bool)
     {
         require(msg.sender == oracles[oracles.length - 1].oracleAddress);
@@ -268,10 +277,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return true;
     }
 
-    /// @notice Allows winners of the event to withdraw their winnings after the final result is set.
+    /*
+    * @notice Allows winners of the event to withdraw their blockchain tokens and BOT after the final result is set.
+    */
     function withdrawWinnings() 
         public 
-        hasEnded 
         resultIsSet
     {
         require(status == Status.Collection);
