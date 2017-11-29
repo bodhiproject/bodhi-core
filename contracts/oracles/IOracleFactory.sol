@@ -7,5 +7,5 @@ contract IOracleFactory {
         uint256 _eventBettingEndBlock,
         uint256 _decisionEndBlock, 
         uint256 _arbitrationOptionEndBlock) 
-    public payable returns (address);
+    public returns (address);
 }

@@ -35,7 +35,6 @@ contract OracleFactory is IOracleFactory {
         uint256 _decisionEndBlock,
         uint256 _arbitrationOptionEndBlock)
         public
-        payable
         returns (address)
     {
         bytes32 oracleHash = getOracleHash(_eventName, _eventResultNames, _eventBettingEndBlock, 
@@ -45,7 +44,7 @@ contract OracleFactory is IOracleFactory {
 
         Oracle oracle = new Oracle(msg.sender, _eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
             _arbitrationOptionEndBlock, addressManager);
-        oracle.addBaseReward.value(msg.value)();
+        // oracle.addBaseReward.value(msg.value)();
         oracles[oracleHash] = oracle;
         OracleCreated(msg.sender, address(oracle), _eventName, _eventResultNames, _eventBettingEndBlock, 
             _decisionEndBlock, _arbitrationOptionEndBlock, msg.value);

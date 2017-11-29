@@ -56,17 +56,16 @@ contract Oracle is Ownable, ReentrancyGuard {
     /// @param _owner The address of the owner.
     /// @param _eventName The name of the Event this Oracle will arbitrate.
     /// @param _eventResultNames The result options of the Event.
-    /// @param _eventBettingEndBlock The block when Event betting ended.
-    /// @param _decisionEndBlock The block when Oracle voting will end.
-    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
+    /// @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
+    /// @param _consensusThreshold The amount of BOT that needs to be reached in order for this 
     /// @param _addressManager The address of the AddressManager contract.
     function Oracle(
         address _owner,
         bytes32[10] _eventName,
-        bytes32[10] _eventResultNames, 
-        uint256 _eventBettingEndBlock,
-        uint256 _decisionEndBlock,
-        uint256 _arbitrationOptionEndBlock,
+        bytes32[10] _eventResultNames,
+        uint8 _lastResultIndex,
+        uint256 _arbitrationEndBlock,
+        uint256 _consensusThreshold,
         address _addressManager)
         Ownable(_owner)
         public

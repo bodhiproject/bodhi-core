@@ -1,5 +1,6 @@
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const EventFactory = artifacts.require("./events/EventFactory.sol");
+const OracleFactory = artifacts.require("./oracles/OracleFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
@@ -20,6 +21,7 @@ contract('EventFactory', function(accounts) {
     let addressManager;
     let eventFactory;
     let eventFactoryCreator = accounts[0];
+    let oracleFactory;
     let topic;
     let topicCreator = accounts[1];
 
@@ -29,6 +31,7 @@ contract('EventFactory', function(accounts) {
     beforeEach(async function() {
         addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
         eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
+        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: eventFactoryCreator });
         
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
         topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
@@ -55,9 +58,9 @@ contract('EventFactory', function(accounts) {
             assert.equal(await topic.owner.call(), topicCreator);
             assert.equal((await topic.getOracle(0))[0], testTopicParams._oracle);
             assert.equal(await topic.getEventName(), testTopicParams._name.join(''));
-            assert.equal(web3.toUtf8(await topic.getResultName(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await topic.getResultName(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await topic.getResultName(2)), testTopicParams._resultNames[2]);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(0)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal((await topic.numOfResults.call()).toNumber(), 3);
             assert.equal(await topic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
             assert.equal(await topic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
