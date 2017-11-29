@@ -5,10 +5,9 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../storage/IAddressManager.sol";
-import "../ReentrancyGuard.sol";
 
 /// @title Base Oracle contract
-contract Oracle is Ownable, ReentrancyGuard {
+contract Oracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -19,16 +18,12 @@ contract Oracle is Ownable, ReentrancyGuard {
         uint256 stakeContributed;
     }
 
-    uint256 public constant nativeDecimals = 18; // Number of decimals of token used to create Oracle
-    uint256 public constant botDecimals = 8; // Number of decimals for BOT
-    uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
-
     bool public isFinished;
     uint8 public lastResultIndex;
     uint8 public numOfResults;
     bytes32[10] private eventName;
     bytes32[10] public eventResultNames;
-    address eventAddress;
+    address public eventAddress;
     uint256 public arbitrationEndBlock;
     uint256 public consensusThreshold;
     uint256 public totalStakeContributed;
@@ -100,11 +95,6 @@ contract Oracle is Ownable, ReentrancyGuard {
         addressManager = IAddressManager(_addressManager);
     }
 
-    /// @notice Fallback function that rejects any amount sent to the contract.
-    function() external payable {
-        revert();
-    }
-
     /// @notice Vote on an Event Result which requires BOT payment.
     /// @param _eventResultIndex The Event Result which is being voted on.
     /// @param _botAmount The amount of BOT used to vote.
@@ -116,6 +106,7 @@ contract Oracle is Ownable, ReentrancyGuard {
         require(_botAmount > 0);
         require(!participants[msg.sender].didSetResult);
         require(block.number < arbitrationEndBlock);
+        require(_eventResultIndex != lastResultIndex);
 
         Participant storage participant = participants[msg.sender];
         participant.didSetResult = true;
