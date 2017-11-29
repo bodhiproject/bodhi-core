@@ -40,17 +40,9 @@ contract('TopicEvent', function(accounts) {
             assert.equal(await testTopic.owner.call(), testTopicParams._owner);
             assert.equal((await testTopic.getOracle(0))[0], testTopicParams._oracle);
             assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
-
-            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), testTopicParams._resultNames[2]);
-            try {
-                await testTopic.getResultName(3);
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal((await testTopic.numOfResults.call()).toNumber(), 3);
             await assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
             await assert.equal(await testTopic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
@@ -112,16 +104,16 @@ contract('TopicEvent', function(accounts) {
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
 
-            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), "third");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(3)), "fourth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(4)), "fifth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(5)), "sixth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(6)), "seventh");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), "first");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), "second");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), "third");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(3)), "fourth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(4)), "fifth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(5)), "sixth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(6)), "seventh");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(7)), "eighth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(8)), "ninth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(9)), "ten");
         });
 
         it('should only set the first 10 resultNames', async function() {
@@ -131,19 +123,19 @@ contract('TopicEvent', function(accounts) {
                 resultNames, testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
 
-            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), "first");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), "second");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), "third");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(3)), "fourth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(4)), "fifth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(5)), "sixth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(6)), "seventh");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(7)), "eighth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(8)), "ninth");
-            assert.equal(web3.toUtf8(await testTopic.getResultName(9)), "ten");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), "first");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), "second");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), "third");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(3)), "fourth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(4)), "fifth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(5)), "sixth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(6)), "seventh");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(7)), "eighth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(8)), "ninth");
+            assert.equal(web3.toUtf8(await testTopic.resultNames.call(9)), "ten");
 
             try {
-                await testTopic.getResultName(10);
+                await testTopic.resultNames.call(10);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -405,23 +397,6 @@ contract('TopicEvent', function(accounts) {
             accountBetBalance = web3.toBigNumber(await testTopic.getBetBalance(testFinalResultIndex, 
                 { from: account2 }));
             assert.equal(accountBetBalance.toString(), 0);
-        });
-    });
-
-    describe("GetResultName:", async function() {
-        it("returns the correct result name for valid result index", async function() {
-            assert.equal(web3.toUtf8(await testTopic.getResultName(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await testTopic.getResultName(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await testTopic.getResultName(2)), testTopicParams._resultNames[2]);
-        });
-
-        it("throws if using an invalid result index", async function() {
-            try {
-                let resultName3 = await testTopic.getResultName(3);
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
         });
     });
 

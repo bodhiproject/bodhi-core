@@ -23,8 +23,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         Collection
     }
 
-    struct Result {
-        bytes32 name;
+    struct ResultBalance {
         uint256 balance;
         mapping (address => uint256) betBalances;
     }
@@ -41,7 +40,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     uint256 public bettingEndBlock;
     uint256 public resultSettingEndBlock;
     bytes32[10] private name;
-    Result[10] private results;
+    bytes32[10] public resultNames;
+    ResultBalance[10] private balances;
     IAddressManager private addressManager;
     Oracle[] public oracles;
 
@@ -98,12 +98,13 @@ contract TopicEvent is Ownable, ReentrancyGuard {
             oracleAddress: _oracle,
             didSetResult: false
             }));
+        
         name = _name;
+        resultNames = _resultNames;
 
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
-                results[i] = Result({
-                    name: _resultNames[i],
+                balances[i] = ResultBalance({
                     balance: 0
                     });
                 numOfResults++;
@@ -128,17 +129,18 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     function bet(uint8 _resultIndex) 
         external 
         payable
+        validResultIndex(_resultIndex)
         nonReentrant()
     {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
-        Result storage updatedResult = results[_resultIndex];
-        updatedResult.balance = updatedResult.balance.add(msg.value);
-        updatedResult.betBalances[msg.sender] = updatedResult.betBalances[msg.sender].add(msg.value);
-        results[_resultIndex] = updatedResult;
+        ResultBalance storage resultBalance = balances[_resultIndex];
+        resultBalance.balance = resultBalance.balance.add(msg.value);
+        resultBalance.betBalances[msg.sender] = resultBalance.betBalances[msg.sender].add(msg.value);
+        balances[_resultIndex] = resultBalance;
 
-        BetAccepted(msg.sender, _resultIndex, msg.value, results[_resultIndex].betBalances[msg.sender]);
+        BetAccepted(msg.sender, _resultIndex, msg.value, balances[_resultIndex].betBalances[msg.sender]);
     }
 
     /// @notice Allows anyone to start a Voting Oracle if the Individual Oracle did not set a result in time.
@@ -186,18 +188,18 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     {
         require(status == Status.Collection);
 
-        Result storage finalResult = results[finalResultIndex];
-        uint256 betBalance = finalResult.betBalances[msg.sender];
+        ResultBalance storage resultBalance = balances[finalResultIndex];
+        uint256 betBalance = resultBalance.betBalances[msg.sender];
         require(betBalance > 0);
 
         uint256 totalTopicBalance = getTotalTopicBalance();
         require(totalTopicBalance > 0);
 
-        uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(finalResult.balance);
+        uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(resultBalance.balance);
         require(withdrawAmount > 0);
 
         // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
-        finalResult.betBalances[msg.sender] = 0;
+        resultBalance.betBalances[msg.sender] = 0;
         msg.sender.transfer(withdrawAmount);
 
         WinningsWithdrawn(withdrawAmount);
@@ -248,18 +250,6 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         return ByteUtils.toString(name);
     }
 
-    /// @notice Gets the result's name given the index.
-    /// @param _resultIndex The index of the result.
-    /// @return The result name.
-    function getResultName(uint8 _resultIndex) 
-        public 
-        view 
-        validResultIndex(_resultIndex) 
-        returns (bytes32) 
-    {
-        return results[_resultIndex].name;
-    }
-
     /// @notice Gets the result's balance given the index.
     /// @param _resultIndex The index of the result.
     /// @return The result total bet balance.
@@ -269,7 +259,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         validResultIndex(_resultIndex) 
         returns (uint256) 
     {
-        return results[_resultIndex].balance;
+        return balances[_resultIndex].balance;
     }
 
     /// @notice Gets the result's bet balance of the caller given the index.
@@ -281,7 +271,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         validResultIndex(_resultIndex) 
         returns (uint256) 
     {
-        return results[_resultIndex].betBalances[msg.sender];
+        return balances[_resultIndex].betBalances[msg.sender];
     }
 
     /// @notice Gets the total bet balance of the TopicEvent.
@@ -292,8 +282,8 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         returns (uint256) 
     {
         uint256 totalTopicBalance = 0;
-        for (uint i = 0; i < results.length; i++) {
-            totalTopicBalance = results[i].balance.add(totalTopicBalance);
+        for (uint i = 0; i < balances.length; i++) {
+            totalTopicBalance = balances[i].balance.add(totalTopicBalance);
         }
         return totalTopicBalance;
     }
@@ -317,7 +307,7 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         resultIsSet
         returns (bytes32) 
     {
-        return results[finalResultIndex].name;
+        return resultNames[finalResultIndex];
     }
  
     /// @dev Creates an Oracle for this Event.
@@ -327,16 +317,6 @@ contract TopicEvent is Ownable, ReentrancyGuard {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
-
-        bytes32[10] memory resultNames;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (!results[i].name.isEmpty()) {
-                resultNames[i] = results[i].name;
-            } else {
-                break;
-            }
-        }
-
         address newOracle = IOracleFactory(oracleFactory).createOracle(name, resultNames, bettingEndBlock, 
             resultSettingEndBlock, block.number.add(arbitrationBlockLength));
         
