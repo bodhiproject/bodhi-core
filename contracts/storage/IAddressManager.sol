@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 
 contract IAddressManager {
+    uint16 public arbitrationBlockLength;
     address public bodhiTokenAddress;
 
     function setBodhiTokenAddress(address _tokenAddress) public;

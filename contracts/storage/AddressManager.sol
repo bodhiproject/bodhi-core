@@ -4,6 +4,7 @@ import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
 
 contract AddressManager is IAddressManager, Ownable {
+    uint16 public arbitrationBlockLength = 100;
     uint16 private currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
     uint16 private currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
     mapping(uint16 => address) private eventFactoryAddresses;

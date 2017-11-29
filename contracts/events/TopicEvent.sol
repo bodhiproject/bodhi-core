@@ -326,13 +326,23 @@ contract TopicEvent is Ownable, ReentrancyGuard {
     {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
-        // TODO: fetch block number offset
-        address newOracle = IOracleFactory(oracleFactory).createOracle(_name, _resultNames, _bettingEndBlock, 
-            _resultSettingEndBlock, block.number + 100);
+        uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
+
+        bytes32[10] memory resultNames;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            if (!results[i].name.isEmpty()) {
+                resultNames[i] = results[i].name;
+            } else {
+                break;
+            }
+        }
+
+        address newOracle = IOracleFactory(oracleFactory).createOracle(name, resultNames, bettingEndBlock, 
+            resultSettingEndBlock, block.number.add(arbitrationBlockLength));
         
         assert(newOracle != address(0));
         oracles.push(Oracle({
-            oracleAddress: _oracle,
+            oracleAddress: newOracle,
             didSetResult: false
             }));
 
