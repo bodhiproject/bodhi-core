@@ -1,8 +1,9 @@
 const web3 = global.web3;
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
-const TopicEvent = artifacts.require("./TopicEvent.sol");
+const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
+const TopicEvent = artifacts.require("./TopicEvent.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 const Utils = require('../helpers/utils');
@@ -25,7 +26,9 @@ contract('TopicEvent', function(accounts) {
         _bettingEndBlock: 100,
         _resultSettingEndBlock: 110
     };
+    const botBalance = Utils.getBigNumberWithDecimals(1000, botDecimals);
 
+    let token;
     let addressManager;
     let testTopic;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
@@ -34,7 +37,18 @@ contract('TopicEvent', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
+        token = await BodhiToken.deployed({ from: admin });
+
+        await token.mintByOwner(owner, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(owner)).toString(), botBalance.toString());
+
+        await token.mintByOwner(oracle, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(oracle)).toString(), botBalance.toString());
+
         addressManager = await AddressManager.deployed({ from: admin });
+        await addressManager.setBodhiTokenAddress(token.address, { from: admin });
+        assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
+
         testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: owner });
     });
 
@@ -493,19 +507,23 @@ contract('TopicEvent', function(accounts) {
         // TODO: implement
     });
 
-    describe("GetFinalResultIndex:", async function() {
+    describe("getFinalResultIndex()", async function() {
         it("returns the correct final result index", async function() {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            let currentBlock = web3.eth.blockNumber;
-            assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
 
             assert.isFalse(await testTopic.resultSet.call());
 
-            let expectedFinalResultIndex = 1;
-            await testTopic.revealResult(expectedFinalResultIndex, { from: testTopicParams._oracle });
+            let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
+            await token.approve(testTopic.address, threshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
+
+            let finalResultIndex = 1;
+            await testTopic.centralizedOracleSetResult(finalResultIndex, threshold, { from: oracle });
 
             assert.isTrue(await testTopic.resultSet.call());
-            assert.equal(await testTopic.getFinalResultIndex(), expectedFinalResultIndex);
+            assert.equal(await testTopic.getFinalResultIndex(), finalResultIndex);
         });
 
         it("throws if trying to get the final result index before it is set", async function() {
