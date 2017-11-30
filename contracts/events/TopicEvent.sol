@@ -26,8 +26,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     struct ResultBalance {
-        uint256 balance;
-        mapping (address => uint256) betBalances;
+        uint256 totalBetBalance;
+        uint256 totalVoteBalance;
+        mapping(address => uint256) betBalances;
+        mapping(address => uint256) voteBalances;
     }
 
     struct Oracle {
@@ -103,7 +105,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
                 balances[i] = ResultBalance({
-                    balance: 0
+                    totalBetBalance: 0,
+                    totalVoteBalance: 0
                     });
                 numOfResults++;
             } else {
@@ -125,7 +128,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     /*
     * @notice Allows betting on a Result using the blockchain token.
-    * @param _resultIndex The index of result to bet on.
+    * @param _resultIndex The index of Result to bet on.
     */
     function bet(uint8 _resultIndex) 
         external 
@@ -137,7 +140,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(msg.value > 0);
 
         ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.balance = resultBalance.balance.add(msg.value);
+        resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
         resultBalance.betBalances[msg.sender] = resultBalance.betBalances[msg.sender].add(msg.value);
         balances[_resultIndex] = resultBalance;
 
@@ -146,13 +149,16 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     /*
     * @dev VotingOracles will call this to vote on a Result on behalf of a participant. Participants must BOT approve()
-    *   with the amount before voting.
+    *   with the amount before voting. We are storing the voted amounts here to have a centralized contract to withdraw
+    *   winnings.
+    * @param _resultIndex The index of Result to vote on.
     * @param _sender The address of the person voting on a Result.
     * @param _amount The BOT amount used to vote.
     * @return Flag indicating a successful transfer.
     */
-    function transferBot(address _sender, uint256 _amount)
+    function voteFromOracle(uint8 _resultIndex, address _sender, uint256 _amount)
         external
+        validResultIndex(_resultIndex)
         returns (bool)
     {
         bool isValidOracle = false;
@@ -166,7 +172,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(_amount > 0);
         require(token.allowance(_sender, address(this)) >= _amount);
 
-        // TODO: log amount of BOT voted by _sender
+        ResultBalance storage resultBalance = balances[_resultIndex];
+        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_amount);
+        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_amount);
+        balances[_resultIndex] = resultBalance;
 
         return token.transferFrom(_sender, address(this), _amount);
     }
@@ -187,12 +196,12 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         resultSet = true;
         status = Status.OracleVoting;
 
-        // Calculates the winning Result index based on balances of each Result
+        // Calculates the winning Result index based on bet balances of each Result
         uint256 winningIndexAmount = 0;
         for (uint8 i = 0; i < balances.length; i++) {
-            uint256 resultBalance = balances[i].balance;
-            if (resultBalance > winningIndexAmount) {
-                winningIndexAmount = resultBalance;
+            uint256 totalBetBalance = balances[i].totalBetBalance;
+            if (totalBetBalance > winningIndexAmount) {
+                winningIndexAmount = totalBetBalance;
                 finalResultIndex = i;
             }
         }
@@ -330,18 +339,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return ByteUtils.toString(name);
     }
 
-    /// @notice Gets the result's balance given the index.
-    /// @param _resultIndex The index of the result.
-    /// @return The result total bet balance.
-    function getResultBalance(uint8 _resultIndex) 
-        public 
-        view 
-        validResultIndex(_resultIndex) 
-        returns (uint256) 
-    {
-        return balances[_resultIndex].balance;
-    }
-
     /// @notice Gets the result's bet balance of the caller given the index.
     /// @param _resultIndex The index of the result.
     /// @return The result's bet balance for the caller.
@@ -363,7 +360,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     {
         uint256 totalTopicBalance = 0;
         for (uint i = 0; i < balances.length; i++) {
-            totalTopicBalance = balances[i].balance.add(totalTopicBalance);
+            totalTopicBalance = balances[i].totalBetBalance.add(totalTopicBalance);
         }
         return totalTopicBalance;
     }

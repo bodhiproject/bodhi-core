@@ -116,7 +116,7 @@ contract Oracle is Ownable {
         resultBalances[_eventResultIndex] = resultBalances[_eventResultIndex].add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
 
-        if (!ITopicEvent(eventAddress).transferBot(msg.sender, _botAmount)) {
+        if (!ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount)) {
             revert();
         }
 
