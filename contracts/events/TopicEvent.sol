@@ -54,7 +54,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
-    event WinningsWithdrawn(uint256 _amountWithdrawn);
+    event WinningsWithdrawn(uint256 _blockchainTokenWon, uint256 _botTokenWon);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -298,24 +298,33 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         resultIsSet
     {
         require(status == Status.Collection);
-
+        require(getTotalTopicBalance() > 0);
+ 
         ResultBalance storage resultBalance = balances[finalResultIndex];
         uint256 betBalance = resultBalance.betBalances[msg.sender];
-        require(betBalance > 0);
+        uint256 voteBalance = resultBalance.voteBalances[msg.sender];
+        require(betBalance > 0 || voteBalance > 0);
 
-        uint256 totalTopicBalance = getTotalTopicBalance();
-        require(totalTopicBalance > 0);
+        uint256 blockchainTokenWinnings = 0;  
+        if (betBalance > 0) {
+             blockchainTokenWinnings = calculateBlockchainTokenWinnings();
+             resultBalance.betBalances[msg.sender] = 0;
+        }
 
-        uint256 withdrawAmount = totalTopicBalance.mul(betBalance).div(resultBalance.balance);
-        require(withdrawAmount > 0);
+        uint256 botTokenWinnings = 0;  
+        if (voteBalance > 0) {
+             botTokenWinnings = calculateBotTokenWinnings();
+             resultBalance.voteBalances[msg.sender] = 0;
+        }
 
-        // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
-        resultBalance.betBalances[msg.sender] = 0;
-        msg.sender.transfer(withdrawAmount);
+        if (blockchainTokenWinnings > 0) {
+            msg.sender.transfer(withdrawAmount);
+        }
+        if (botTokenWinnings > 0) {
+            token.transfer(msg.sender, botTokenWinnings);
+        }
 
-        // TODO: finish withdrawing BOT and QTUM
-
-        WinningsWithdrawn(withdrawAmount);
+        WinningsWithdrawn(blockchainTokenWinnings, botTokenWinnings);
     }
 
     /// @notice Gets the Oracle's address and flag indicating if it set it's result.
@@ -405,5 +414,41 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }));
 
         return true;
+    }
+
+    /// @dev Calculates the native token (blockchain token) winnings based on the sender's contributions.
+    function calculateBlockchainTokenWinnings() 
+        private
+        view
+        returns (uint256) 
+    {
+        uint256 losingResultsTotal = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            if (i != finalResultIndex) {
+                losingResultsTotal = losingResultsTotal.add(balances[i].totalBetBalance);
+            }
+        }
+
+        uint256 betBalance = balances[finalResultIndex].betBalances[msg.sender];
+        uint256 winningResultTotal = balances[finalResultIndex].totalBetBalance;
+        return betBalance.mul(losingResultsTotal).div(winningResultTotal).add(betBalance);
+    }
+
+    /// @dev Calculates the BOT token winnings based on the sender's contributions.
+    function calculateBotTokenWinnings() 
+        private
+        view
+        returns (uint256) 
+    {
+        uint256 losingResultsTotal = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            if (i != finalResultIndex) {
+                losingResultsTotal = losingResultsTotal.add(balances[i].totalVoteBalance);
+            }
+        }
+
+        uint256 voteBalance = balances[finalResultIndex].voteBalances[msg.sender];
+        uint256 winningResultTotal = balances[finalResultIndex].totalVoteBalance;
+        return voteBalance.mul(losingResultsTotal).div(winningResultTotal).add(voteBalances);
     }
 }
