@@ -310,6 +310,26 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
+    describe('voteFromOracle()', async function() {
+        // TODO: implement
+    });
+
+    describe('centralizedOracleSetResult()', async function() {
+        // TODO: implement
+    });
+
+    describe('invalidateCentralizedOracle()', async function() {
+        // TODO: implement
+    });
+
+    describe('votingOracleSetResult()', async function() {
+        // TODO: implement
+    });
+
+    describe('finalizeResult()', async function() {
+        // TODO: implement
+    });
+
     describe("Revealing Results:", async function() {
         it("allows the Oracle to reveal the result if the bettingEndBlock has been reached", async function() {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
@@ -373,7 +393,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("Withdrawing:", async function() {
+    describe("withdrawWinnings()", async function() {
         it("allows the better to withdraw their winnings if it has ended and the result was revealed", async function() {
             // Set bets
             let account1 = accounts[1];
@@ -425,44 +445,21 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("GetResultBalance:", async function() {
+    describe("getBetBalances()", async function() {
         it("returns the correct result balance", async function() {
-            let betResultIndex = 0;
-            let better = accounts[1];
-            let betAmount = web3.toWei(1, 'ether');
-            await testTopic.bet(betResultIndex, { from: better, value: betAmount });
+            let bet0 = Utils.getBigNumberWithDecimals(13, nativeDecimals);
+            await testTopic.bet(0, { from: oracle, value: bet0 });
 
-            assert.equal(await testTopic.getResultBalance(betResultIndex), betAmount);
-        });
+            let bet1 = Utils.getBigNumberWithDecimals(7, nativeDecimals);
+            await testTopic.bet(1, { from: oracle, value: bet1 });
 
-        it("throws if using an invalid result index", async function() {
-            try {
-                await testTopic.getResultBalance(3);
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-        });
-    });
+            let bet2 = Utils.getBigNumberWithDecimals(4, nativeDecimals);
+            await testTopic.bet(2, { from: oracle, value: bet2 });
 
-    describe("GetBetBalance:", async function() {
-        it("returns the correct bet balance", async function() {
-            let betResultIndex = 0;
-            let better = accounts[1];
-            let betAmount = web3.toWei(1, 'ether');
-            await testTopic.bet(betResultIndex, { from: better, value: betAmount });
-
-            let actualBetBalance = web3.toBigNumber(await testTopic.getBetBalance(betResultIndex, { from: better }));
-            assert.equal(actualBetBalance.toString(), betAmount.toString());
-        });
-
-        it("throws if using an invalid result index", async function() {
-            try {
-                await testTopic.getBetBalance(3);
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
+            let betBalances = await testTopic.getBetBalances({ from: oracle });
+            assert.equal(betBalances[0].toString(), bet0.toString());
+            assert.equal(betBalances[1].toString(), bet1.toString());
+            assert.equal(betBalances[2].toString(), bet2.toString());
         });
     });
 
