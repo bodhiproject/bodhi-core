@@ -298,7 +298,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         nonReentrant()
     {
         require(status == Status.Collection);
-        require(getTotalTopicBalance() > 0);
+        require(getTotalBetBalance() > 0);
  
         ResultBalance storage resultBalance = balances[finalResultIndex];
         uint256 betBalance = resultBalance.betBalances[msg.sender];
@@ -327,9 +327,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         WinningsWithdrawn(blockchainTokensWon, botTokensWon);
     }
 
-    /// @notice Gets the Oracle's address and flag indicating if it set it's result.
-    /// @param _oracleIndex The index of the Oracle in the array.
-    /// @return The Oracle address and boolean indicating if it set it's result.
+    /*
+    * @notice Gets the Oracle's address and flag indicating if it set it's result.
+    * @param _oracleIndex The index of the Oracle in the array.
+    * @return The Oracle address and boolean indicating if it set it's result.
+    */
     function getOracle(uint8 _oracleIndex)
         public 
         view 
@@ -338,8 +340,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return (oracles[_oracleIndex].oracleAddress, oracles[_oracleIndex].didSetResult);
     }
 
-    /// @notice Gets the Event name as a string.
-    /// @return The name of the Event.
+    /*
+    * @notice Gets the Event name as a string.
+    * @return The name of the Event.
+    */
     function getEventName() 
         public 
         view 
@@ -348,34 +352,74 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return ByteUtils.toString(name);
     }
 
-    /// @notice Gets the result's bet balance of the caller given the index.
-    /// @param _resultIndex The index of the result.
-    /// @return The result's bet balance for the caller.
-    function getBetBalance(uint8 _resultIndex) 
+    /*
+    * @notice Gets the bet balances of the sender for all the results.
+    * @return An array of all the bet balances of the sender.
+    */
+    function getBetBalances() 
         public
         view
-        validResultIndex(_resultIndex) 
-        returns (uint256) 
+        returns (uint256[10]) 
     {
-        return balances[_resultIndex].betBalances[msg.sender];
+        uint256[10] memory betBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            betBalances[i] = balances[i].betBalances[msg.sender];
+        }
+        return betBalances;
     }
 
-    /// @notice Gets the total bet balance of the TopicEvent.
-    /// @return The total bet balance.
-    function getTotalTopicBalance() 
+    /*
+    * @notice Gets the vote balances of the sender for all the results.
+    * @return An array of all the vote balances of the sender.
+    */
+    function getVoteBalances() 
+        public
+        view
+        returns (uint256[10]) 
+    {
+        uint256[10] memory voteBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            voteBalances[i] = balances[i].voteBalances[msg.sender];
+        }
+        return voteBalances;
+    }
+
+    /*
+    * @notice Gets the total blockchain token bet balance of the TopicEvent.
+    * @return The total blockchain token bet balance.
+    */
+    function getTotalBetBalance() 
         public 
         view 
         returns (uint256) 
     {
         uint256 totalTopicBalance = 0;
-        for (uint i = 0; i < balances.length; i++) {
+        for (uint i = 0; i < numOfResults; i++) {
             totalTopicBalance = balances[i].totalBetBalance.add(totalTopicBalance);
         }
         return totalTopicBalance;
     }
 
-    /// @notice Gets the final result index set by the Oracle (if it was set).
-    /// @return The index of the final result.
+    /*
+    * @notice Gets the total BOT token vote balance of the TopicEvent and it's VotingOracles.
+    * @return The total BOT token vote balance.
+    */
+    function getTotalVoteBalance() 
+        public 
+        view 
+        returns (uint256) 
+    {
+        uint256 totalVoteBalance = 0;
+        for (uint i = 0; i < numOfResults; i++) {
+            totalVoteBalance = balances[i].totalVoteBalance.add(totalVoteBalance);
+        }
+        return totalVoteBalance;
+    }
+
+    /*
+    * @notice Gets the final result index set by the Oracle (if it was set).
+    * @return The index of the final result.
+    */
     function getFinalResultIndex() 
         public 
         view
@@ -385,8 +429,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return finalResultIndex;
     }
 
-    /// @notice Gets the final result name if the final result was set.
-    /// @return The final result name.
+    /*
+    * @notice Gets the final result name if the final result was set.
+    * @return The final result name.
+    */
     function getFinalResultName() 
         public 
         view
@@ -396,7 +442,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return resultNames[finalResultIndex];
     }
 
-    /// @dev Creates an Oracle for this Event.
+    /*
+    * @dev Creates a VotingOracle for this Event.
+    * @return Flag indicating successful creation of VotingOracle.
+    */
     function createVotingOracle(uint256 _consensusThreshold) 
         private 
         returns (bool)
