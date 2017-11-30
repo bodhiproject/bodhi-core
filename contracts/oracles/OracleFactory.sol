@@ -38,7 +38,7 @@ contract OracleFactory is IOracleFactory {
         require(address(oracles[oracleHash]) == 0);
 
         Oracle oracle = new Oracle(msg.sender, _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold, addressManager);
+            _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = oracle;
 
         OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 

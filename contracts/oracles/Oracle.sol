@@ -4,7 +4,6 @@ import "../events/ITopicEvent.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
-import "../storage/IAddressManager.sol";
 
 /// @title Base Oracle contract
 contract Oracle is Ownable {
@@ -25,7 +24,6 @@ contract Oracle is Ownable {
     uint256 public arbitrationEndBlock;
     uint256 public consensusThreshold;
     uint256 public totalStakeContributed;
-    IAddressManager private addressManager;
     ResultBalance[10] private resultBalances;
 
     // Modifiers
@@ -52,7 +50,6 @@ contract Oracle is Ownable {
     * @param _lastResultIndex The last result index set by the Oracle.
     * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
     * @param _consensusThreshold The amount of BOT that needs to be reached in order for this Oracle to be valid.
-    * @param _addressManager The address of the AddressManager contract.
     */
     function Oracle(
         address _owner,
@@ -61,12 +58,10 @@ contract Oracle is Ownable {
         bytes32[10] _eventResultNames,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
-        uint256 _consensusThreshold,
-        address _addressManager)
+        uint256 _consensusThreshold)
         Ownable(_owner)
         public
         validAddress(_eventAddress)
-        validAddress(_addressManager)
     {
         require(!_eventName[0].isEmpty());
         require(!_eventResultNames[0].isEmpty());
@@ -90,8 +85,6 @@ contract Oracle is Ownable {
         lastResultIndex = _lastResultIndex;
         arbitrationEndBlock = _arbitrationEndBlock;
         consensusThreshold = _consensusThreshold;
-
-        addressManager = IAddressManager(_addressManager);
     }
 
     /*

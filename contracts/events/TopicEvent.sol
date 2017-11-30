@@ -295,6 +295,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     function withdrawWinnings() 
         public 
         resultIsSet
+        nonReentrant()
     {
         require(status == Status.Collection);
         require(getTotalTopicBalance() > 0);
