@@ -19,6 +19,8 @@ contract('TopicEvent', function(accounts) {
     const owner = accounts[1];
     const oracle = accounts[2];
     const better1 = accounts[3];
+    const better2 = accounts[4];
+    const better3 = accounts[5];
     const testTopicParams = {
         _owner: owner,
         _oracle: oracle,
@@ -48,6 +50,12 @@ contract('TopicEvent', function(accounts) {
 
         await token.mintByOwner(better1, botBalance, { from: admin });
         assert.equal((await token.balanceOf(better1)).toString(), botBalance.toString());
+
+        await token.mintByOwner(better2, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(better2)).toString(), botBalance.toString());
+
+        await token.mintByOwner(better3, botBalance, { from: admin });
+        assert.equal((await token.balanceOf(better3)).toString(), botBalance.toString());
 
         addressManager = await AddressManager.deployed({ from: admin });
         await addressManager.setBodhiTokenAddress(token.address, { from: admin });
@@ -360,13 +368,15 @@ contract('TopicEvent', function(accounts) {
                 assert.isTrue((await testTopic.getOracle(0))[1]);
                 assert.isTrue(await testTopic.resultSet.call());
                 assert.equal((await testTopic.status.call()).toNumber(), 1);
+
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], finalResultIndex);
                 assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
 
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), threshold.toString());
-                assert.notEqual((await testTopic.getOracle(1))[0], 0);
-                assert.isFalse((await testTopic.getOracle(1))[1]);
+                let votingOracle = await testTopic.getOracle(1);
+                assert.notEqual(votingOracle[0], 0);
+                assert.isFalse(votingOracle[1]);
             });
 
             it('throws if sender is not the CentralizedOracle', async function() {
@@ -482,7 +492,113 @@ contract('TopicEvent', function(accounts) {
     });
 
     describe('invalidateCentralizedOracle()', async function() {
-        // TODO: implement
+        let winningResultIndex = 2;
+
+        beforeEach(async function() {
+            assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
+
+            let bet1 = Utils.getBigNumberWithDecimals(20, botDecimals);
+            await testTopic.bet(winningResultIndex, { from: better1, value: bet1 });
+            assert.equal((await testTopic.getBetBalances({ from: better1 }))[winningResultIndex].toString(), 
+                bet1.toString());
+
+            let bet2 = Utils.getBigNumberWithDecimals(30, botDecimals);
+            await testTopic.bet(0, { from: better2, value: bet2 });
+            assert.equal((await testTopic.getBetBalances({ from: better2 }))[0].toString(), bet2.toString());
+
+            let bet3 = Utils.getBigNumberWithDecimals(11, botDecimals);
+            await testTopic.bet(winningResultIndex, { from: better3, value: bet3 });
+            assert.equal((await testTopic.getBetBalances({ from: better3 }))[winningResultIndex].toString(), 
+                bet3.toString());
+
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
+
+            assert.isFalse(await testTopic.resultSet.call());
+        });
+
+        describe('in valid block range', async function() {
+            beforeEach(async function() {
+                await blockHeightManager.mineTo(testTopicParams._resultSettingEndBlock);
+                assert.equal(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
+            });
+
+            it('sets the result based on majority vote and creates a new VotingOracle', async function() {
+                try {
+                    assert.equal((await testTopic.getOracle(1))[0], 0);
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+
+                await testTopic.invalidateCentralizedOracle();
+
+                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue(await testTopic.resultSet.call());
+                assert.equal((await testTopic.status.call()).toNumber(), 1);     
+                           
+                let finalResult = await testTopic.getFinalResult();
+                assert.equal(finalResult[0], winningResultIndex);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[winningResultIndex]);
+
+                let votingOracle = await testTopic.getOracle(1);
+                assert.notEqual(votingOracle[0], 0);
+                assert.isFalse(votingOracle[1]);
+            });
+
+            it('throws if CentralizedOracle already set the result', async function() {
+                try {
+                    assert.equal((await testTopic.getOracle(1))[0], 0);
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+
+                await testTopic.invalidateCentralizedOracle();
+
+                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue(await testTopic.resultSet.call());
+                assert.equal((await testTopic.status.call()).toNumber(), 1);     
+                           
+                let finalResult = await testTopic.getFinalResult();
+                assert.equal(finalResult[0], winningResultIndex);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[winningResultIndex]);
+
+                let votingOracle = await testTopic.getOracle(1);
+                assert.notEqual(votingOracle[0], 0);
+                assert.isFalse(votingOracle[1]);
+
+                try {
+                    await testTopic.invalidateCentralizedOracle();
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
+
+        describe('in invalid block range', async function() {
+            beforeEach(async function() {
+                await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+                assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
+            });    
+
+            it('throws if block is below resultSettingEndBlock', async function() {
+                try {
+                    assert.equal((await testTopic.getOracle(1))[0], 0);
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+
+                try {
+                    await testTopic.invalidateCentralizedOracle();
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
     });
 
     describe('votingOracleSetResult()', async function() {
@@ -491,69 +607,6 @@ contract('TopicEvent', function(accounts) {
 
     describe('finalizeResult()', async function() {
         // TODO: implement
-    });
-
-    describe("Revealing Results:", async function() {
-        it("allows the Oracle to reveal the result if the bettingEndBlock has been reached", async function() {
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            let currentBlock = web3.eth.blockNumber;
-            assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
-
-            let testFinalResultIndex = 2;
-            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
-
-            assert.isTrue(await testTopic.resultSet.call());
-            assert.equal(await testTopic.getFinalResultIndex(), testFinalResultIndex);
-
-            assert.equal(web3.toUtf8(await testTopic.getFinalResultName()), 
-                testTopicParams._resultNames[testFinalResultIndex]);
-        });
-
-        it("does not allow the Oracle to reveal the result if the bettingEndBlock has not been reached", async function() {
-            let currentBlock = web3.eth.blockNumber;
-            assert.isBelow(currentBlock, testTopicParams._bettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
-            
-            try {
-                await testTopic.revealResult(2, { from: testTopicParams._oracle });
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-        });
-
-        it("only allows the Oracle to reveal the result", async function() {
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            assert.isAtLeast(web3.eth.blockNumber, testTopicParams._bettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
-            
-            let testFinalResultIndex = 2;
-            try {
-                await testTopic.revealResult(testFinalResultIndex, { from: owner });
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-            assert.isFalse(await testTopic.resultSet.call());
-
-            try {
-                await testTopic.revealResult(testFinalResultIndex, { from: admin });
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-            assert.isFalse(await testTopic.resultSet.call());
-
-            await testTopic.revealResult(testFinalResultIndex, { from: testTopicParams._oracle });
-            assert.isTrue(await testTopic.resultSet.call());
-            assert.equal(await testTopic.getFinalResultIndex(), testFinalResultIndex);
-            assert.equal(web3.toUtf8(await testTopic.getFinalResultName()), 
-                testTopicParams._resultNames[testFinalResultIndex]);
-        });
     });
 
     describe("withdrawWinnings()", async function() {
