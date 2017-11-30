@@ -11,12 +11,6 @@ contract Oracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
-    struct Participant {
-        bool didWithdrawEarnings;
-        uint8 resultIndex;
-        uint256 stakeContributed;
-    }
-
     struct ResultBalance {
         uint256 totalVoteBalance;
         mapping(address => uint256) voteBalances;
@@ -32,7 +26,6 @@ contract Oracle is Ownable {
     uint256 public consensusThreshold;
     uint256 public totalStakeContributed;
     IAddressManager private addressManager;
-    mapping(address => Participant) private participants;
     ResultBalance[10] private resultBalances;
 
     // Modifiers
@@ -152,8 +145,10 @@ contract Oracle is Ownable {
         }
     }
 
-    /// @notice Gets the Event name as a string.
-    /// @return The name of the Event.
+    /*
+    * @notice Gets the Event name as a string.
+    * @return The name of the Event.
+    */
     function getEventName() 
         public 
         view 
@@ -162,35 +157,17 @@ contract Oracle is Ownable {
         return ByteUtils.toString(eventName);
     }
 
-    /// @notice Gets the stake contributed by the Oracle participant.
-    /// @return The amount of stake contributed by the Oracle participant.
-    function getStakeContributed() 
+    /*
+    * @notice Gets the BOT amount voted by the Oracle participant given the event result index.
+    * @return The amount of BOT voted.
+    */
+    function getVotedBalance(uint8 _eventResultIndex) 
         public 
         view 
-        returns(uint256) 
+        validResultIndex(_eventResultIndex)
+        returns (uint256)
     {
-        return participants[msg.sender].stakeContributed;
-    }
-
-    /// @notice Shows if the Oracle participant has voted yet.
-    /// @return Flag that shows if the Oracle participant has voted yet.
-    function didSetResult() 
-        public 
-        view 
-        returns(bool) 
-    {
-        return participants[msg.sender].didSetResult;
-    }
-
-    /// @notice Gets the result index the Oracle participant previously voted on.
-    /// @return The voted result index.
-    function getVotedResultIndex() 
-        public 
-        view 
-        returns(uint8) 
-    {
-        require(participants[msg.sender].didSetResult);
-        return participants[msg.sender].resultIndex;
+        return resultBalances[_eventResultIndex].voteBalances[msg.sender];
     }
 
     /*
@@ -217,6 +194,9 @@ contract Oracle is Ownable {
         return finalResultIndex;
     }
 
+    /*
+    * @dev Sets the result in the Event.
+    */
     function setResult() 
         private 
     {
