@@ -5,15 +5,18 @@ const TopicEvent = artifacts.require("./TopicEvent.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const Utils = require('../helpers/utils');
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('TopicEvent', function(accounts) {
+    const nativeDecimals = 8;
+    const botDecimals = 8;
+
     const blockHeightManager = new BlockHeightManager(web3);
 
     const admin = accounts[0];
     const owner = accounts[1];
     const oracle = accounts[2];
-
     const testTopicParams = {
         _owner: owner,
         _oracle: oracle,
@@ -266,34 +269,29 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("Betting:", async function() {
-        it("allows users to bet if the betting end block has not been reached", async function() {
+    describe("bet()", async function() {
+        it("allows users to bet", async function() {
             let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
-            let betAmount = web3.toWei(1, 'ether');
+            let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
             let betResultIndex = 0;
 
-            await testTopic.bet(betResultIndex, { from: accounts[1], value: betAmount });
+            await testTopic.bet(betResultIndex, { from: oracle, value: betAmount });
             let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
             let difference = newBalance - initialBalance;
+
             assert.equal(difference, betAmount);
+            assert.equal((await testTopic.getTotalBetBalance()).toString(), betAmount.toString());
 
-            let resultBalance = await testTopic.getResultBalance(betResultIndex);
-            assert.equal(resultBalance, betAmount);
-
-            let betBalance = await testTopic.getBetBalance(betResultIndex, { from: accounts[1] });
-            assert.equal(betBalance.toString(), betAmount);
+            let betBalances = await testTopic.getBetBalances({ from: oracle });
+            assert.equal(betBalances[betResultIndex].toString(), betAmount.toString());
         });
      
-        it("does not allow users to bet if the betting end block has been reached", async function() {
+        it("does not allow betting if the bettingEndBlock has been reached", async function() {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            let currentBlock = web3.eth.blockNumber;
-            assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             try {
-                let betResultIndex = 1;
-                let better = accounts[1];
-                let betAmount = 0;
-                await testTopic.bet(betResultIndex, { from: better, value: betAmount })
+                await testTopic.bet(1, { from: oracle, value: 1 })
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -301,14 +299,10 @@ contract('TopicEvent', function(accounts) {
         });
 
         it("throws on a bet of 0", async function() {
-            let currentBlock = web3.eth.blockNumber;
-            assert.isBelow(currentBlock, testTopicParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             try {
-                let betResultIndex = 1;
-                let better = accounts[1];
-                let betAmount = 0;
-                await testTopic.bet(betResultIndex, { from: better, value: betAmount })
+                await testTopic.bet(1, { from: oracle, value: 0 })
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
