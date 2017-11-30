@@ -238,6 +238,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     function votingOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
         external 
         validResultIndex(_resultIndex)
+        returns (bool)
     {
         bool isValidVotingOracle = false;
         uint8 oracleIndex;
@@ -302,6 +303,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         // Clear out balance in case withdrawBet() is called again before the prior transfer is complete
         resultBalance.betBalances[msg.sender] = 0;
         msg.sender.transfer(withdrawAmount);
+
+        // TODO: finish withdrawing BOT and QTUM
 
         WinningsWithdrawn(withdrawAmount);
     }

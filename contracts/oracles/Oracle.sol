@@ -207,6 +207,7 @@ contract Oracle is Ownable {
         return finalResultIndex;
     }
 
+    // TODO: REMOVE
     /// @notice Gets the amount of earnings you can withdraw.
     /// @return The amount of earnings you can withdraw.
     function getEarningsAmount() 
@@ -242,10 +243,11 @@ contract Oracle is Ownable {
     {
         isFinished = true;
 
-        if (!ITopicEvent(eventAddress).votingOracleSetResult(getFinalResultIndex(), totalStakeContributed)) {
+        uint8 finalResultIndex = getFinalResultIndex();
+        if (!ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, totalStakeContributed)) {
             revert();
         }
 
-        OracleResultSet(_eventResultIndex);
+        OracleResultSet(finalResultIndex);
     }
 }
