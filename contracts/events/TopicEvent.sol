@@ -318,7 +318,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         }
 
         if (blockchainTokenWinnings > 0) {
-            msg.sender.transfer(withdrawAmount);
+            msg.sender.transfer(blockchainTokenWinnings);
         }
         if (botTokenWinnings > 0) {
             token.transfer(msg.sender, botTokenWinnings);
@@ -449,6 +449,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
         uint256 voteBalance = balances[finalResultIndex].voteBalances[msg.sender];
         uint256 winningResultTotal = balances[finalResultIndex].totalVoteBalance;
-        return voteBalance.mul(losingResultsTotal).div(winningResultTotal).add(voteBalances);
+        return voteBalance.mul(losingResultsTotal).div(winningResultTotal).add(voteBalance);
     }
 }
