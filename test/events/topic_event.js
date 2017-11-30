@@ -4,6 +4,7 @@ const bluebird = require('bluebird');
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const TopicEvent = artifacts.require("./TopicEvent.sol");
+const Oracle = artifacts.require("./Oracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 const Utils = require('../helpers/utils');
@@ -34,6 +35,7 @@ contract('TopicEvent', function(accounts) {
     let token;
     let addressManager;
     let testTopic;
+    let votingOracle;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
     beforeEach(blockHeightManager.snapshot);
@@ -336,8 +338,60 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe('voteFromOracle()', async function() {
-        // TODO: implement
+    describe.only('voteFromOracle()', async function() {
+        let firstResultIndex = 1;
+
+        beforeEach(async function() {
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
+
+            let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
+            await token.approve(testTopic.address, threshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
+
+            await testTopic.centralizedOracleSetResult(firstResultIndex, threshold, { from: oracle });
+
+            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue(await testTopic.resultSet.call());
+            assert.equal((await testTopic.status.call()).toNumber(), 1);
+
+            let finalResult = await testTopic.getFinalResult();
+            assert.equal(finalResult[0], firstResultIndex);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[firstResultIndex]);
+
+            let oracleArray = await testTopic.getOracle(1);
+            votingOracle = await Oracle.at(oracleArray[0]);
+        });
+
+        it('allows votes from VotingOracles', async function() {
+            assert.equal(await testTopic.getTotalVoteBalance(), 0);
+
+            let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
+            await token.approve(testTopic.address, vote1, { from: better1 });
+            assert.equal((await token.allowance(better1, testTopic.address)).toString(), vote1.toString());
+            await votingOracle.voteResult(0, vote1, { from: better1 });
+            assert.equal((await testTopic.getVoteBalances({ from: better1 }))[0].toString(), vote1.toString());
+
+            let vote2 = Utils.getBigNumberWithDecimals(35, botDecimals);
+            await token.approve(testTopic.address, vote2, { from: better2 });
+            assert.equal((await token.allowance(better2, testTopic.address)).toString(), vote2.toString());
+            await votingOracle.voteResult(2, vote2, { from: better2 });
+            assert.equal((await testTopic.getVoteBalances({ from: better2 }))[2].toString(), vote2.toString());
+
+            let vote3 = Utils.getBigNumberWithDecimals(10, botDecimals);
+            await token.approve(testTopic.address, vote3, { from: better3 });
+            assert.equal((await token.allowance(better3, testTopic.address)).toString(), vote3.toString());
+            await votingOracle.voteResult(0, vote3, { from: better3 });
+            assert.equal((await testTopic.getVoteBalances({ from: better3 }))[0].toString(), vote3.toString());
+
+            let totalVoteBalance = vote1.add(vote2).add(vote3);
+            assert.equal((await testTopic.getTotalVoteBalance()).toString(), totalVoteBalance.toString());
+            assert.equal((await token.balanceOf(testTopic.address)).toString(), 
+                (await testTopic.totalBotValue.call()).toString());
+        });
+
+        // TODO: finish
     });
 
     describe('centralizedOracleSetResult()', async function() {
@@ -368,10 +422,10 @@ contract('TopicEvent', function(accounts) {
                 assert.isTrue((await testTopic.getOracle(0))[1]);
                 assert.isTrue(await testTopic.resultSet.call());
                 assert.equal((await testTopic.status.call()).toNumber(), 1);
-
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], finalResultIndex);
                 assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
+                assert.equal((await testTopic.totalBotValue.call()).toString(), threshold.toString());
 
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), threshold.toString());
                 let votingOracle = await testTopic.getOracle(1);

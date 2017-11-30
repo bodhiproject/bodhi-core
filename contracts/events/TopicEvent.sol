@@ -43,6 +43,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     Status public status = Status.Betting;
     uint256 public bettingEndBlock;
     uint256 public resultSettingEndBlock;
+    uint256 public totalBotValue;
     bytes32[10] private name;
     bytes32[10] public resultNames;
     ResultBalance[10] private balances;
@@ -175,7 +176,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_amount);
-        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_amount);
+        resultBalance.voteBalances[_sender] = resultBalance.voteBalances[_sender].add(_amount);
+        totalBotValue = totalBotValue.add(_amount);
 
         return token.transferFrom(_sender, address(this), _amount);
     }
@@ -203,6 +205,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         resultSet = true;
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
+        totalBotValue = totalBotValue.add(startingOracleThreshold);
 
         token.transferFrom(msg.sender, address(this), startingOracleThreshold);
         createVotingOracle(addressManager.startingOracleThreshold());
@@ -482,15 +485,9 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         view
         returns (uint256) 
     {
-        uint256 losingResultsTotal = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
-                losingResultsTotal = losingResultsTotal.add(balances[i].totalVoteBalance);
-            }
-        }
-
-        uint256 senderVoteBalance = balances[finalResultIndex].voteBalances[msg.sender];
         uint256 winningResultTotal = balances[finalResultIndex].totalVoteBalance;
+        uint256 losingResultsTotal = totalBotValue.sub(winningResultTotal);
+        uint256 senderVoteBalance = balances[finalResultIndex].voteBalances[msg.sender];
         return senderVoteBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderVoteBalance);
     }
 }
