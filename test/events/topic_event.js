@@ -391,7 +391,39 @@ contract('TopicEvent', function(accounts) {
                 (await testTopic.totalBotValue.call()).toString());
         });
 
-        // TODO: finish
+        it('throws if voting on an invalid result index', async function() {
+            try {
+                await votingOracle.voteResult(3, 1, { from: better1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws if voting from an invalid Oracle', async function() {
+            // TODO: finish
+        });
+
+        it('throws if amount is 0', async function() {
+            try {
+                await votingOracle.voteResult(0, 0, { from: better1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws if allowance is less than the amount', async function() {
+            let vote = Utils.getBigNumberWithDecimals(10, botDecimals);
+            await token.approve(testTopic.address, vote.sub(1), { from: better1 });
+
+            try {
+                await votingOracle.voteResult(0, vote, { from: better1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
     });
 
     describe('centralizedOracleSetResult()', async function() {
