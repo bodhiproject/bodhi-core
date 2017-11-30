@@ -142,6 +142,37 @@ contract('TopicEvent', function(accounts) {
             }
         });
 
+        it('throws if owner address is invalid', async function() {
+            try {
+                await TopicEvent.new(0, testTopicParams._oracle, testTopicParams._name, testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws if oracle address is invalid', async function() {
+            try {
+                await TopicEvent.new(testTopicParams._owner, 0, testTopicParams._name, testTopicParams._resultNames, 
+                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws if AddressManager address is invalid', async function() {
+            try {
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                    testTopicParams._resultSettingEndBlock, 0);
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
         it('throws if name is empty', async function() {
             try {
                 await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
