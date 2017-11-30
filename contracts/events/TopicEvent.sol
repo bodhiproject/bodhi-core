@@ -15,9 +15,9 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     /*
     * @notice Status types
-    *   Betting: betting phase on the TopicEvent
-    *   Arbitration: Voting Oracle phase
-    *   Collection: winners can collect their winnings
+    *   Betting: Bets with blockchain token are allowed during this phase.
+    *   Arbitration: Voting takes place in the VotingOracles during this phase.
+    *   Collection: Winners can collect their won tokens during this phase.
     */
     enum Status {
         Betting,
@@ -67,13 +67,16 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         _;
     }
 
-    /// @notice Creates new TopicEvent contract.
-    /// @param _owner The address of the owner.
-    /// @param _oracle The address of the individual Oracle that will decide the result.
-    /// @param _name The question or statement of the TopicEvent broken down by multiple bytes32.
-    /// @param _resultNames The possible results of the TopicEvent.
-    /// @param _bettingEndBlock The block when TopicEvent voting will end.
-    /// @param _resultSettingEndBlock The last block the Individual Oracle can set the result.
+    /*
+    * @notice Creates new TopicEvent contract.
+    * @param _owner The address of the owner.
+    * @param _oracle The address of the Centralized Oracle that will decide the result.
+    * @param _name The question or statement prediction broken down by multiple bytes32.
+    * @param _resultNames The possible results.
+    * @param _bettingEndBlock The block when betting will end.
+    * @param _resultSettingEndBlock The last block the Centralized Oracle can set the result.
+    * @param _addressManager The address of the AddressManager.
+    */
     function TopicEvent(
         address _owner,
         address _oracle,
@@ -127,14 +130,13 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Allows betting on a Result using the blockchain token.
-    * @param _resultIndex The index of Result to bet on.
+    * @notice Allows betting on a result using the blockchain token.
+    * @param _resultIndex The index of result to bet on.
     */
     function bet(uint8 _resultIndex) 
         external 
         payable
         validResultIndex(_resultIndex)
-        nonReentrant()
     {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
@@ -142,7 +144,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
         resultBalance.betBalances[msg.sender] = resultBalance.betBalances[msg.sender].add(msg.value);
-        balances[_resultIndex] = resultBalance;
 
         BetAccepted(msg.sender, _resultIndex, msg.value, balances[_resultIndex].betBalances[msg.sender]);
     }
@@ -175,51 +176,22 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_amount);
         resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_amount);
-        balances[_resultIndex] = resultBalance;
 
         return token.transferFrom(_sender, address(this), _amount);
     }
 
     /* 
-    * @notice Allows anyone to set the Result based on majority vote if the CentralizedOracle does not set the Result 
-    *   in time.
-    * @dev This insures the funds don't get locked up in the contract. The will create a VotingOracle as usual.
-    */
-    function invalidateCentralizedOracle() 
-        external 
-    {
-        require(!oracles[0].didSetResult);
-        require(block.number >= resultSettingEndBlock);
-        require(status == Status.Betting);
-
-        oracles[0].didSetResult = true;
-        resultSet = true;
-        status = Status.OracleVoting;
-
-        // Calculates the winning Result index based on bet balances of each Result
-        uint256 winningIndexAmount = 0;
-        for (uint8 i = 0; i < balances.length; i++) {
-            uint256 totalBetBalance = balances[i].totalBetBalance;
-            if (totalBetBalance > winningIndexAmount) {
-                winningIndexAmount = totalBetBalance;
-                finalResultIndex = i;
-            }
-        }
-
-        createVotingOracle(addressManager.startingOracleThreshold());
-    }
-
-    /* 
-    * @dev CentralizedOracle should call this to set the Result. Requires minimum BOT approve() of 
-    *   startingOracleThreshold.
-    * @param _resultIndex The index of the Result to set.
-    * @param _botAmount The amount of BOT to transfer to this Event.
+    * @dev CentralizedOracle should call this to set the result. Requires the Oracle to approve() BOT in the amount of 
+    *   the starting Oracle threshold.
+    * @param _resultIndex The index of the result to set.
+    * @param _botAmount The amount of BOT to transfer.
     */
     function centralizedOracleSetResult(uint8 _resultIndex, uint256 _botAmount)
         external 
         validResultIndex(_resultIndex)
     {
-        require(msg.sender == oracles[0].oracleAddress && !oracles[0].didSetResult);
+        require(msg.sender == oracles[0].oracleAddress);
+        require(!oracles[0].didSetResult);
         require(block.number >= bettingEndBlock);
         require(block.number < resultSettingEndBlock);
         uint256 startingOracleThreshold = addressManager.startingOracleThreshold();
@@ -232,17 +204,44 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        if (!token.transferFrom(msg.sender, address(this), startingOracleThreshold)) {
-            revert();
-        }
+        token.transferFrom(msg.sender, address(this), startingOracleThreshold);
         createVotingOracle(addressManager.startingOracleThreshold());
     }
 
     /* 
-    * @dev VotingOracle should call this to set the Result. Should be allowed when the Oracle passes the 
-    *   consensus threshold.
-    * @param _resultIndex The index of the Result to set.
-    * @param _currentConsensusThreshold The current consensus threshold amount for this Oracle.
+    * @notice Allows anyone to set the result based on majority vote if the CentralizedOracle does not set the result 
+    *   in time.
+    * @dev This insures the funds don't get locked up in the contract. This will create a VotingOracle as usual.
+    */
+    function invalidateCentralizedOracle() 
+        external 
+    {
+        require(!oracles[0].didSetResult);
+        require(block.number >= resultSettingEndBlock);
+        require(status == Status.Betting);
+
+        oracles[0].didSetResult = true;
+        resultSet = true;
+        status = Status.OracleVoting;
+
+        // Calculates the winning result index based on bet balances
+        uint256 winningIndexAmount = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            uint256 totalBetBalance = balances[i].totalBetBalance;
+            if (totalBetBalance > winningIndexAmount) {
+                winningIndexAmount = totalBetBalance;
+                finalResultIndex = i;
+            }
+        }
+
+        createVotingOracle(addressManager.startingOracleThreshold());
+    }
+
+    /* 
+    * @dev VotingOracle should call this to set the result. Should be allowed when the Oracle passes the consensus 
+    *   threshold.
+    * @param _resultIndex The index of the result to set.
+    * @param _currentConsensusThreshold The current consensus threshold for the Oracle.
     */
     function votingOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
         external 
@@ -291,7 +290,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Allows winners of the event to withdraw their blockchain tokens and BOT after the final result is set.
+    * @notice Allows winners of the Event to withdraw their blockchain and BOT winnings after the final result is set.
     */
     function withdrawWinnings() 
         public 
@@ -305,26 +304,26 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         uint256 voteBalance = resultBalance.voteBalances[msg.sender];
         require(betBalance > 0 || voteBalance > 0);
 
-        uint256 blockchainTokenWinnings = 0;  
+        uint256 blockchainTokensWon = 0;  
         if (betBalance > 0) {
-             blockchainTokenWinnings = calculateBlockchainTokenWinnings();
+             blockchainTokensWon = calculateBlockchainTokensWon();
              resultBalance.betBalances[msg.sender] = 0;
         }
 
-        uint256 botTokenWinnings = 0;  
+        uint256 botTokensWon = 0;  
         if (voteBalance > 0) {
-             botTokenWinnings = calculateBotTokenWinnings();
+             botTokensWon = calculateBotTokensWon();
              resultBalance.voteBalances[msg.sender] = 0;
         }
 
-        if (blockchainTokenWinnings > 0) {
-            msg.sender.transfer(blockchainTokenWinnings);
+        if (blockchainTokensWon > 0) {
+            msg.sender.transfer(blockchainTokensWon);
         }
-        if (botTokenWinnings > 0) {
-            token.transfer(msg.sender, botTokenWinnings);
+        if (botTokensWon > 0) {
+            token.transfer(msg.sender, botTokensWon);
         }
 
-        WinningsWithdrawn(blockchainTokenWinnings, botTokenWinnings);
+        WinningsWithdrawn(blockchainTokensWon, botTokensWon);
     }
 
     /// @notice Gets the Oracle's address and flag indicating if it set it's result.
@@ -416,8 +415,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return true;
     }
 
-    /// @dev Calculates the native token (blockchain token) winnings based on the sender's contributions.
-    function calculateBlockchainTokenWinnings() 
+    /* 
+    * @dev Calculates the blockchain tokens won based on the sender's contributions.
+    * @return The amount of blockchain tokens won.
+    */
+    function calculateBlockchainTokensWon() 
         private
         view
         returns (uint256) 
@@ -429,13 +431,16 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }
         }
 
-        uint256 betBalance = balances[finalResultIndex].betBalances[msg.sender];
+        uint256 senderBetBalance = balances[finalResultIndex].betBalances[msg.sender];
         uint256 winningResultTotal = balances[finalResultIndex].totalBetBalance;
-        return betBalance.mul(losingResultsTotal).div(winningResultTotal).add(betBalance);
+        return senderBetBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderBetBalance);
     }
 
-    /// @dev Calculates the BOT token winnings based on the sender's contributions.
-    function calculateBotTokenWinnings() 
+    /*
+    * @dev Calculates the BOT tokens won based on the sender's contributions.
+    * @return The amount of BOT tokens won.
+    */
+    function calculateBotTokensWon() 
         private
         view
         returns (uint256) 
@@ -447,8 +452,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }
         }
 
-        uint256 voteBalance = balances[finalResultIndex].voteBalances[msg.sender];
+        uint256 senderVoteBalance = balances[finalResultIndex].voteBalances[msg.sender];
         uint256 winningResultTotal = balances[finalResultIndex].totalVoteBalance;
-        return voteBalance.mul(losingResultsTotal).div(winningResultTotal).add(voteBalance);
+        return senderVoteBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderVoteBalance);
     }
 }

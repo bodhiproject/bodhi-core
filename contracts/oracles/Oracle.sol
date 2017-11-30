@@ -12,10 +12,14 @@ contract Oracle is Ownable {
     using SafeMath for uint256;
 
     struct Participant {
-        bool didSetResult;
         bool didWithdrawEarnings;
         uint8 resultIndex;
         uint256 stakeContributed;
+    }
+
+    struct ResultBalance {
+        uint256 totalVoteBalance;
+        mapping(address => uint256) voteBalances;
     }
 
     bool public isFinished;
@@ -27,9 +31,9 @@ contract Oracle is Ownable {
     uint256 public arbitrationEndBlock;
     uint256 public consensusThreshold;
     uint256 public totalStakeContributed;
-    uint256[10] private resultBalances;
     IAddressManager private addressManager;
     mapping(address => Participant) private participants;
+    ResultBalance[10] private resultBalances;
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -46,15 +50,17 @@ contract Oracle is Ownable {
     event OracleResultVoted(address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
     event OracleResultSet(uint8 _resultIndex);
 
-    /// @notice Creates new Oracle contract.
-    /// @param _owner The address of the owner.
-    /// @param _eventAddress The address of the Event this Oracle will arbitrate.
-    /// @param _eventName The name of the Event this Oracle will arbitrate.
-    /// @param _eventResultNames The result options of the Event.
-    /// @param _lastResultIndex The last result index set by the Oracle.
-    /// @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
-    /// @param _consensusThreshold The amount of BOT that needs to be reached in order for this Oracle to be valid.
-    /// @param _addressManager The address of the AddressManager contract.
+    /*
+    * @notice Creates new Oracle contract.
+    * @param _owner The address of the owner.
+    * @param _eventAddress The address of the Event this Oracle will arbitrate.
+    * @param _eventName The name of the Event this Oracle will arbitrate.
+    * @param _eventResultNames The result options of the Event.
+    * @param _lastResultIndex The last result index set by the Oracle.
+    * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
+    * @param _consensusThreshold The amount of BOT that needs to be reached in order for this Oracle to be valid.
+    * @param _addressManager The address of the AddressManager contract.
+    */
     function Oracle(
         address _owner,
         address _eventAddress,
@@ -95,25 +101,24 @@ contract Oracle is Ownable {
         addressManager = IAddressManager(_addressManager);
     }
 
-    /// @notice Vote on an Event Result which requires BOT payment.
-    /// @param _eventResultIndex The Event Result which is being voted on.
-    /// @param _botAmount The amount of BOT used to vote.
+    /*
+    * @notice Vote on an Event result which requires BOT payment.
+    * @param _eventResultIndex The Event result which is being voted on.
+    * @param _botAmount The amount of BOT used to vote.
+    */
     function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
         external 
         validResultIndex(_eventResultIndex) 
         isNotFinished()
     {
         require(_botAmount > 0);
-        require(!participants[msg.sender].didSetResult);
         require(block.number < arbitrationEndBlock);
         require(_eventResultIndex != lastResultIndex);
 
-        Participant storage participant = participants[msg.sender];
-        participant.didSetResult = true;
-        participant.resultIndex = _eventResultIndex;
-        participant.stakeContributed = _botAmount;
+        ResultBalance storage resultBalance = resultBalances[_eventResultIndex];
+        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
+        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
 
-        resultBalances[_eventResultIndex] = resultBalances[_eventResultIndex].add(_botAmount);
         totalStakeContributed = totalStakeContributed.add(_botAmount);
 
         if (!ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount)) {
@@ -129,7 +134,8 @@ contract Oracle is Ownable {
 
     /*
     * @notice This can be called by anyone if this VotingOracle did not meet the consensus threshold and has reached 
-    *   the arbitration end block.
+    *   the arbitration end block. This finishes the Event and allows winners to withdraw their winnings from the Event 
+    *   contract.
     * @return Flag to indicate success of finalizing the result.
     */
     function finalizeResult() 
@@ -187,55 +193,28 @@ contract Oracle is Ownable {
         return participants[msg.sender].resultIndex;
     }
 
-    /// @notice Gets the final result index set by the Oracle participants.
-    /// @return The index of the final result set by Oracle participants.
+    /*
+    * @notice Gets the final result index set by the Oracle participants based on majority vote.
+    * @return The index of the final result.
+    */
     function getFinalResultIndex() 
         public 
         view 
         returns (uint8) 
     {
+        require(isFinished);
+
         uint8 finalResultIndex = 0;
-        uint256 winningIndexAmount = 0;
-        for (uint8 i = 0; i < resultBalances.length; i++) {
-            uint256 resultBalance = resultBalances[i];
-            if (resultBalance > winningIndexAmount) {
-                winningIndexAmount = resultBalance;
+        uint256 winningVoteBalance = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            uint256 totalVoteBalance = resultBalances[i].totalVoteBalance;
+            if (totalVoteBalance > winningVoteBalance) {
+                winningVoteBalance = totalVoteBalance;
                 finalResultIndex = i;
             }
         }
 
         return finalResultIndex;
-    }
-
-    // TODO: REMOVE
-    /// @notice Gets the amount of earnings you can withdraw.
-    /// @return The amount of earnings you can withdraw.
-    function getEarningsAmount() 
-        public 
-        view 
-        returns(uint256) 
-    {
-        uint256 stakeContributed = participants[msg.sender].stakeContributed;
-        if (stakeContributed == 0) {
-            return 0;
-        }
-
-        if (!participants[msg.sender].didSetResult) {
-            return 0;
-        }
-
-        if (participants[msg.sender].didWithdrawEarnings) {
-            return 0;
-        }
-
-        uint8 finalResultIndex = getFinalResultIndex();
-        if (participants[msg.sender].resultIndex != finalResultIndex) {
-            return 0;
-        }
-
-        uint256 winningResultContributions = resultBalances[finalResultIndex];
-        uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
-        return stakeContributed.mul(losingResultContributions).div(winningResultContributions).add(stakeContributed);
     }
 
     function setResult() 

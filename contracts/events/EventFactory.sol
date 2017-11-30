@@ -34,6 +34,7 @@ contract EventFactory {
         TopicEvent topic = new TopicEvent(msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
             _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
+        
         TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
             _resultSettingEndBlock);
 
