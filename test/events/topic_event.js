@@ -507,8 +507,8 @@ contract('TopicEvent', function(accounts) {
         // TODO: implement
     });
 
-    describe("getFinalResultIndex()", async function() {
-        it("returns the correct final result index", async function() {
+    describe("getFinalResult()", async function() {
+        it("returns the final result index and name", async function() {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
             assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
             assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
@@ -523,42 +523,17 @@ contract('TopicEvent', function(accounts) {
             await testTopic.centralizedOracleSetResult(finalResultIndex, threshold, { from: oracle });
 
             assert.isTrue(await testTopic.resultSet.call());
-            assert.equal(await testTopic.getFinalResultIndex(), finalResultIndex);
+
+            let finalResult = await testTopic.getFinalResult();
+            assert.equal(finalResult[0], finalResultIndex);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
         });
 
-        it("throws if trying to get the final result index before it is set", async function() {
+        it("throws if trying to get the final result before it is set", async function() {
             assert.isFalse(await testTopic.resultSet.call());
 
             try {
-                await testTopic.getFinalResultIndex();
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-        });
-    });
-
-    describe("GetFinalResultName:", async function() {
-        it("returns the correct final result name", async function() {
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            let currentBlock = web3.eth.blockNumber;
-            assert.isAtLeast(currentBlock, testTopicParams._bettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
-
-            let finalResultIndex = 0;
-            await testTopic.revealResult(finalResultIndex, { from: testTopicParams._oracle });
-
-            assert.isTrue(await testTopic.resultSet.call());
-            assert.equal(web3.toUtf8(await testTopic.getFinalResultName()), 
-                testTopicParams._resultNames[finalResultIndex]);
-        });
-
-        it("throws if trying to get the final result index before it is set", async function() {
-            assert.isFalse(await testTopic.resultSet.call());
-
-            try {
-                await testTopic.getFinalResultName();
+                await testTopic.getFinalResult();
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
