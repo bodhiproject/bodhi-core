@@ -445,8 +445,14 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
+    describe("getEventName()", async function() {
+        it("returns the event name as a string", async function() {
+            assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
+        });
+    });
+
     describe("getBetBalances()", async function() {
-        it("returns the correct result balance", async function() {
+        it("returns the bet balances", async function() {
             let bet0 = Utils.getBigNumberWithDecimals(13, nativeDecimals);
             await testTopic.bet(0, { from: oracle, value: bet0 });
 
@@ -463,29 +469,28 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("GetTotalTopicBalance:", async function() {
-        it("returns the correct total topic balance", async function() {
-            let account1 = accounts[1];
-            let account1BetAmount = web3.toBigNumber(web3.toWei(1, "ether"));
+    describe("getVoteBalances()", async function() {
+        // TODO: implement
+    });
 
-            let account2 = accounts[2];
-            let account2BetAmount = web3.toBigNumber(web3.toWei(2, "ether"));
+    describe("getTotalBetBalance():", async function() {
+        it("returns the total bet balance", async function() {
+            let bet0 = Utils.getBigNumberWithDecimals(13, nativeDecimals);
+            await testTopic.bet(0, { from: oracle, value: bet0 });
 
-            let account3 = accounts[3];
-            let account3BetAmount = web3.toBigNumber(web3.toWei(3, "ether"));
+            let bet1 = Utils.getBigNumberWithDecimals(7, nativeDecimals);
+            await testTopic.bet(1, { from: oracle, value: bet1 });
 
-            let totalTopicBalance = account1BetAmount.add(account2BetAmount).add(account3BetAmount);
+            let bet2 = Utils.getBigNumberWithDecimals(4, nativeDecimals);
+            await testTopic.bet(2, { from: oracle, value: bet2 });
 
-            await testTopic.bet(0, { from: account1, value: account1BetAmount })
-            .then(async function() {
-                await testTopic.bet(1, { from: account2, value: account2BetAmount });
-            }).then(async function() {
-                await testTopic.bet(2, { from: account3, value: account3BetAmount });
-            });
-
-            let actualTotalTopicBalance = web3.toBigNumber(await testTopic.getTotalTopicBalance());
-            assert.equal(actualTotalTopicBalance.toString(), totalTopicBalance.toString());
+            let totalBetBalance = bet0.add(bet1).add(bet2);
+            assert.equal((await testTopic.getTotalBetBalance()).toString(), totalBetBalance.toString());
         });
+    });
+
+    describe("getTotalVoteBalance()", async function() {
+        // TODO: implement
     });
 
     describe("GetFinalResultIndex:", async function() {
