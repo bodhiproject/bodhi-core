@@ -459,6 +459,13 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
+    describe.only("getOracle()", async function() {
+        it("returns the oracle address and didSetResult flag", async function() {
+            assert.equal((await testTopic.getOracle(0))[0], testTopicParams._oracle);
+            assert.isFalse((await testTopic.getOracle(0))[1]);
+        });
+    });
+
     describe("getEventName()", async function() {
         it("returns the event name as a string", async function() {
             assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
