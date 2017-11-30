@@ -6,7 +6,7 @@ import "../storage/IAddressManager.sol";
 
 contract OracleFactory is IOracleFactory {
     address private addressManager;
-    mapping (bytes32 => Oracle) public oracles;
+    mapping(bytes32 => Oracle) public oracles;
 
     // Events
     event OracleCreated(address indexed _creator, address indexed _oracleAddress, address indexed _eventAddress,
