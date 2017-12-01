@@ -113,7 +113,7 @@ contract Oracle is Ownable {
 
         OracleResultVoted(msg.sender, _eventResultIndex, _botAmount);
 
-        if (totalStakeContributed >= consensusThreshold) {
+        if (resultBalance.totalVoteBalance >= consensusThreshold) {
             setResult();
         }
     }
