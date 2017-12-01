@@ -338,7 +338,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe.only('voteFromOracle()', async function() {
+    describe('voteFromOracle()', async function() {
         let firstResultIndex = 1;
 
         beforeEach(async function() {
@@ -400,8 +400,21 @@ contract('TopicEvent', function(accounts) {
             }
         });
 
-        it('throws if voting from an invalid Oracle', async function() {
-            // TODO: finish
+        it('throws if voting from an invalid VotingOracle', async function() {
+            let lastResultIndex = 1;
+            let arbitrationEndBlock = await getBlockNumber() + 100;
+            votingOracle = await Oracle.new(owner, testTopic.address, testTopicParams._name, 
+                testTopicParams._resultNames, lastResultIndex, arbitrationEndBlock, 
+                Utils.getBigNumberWithDecimals(100, botDecimals), { from: owner });
+
+            try {
+                let newResultIndex = 2;
+                let amount = 1;
+                await votingOracle.voteResult(newResultIndex, amount, { from: better1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
         });
 
         it('throws if amount is 0', async function() {

@@ -55,7 +55,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
-    event WinningsWithdrawn(uint256 _blockchainTokenWon, uint256 _botTokenWon);
+    event WinningsWithdrawn(address indexed _winner, uint256 _blockchainTokenWon, uint256 _botTokenWon);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -327,7 +327,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             token.transfer(msg.sender, botTokensWon);
         }
 
-        WinningsWithdrawn(blockchainTokensWon, botTokensWon);
+        WinningsWithdrawn(msg.sender, blockchainTokensWon, botTokensWon);
     }
 
     /*
