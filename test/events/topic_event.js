@@ -79,8 +79,8 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), testTopicParams._resultNames[1]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal((await testTopic.numOfResults.call()).toNumber(), 3);
-            await assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
-            await assert.equal(await testTopic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
+            assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
+            assert.equal(await testTopic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
         });
 
         it('can handle a long name using all 10 array slots', async function() {
@@ -412,9 +412,7 @@ contract('TopicEvent', function(accounts) {
                 Utils.getBigNumberWithDecimals(100, botDecimals), { from: owner });
 
             try {
-                let newResultIndex = 2;
-                let amount = 1;
-                await votingOracle.voteResult(newResultIndex, amount, { from: better1 });
+                await votingOracle.voteResult(2, 1, { from: better1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -502,7 +500,6 @@ contract('TopicEvent', function(accounts) {
 
                 let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
                 await token.approve(testTopic.address, threshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
 
                 let finalResultIndex = 1;
                 await testTopic.centralizedOracleSetResult(finalResultIndex, threshold, { from: oracle });
@@ -515,7 +512,6 @@ contract('TopicEvent', function(accounts) {
                 assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
 
                 await token.approve(testTopic.address, threshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
 
                 try {
                     await testTopic.centralizedOracleSetResult(2, threshold, { from: oracle });
@@ -565,7 +561,6 @@ contract('TopicEvent', function(accounts) {
 
                 let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
                 await token.approve(testTopic.address, threshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
 
                 try {
                     await testTopic.centralizedOracleSetResult(1, threshold, { from: oracle });
@@ -582,7 +577,6 @@ contract('TopicEvent', function(accounts) {
 
                 let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
                 await token.approve(testTopic.address, threshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
 
                 try {
                     await testTopic.centralizedOracleSetResult(1, threshold, { from: oracle });
@@ -1059,14 +1053,9 @@ contract('TopicEvent', function(accounts) {
     describe("getFinalResult()", async function() {
         it("returns the final result index and name", async function() {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
-            assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
 
             let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
             await token.approve(testTopic.address, threshold, { from: oracle });
-            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), threshold.toString());
 
             let finalResultIndex = 1;
             await testTopic.centralizedOracleSetResult(finalResultIndex, threshold, { from: oracle });
