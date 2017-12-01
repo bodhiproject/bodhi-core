@@ -43,6 +43,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     Status public status = Status.Betting;
     uint256 public bettingEndBlock;
     uint256 public resultSettingEndBlock;
+    uint256 public totalBotValue;
     bytes32[10] private name;
     bytes32[10] public resultNames;
     ResultBalance[10] private balances;
@@ -54,7 +55,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
-    event WinningsWithdrawn(uint256 _blockchainTokenWon, uint256 _botTokenWon);
+    event WinningsWithdrawn(address indexed _winner, uint256 _blockchainTokenWon, uint256 _botTokenWon);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -64,6 +65,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     modifier resultIsSet() {
         require(resultSet);
+        _;
+    }
+
+    modifier inCollectionStatus() {
+        require(status == Status.Collection);
         _;
     }
 
@@ -175,7 +181,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_amount);
-        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_amount);
+        resultBalance.voteBalances[_sender] = resultBalance.voteBalances[_sender].add(_amount);
+        totalBotValue = totalBotValue.add(_amount);
 
         return token.transferFrom(_sender, address(this), _amount);
     }
@@ -203,6 +210,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         resultSet = true;
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
+
+        ResultBalance storage resultBalance = balances[_resultIndex];
+        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
+        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
+        totalBotValue = totalBotValue.add(startingOracleThreshold);
 
         token.transferFrom(msg.sender, address(this), startingOracleThreshold);
         createVotingOracle(addressManager.startingOracleThreshold());
@@ -283,7 +295,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(status == Status.OracleVoting);
 
         status = Status.Collection;
-
+ 
         FinalResultSet(finalResultIndex);
 
         return true;
@@ -294,28 +306,18 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     */
     function withdrawWinnings() 
         public 
-        resultIsSet
+        resultIsSet()
+        inCollectionStatus()
         nonReentrant()
     {
-        require(status == Status.Collection);
         require(getTotalBetBalance() > 0);
- 
+
         ResultBalance storage resultBalance = balances[finalResultIndex];
-        uint256 betBalance = resultBalance.betBalances[msg.sender];
-        uint256 voteBalance = resultBalance.voteBalances[msg.sender];
-        require(betBalance > 0 || voteBalance > 0);
+        uint256 blockchainTokensWon = calculateBlockchainTokensWon();
+        uint256 botTokensWon = calculateBotTokensWon();
 
-        uint256 blockchainTokensWon = 0;  
-        if (betBalance > 0) {
-             blockchainTokensWon = calculateBlockchainTokensWon();
-             resultBalance.betBalances[msg.sender] = 0;
-        }
-
-        uint256 botTokensWon = 0;  
-        if (voteBalance > 0) {
-             botTokensWon = calculateBotTokensWon();
-             resultBalance.voteBalances[msg.sender] = 0;
-        }
+        resultBalance.betBalances[msg.sender] = 0;
+        resultBalance.voteBalances[msg.sender] = 0;
 
         if (blockchainTokensWon > 0) {
             msg.sender.transfer(blockchainTokensWon);
@@ -324,7 +326,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             token.transfer(msg.sender, botTokensWon);
         }
 
-        WinningsWithdrawn(blockchainTokensWon, botTokensWon);
+        WinningsWithdrawn(msg.sender, blockchainTokensWon, botTokensWon);
     }
 
     /*
@@ -417,29 +419,60 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Gets the final result index set by the Oracle (if it was set).
-    * @return The index of the final result.
+    * @notice Gets the final result index and name set by the Oracle (if it was set).
+    * @return The index and name of the final result.
     */
-    function getFinalResultIndex() 
+    function getFinalResult() 
         public 
         view
-        resultIsSet
-        returns (uint8) 
+        resultIsSet()
+        returns (uint8, bytes32) 
     {
-        return finalResultIndex;
+        return (finalResultIndex, resultNames[finalResultIndex]);
+    }
+
+    /* 
+    * @dev Calculates the blockchain tokens won based on the sender's contributions.
+    * @return The amount of blockchain tokens won.
+    */
+    function calculateBlockchainTokensWon() 
+        public
+        view
+        inCollectionStatus()
+        returns (uint256) 
+    {
+        uint256 losingResultsTotal = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            if (i != finalResultIndex) {
+                losingResultsTotal = losingResultsTotal.add(balances[i].totalBetBalance);
+            }
+        }
+
+        uint256 senderBetBalance = balances[finalResultIndex].betBalances[msg.sender];
+        uint256 winningResultTotal = balances[finalResultIndex].totalBetBalance;
+        return senderBetBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderBetBalance);
     }
 
     /*
-    * @notice Gets the final result name if the final result was set.
-    * @return The final result name.
+    * @dev Calculates the BOT tokens won based on the sender's contributions.
+    * @return The amount of BOT tokens won.
     */
-    function getFinalResultName() 
-        public 
+    function calculateBotTokensWon() 
+        public
         view
-        resultIsSet
-        returns (bytes32) 
+        inCollectionStatus()
+        returns (uint256) 
     {
-        return resultNames[finalResultIndex];
+        uint256 betBalance = balances[finalResultIndex].betBalances[msg.sender];
+        uint256 voteBalance = balances[finalResultIndex].voteBalances[msg.sender];
+        uint256 totalContribution = betBalance.add(voteBalance);
+
+        uint256 totalWinningBets = balances[finalResultIndex].totalBetBalance;
+        uint256 totalWinningVotes = balances[finalResultIndex].totalVoteBalance;
+        uint256 totalWinningContribution = totalWinningBets.add(totalWinningVotes);
+
+        uint256 totalLosingVotes = totalBotValue.sub(totalWinningVotes);
+        return totalContribution.mul(totalLosingVotes).div(totalWinningContribution).add(voteBalance);
     }
 
     /*
@@ -463,47 +496,5 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }));
 
         return true;
-    }
-
-    /* 
-    * @dev Calculates the blockchain tokens won based on the sender's contributions.
-    * @return The amount of blockchain tokens won.
-    */
-    function calculateBlockchainTokensWon() 
-        private
-        view
-        returns (uint256) 
-    {
-        uint256 losingResultsTotal = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
-                losingResultsTotal = losingResultsTotal.add(balances[i].totalBetBalance);
-            }
-        }
-
-        uint256 senderBetBalance = balances[finalResultIndex].betBalances[msg.sender];
-        uint256 winningResultTotal = balances[finalResultIndex].totalBetBalance;
-        return senderBetBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderBetBalance);
-    }
-
-    /*
-    * @dev Calculates the BOT tokens won based on the sender's contributions.
-    * @return The amount of BOT tokens won.
-    */
-    function calculateBotTokensWon() 
-        private
-        view
-        returns (uint256) 
-    {
-        uint256 losingResultsTotal = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
-                losingResultsTotal = losingResultsTotal.add(balances[i].totalVoteBalance);
-            }
-        }
-
-        uint256 senderVoteBalance = balances[finalResultIndex].voteBalances[msg.sender];
-        uint256 winningResultTotal = balances[finalResultIndex].totalVoteBalance;
-        return senderVoteBalance.mul(losingResultsTotal).div(winningResultTotal).add(senderVoteBalance);
     }
 }

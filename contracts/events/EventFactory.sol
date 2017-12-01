@@ -6,7 +6,7 @@ import "./TopicEvent.sol";
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
     address private addressManager;
-    mapping (bytes32 => TopicEvent) public topics;
+    mapping(bytes32 => TopicEvent) public topics;
 
     // Events
     event TopicCreated(address indexed _topicAddress, address indexed _creator, address indexed _oracle,
@@ -34,7 +34,7 @@ contract EventFactory {
         TopicEvent topic = new TopicEvent(msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
             _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
-        
+
         TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames, _bettingEndBlock, 
             _resultSettingEndBlock);
 

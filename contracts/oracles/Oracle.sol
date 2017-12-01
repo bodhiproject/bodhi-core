@@ -107,13 +107,10 @@ contract Oracle is Ownable {
 
         totalStakeContributed = totalStakeContributed.add(_botAmount);
 
-        if (!ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount)) {
-            revert();
-        }
-
+        ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
         OracleResultVoted(msg.sender, _eventResultIndex, _botAmount);
 
-        if (totalStakeContributed >= consensusThreshold) {
+        if (resultBalance.totalVoteBalance >= consensusThreshold) {
             setResult();
         }
     }
@@ -128,14 +125,11 @@ contract Oracle is Ownable {
         external 
         isNotFinished()
     {
-        require(totalStakeContributed < consensusThreshold);
         require(block.number >= arbitrationEndBlock);
 
         isFinished = true;
 
-        if (!ITopicEvent(eventAddress).finalizeResult()) {
-            revert();
-        }
+        ITopicEvent(eventAddress).finalizeResult();
     }
 
     /*
@@ -196,10 +190,7 @@ contract Oracle is Ownable {
         isFinished = true;
 
         uint8 finalResultIndex = getFinalResultIndex();
-        if (!ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, totalStakeContributed)) {
-            revert();
-        }
-
+        ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, totalStakeContributed);
         OracleResultSet(finalResultIndex);
     }
 }
