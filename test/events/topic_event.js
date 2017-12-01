@@ -985,7 +985,33 @@ contract('TopicEvent', function(accounts) {
     });
 
     describe("getVoteBalances()", async function() {
-        // TODO: implement
+        it('returns the vote balances', async function() {
+            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+
+            let threshold = Utils.getBigNumberWithDecimals(100, botDecimals);
+            await token.approve(testTopic.address, threshold, { from: oracle });
+
+            await testTopic.centralizedOracleSetResult(1, threshold, { from: oracle });
+            votingOracle = await Oracle.at((await testTopic.getOracle(1))[0]);
+
+            let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
+            await token.approve(testTopic.address, vote1, { from: better1 });
+            assert.equal((await token.allowance(better1, testTopic.address)).toString(), vote1.toString());
+            await votingOracle.voteResult(0, vote1, { from: better1 });
+            assert.equal((await testTopic.getVoteBalances({ from: better1 }))[0].toString(), vote1.toString());
+
+            let vote2 = Utils.getBigNumberWithDecimals(35, botDecimals);
+            await token.approve(testTopic.address, vote2, { from: better2 });
+            assert.equal((await token.allowance(better2, testTopic.address)).toString(), vote2.toString());
+            await votingOracle.voteResult(2, vote2, { from: better2 });
+            assert.equal((await testTopic.getVoteBalances({ from: better2 }))[2].toString(), vote2.toString());
+
+            let vote3 = Utils.getBigNumberWithDecimals(10, botDecimals);
+            await token.approve(testTopic.address, vote3, { from: better3 });
+            assert.equal((await token.allowance(better3, testTopic.address)).toString(), vote3.toString());
+            await votingOracle.voteResult(0, vote3, { from: better3 });
+            assert.equal((await testTopic.getVoteBalances({ from: better3 }))[0].toString(), vote3.toString());
+        });
     });
 
     describe("getTotalBetBalance():", async function() {
