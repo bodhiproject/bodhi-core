@@ -128,14 +128,11 @@ contract Oracle is Ownable {
         external 
         isNotFinished()
     {
-        require(totalStakeContributed < consensusThreshold);
         require(block.number >= arbitrationEndBlock);
 
         isFinished = true;
 
-        if (!ITopicEvent(eventAddress).finalizeResult()) {
-            revert();
-        }
+        ITopicEvent(eventAddress).finalizeResult();
     }
 
     /*
