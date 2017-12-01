@@ -1,3 +1,0 @@
-4ffa9cd5: createOracle(address,bytes32[10],bytes32[10],uint8,uint256,uint256)
-d46d115d: doesOracleExist(address,bytes32[10],bytes32[10],uint8,uint256,uint256)
-a81a2677: oracles(bytes32)
