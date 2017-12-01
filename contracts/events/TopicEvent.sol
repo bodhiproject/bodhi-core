@@ -306,28 +306,18 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     */
     function withdrawWinnings() 
         public 
-        resultIsSet
-        nonReentrant()
+        resultIsSet()
         inCollectionStatus()
+        nonReentrant()
     {
         require(getTotalBetBalance() > 0);
- 
+
         ResultBalance storage resultBalance = balances[finalResultIndex];
-        uint256 betBalance = resultBalance.betBalances[msg.sender];
-        uint256 voteBalance = resultBalance.voteBalances[msg.sender];
-        require(betBalance > 0 || voteBalance > 0);
+        uint256 blockchainTokensWon = calculateBlockchainTokensWon();
+        uint256 botTokensWon = calculateBotTokensWon();
 
-        uint256 blockchainTokensWon = 0;  
-        if (betBalance > 0) {
-             blockchainTokensWon = calculateBlockchainTokensWon();
-             resultBalance.betBalances[msg.sender] = 0;
-        }
-
-        uint256 botTokensWon = 0;  
-        if (voteBalance > 0) {
-             botTokensWon = calculateBotTokensWon();
-             resultBalance.voteBalances[msg.sender] = 0;
-        }
+        resultBalance.betBalances[msg.sender] = 0;
+        resultBalance.voteBalances[msg.sender] = 0;
 
         if (blockchainTokensWon > 0) {
             msg.sender.transfer(blockchainTokensWon);
@@ -435,7 +425,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     function getFinalResult() 
         public 
         view
-        resultIsSet
+        resultIsSet()
         returns (uint8, bytes32) 
     {
         return (finalResultIndex, resultNames[finalResultIndex]);

@@ -924,74 +924,123 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
 
             assert.equal((await testTopic.getTotalBetBalance()).toString(), totalBetBalance.toString());
-
-            // CentralizedOracle sets result 2
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
-            assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
-
-            await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
-                startingOracleThreshold.toString());
-
-            await testTopic.centralizedOracleSetResult(centralizedOracleResult, startingOracleThreshold, 
-                { from: oracle });
-            assert.isTrue((await testTopic.getOracle(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
-            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
-            let finalResult = await testTopic.getFinalResult();
-            assert.equal(finalResult[0], centralizedOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
-
-            // VotingOracle voting under consensusThreshold
-            votingOracle = await Oracle.at((await testTopic.getOracle(1))[0]);
-
-            let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
-            await token.approve(testTopic.address, vote1, { from: better1 });
-            assert.equal((await token.allowance(better1, testTopic.address)).toString(), vote1.toString());
-            await votingOracle.voteResult(0, vote1, { from: better1 });
-            assert.equal((await testTopic.getVoteBalances({ from: better1 }))[0].toString(), vote1.toString());
-
-            let vote2 = Utils.getBigNumberWithDecimals(35, botDecimals);
-            await token.approve(testTopic.address, vote2, { from: better2 });
-            assert.equal((await token.allowance(better2, testTopic.address)).toString(), vote2.toString());
-            await votingOracle.voteResult(1, vote2, { from: better2 });
-            assert.equal((await testTopic.getVoteBalances({ from: better2 }))[1].toString(), vote2.toString());
-
-            let totalVoteBalance = startingOracleThreshold.add(vote1).add(vote2);
-            assert.equal((await testTopic.getTotalVoteBalance()).toString(), totalVoteBalance.toString());
-            assert.equal((await token.balanceOf(testTopic.address)).toString(), 
-                (await testTopic.totalBotValue.call()).toString());
         });
 
-        it('transfers the tokens for a single voting round', async function() {
-            // VotingOracle finalize result
-            let arbitrationEndBlock = await votingOracle.arbitrationEndBlock.call();
-            await blockHeightManager.mineTo(arbitrationEndBlock);
-            assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock.toNumber());
-            
-            await votingOracle.finalizeResult({ from: better1 });
-            assert.isTrue(await votingOracle.isFinished.call());
-            assert.equal((await testTopic.status.call()).toNumber(), statusCollection);
-            assert.equal((await testTopic.getFinalResult())[0].toNumber(), centralizedOracleResult);
+        describe('result is set', async function() {
+            beforeEach(async function() {
+                // CentralizedOracle sets result 2
+                await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+                assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
+                assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
 
-            // Withdrawing: winning result 2 = better3, better4
-            let losingBlockingTokens = Utils.getBigNumberWithDecimals(35, nativeDecimals);
-            let winningBlockchainTokens = Utils.getBigNumberWithDecimals(42, nativeDecimals);
+                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
+                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
+                    startingOracleThreshold.toString());
 
-            // better3: 30 * 35 / 42 = 25 blockchain tokens won
-            //          30 * 55 / 42 = 39 BOT won
-            let better3Balance = await web3.eth.getBalance(better3);
-            console.log((await web3.eth.getBalance(better3)).toString());
-            let better3TokensWon = web3.toBigNumber(30).mul(losingBlockingTokens).div(winningBlockchainTokens).add();
-            await testTopic.withdrawWinnings({ from: better3 });
-            console.log((await web3.eth.getBalance(better3)).toString());
-            let difference = (await web3.eth.getBalance(better3)).sub(better3Balance);
-            assert.equal(difference.toString(), better3TokensWon.toString());
+                await testTopic.centralizedOracleSetResult(centralizedOracleResult, startingOracleThreshold, 
+                    { from: oracle });
+                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue(await testTopic.resultSet.call());
+                assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
+                let finalResult = await testTopic.getFinalResult();
+                assert.equal(finalResult[0], centralizedOracleResult);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
 
-            // better4: 12 * 35 / 42 = 10 blockchain tokens won
-            //          12 * 55 / 42 = 15 BOT won
+                // VotingOracle voting under consensusThreshold
+                votingOracle = await Oracle.at((await testTopic.getOracle(1))[0]);
 
+                let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
+                await token.approve(testTopic.address, vote1, { from: better1 });
+                assert.equal((await token.allowance(better1, testTopic.address)).toString(), vote1.toString());
+                await votingOracle.voteResult(0, vote1, { from: better1 });
+                assert.equal((await testTopic.getVoteBalances({ from: better1 }))[0].toString(), vote1.toString());
+
+                let vote2 = Utils.getBigNumberWithDecimals(35, botDecimals);
+                await token.approve(testTopic.address, vote2, { from: better2 });
+                assert.equal((await token.allowance(better2, testTopic.address)).toString(), vote2.toString());
+                await votingOracle.voteResult(1, vote2, { from: better2 });
+                assert.equal((await testTopic.getVoteBalances({ from: better2 }))[1].toString(), vote2.toString());
+
+                let totalVoteBalance = startingOracleThreshold.add(vote1).add(vote2);
+                assert.equal((await testTopic.getTotalVoteBalance()).toString(), totalVoteBalance.toString());
+                assert.equal((await token.balanceOf(testTopic.address)).toString(), 
+                    (await testTopic.totalBotValue.call()).toString());
+            });
+
+            it('transfers the tokens for a single voting round', async function() {
+                // VotingOracle finalize result
+                let arbitrationEndBlock = await votingOracle.arbitrationEndBlock.call();
+                await blockHeightManager.mineTo(arbitrationEndBlock);
+                assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock.toNumber());
+                
+                await votingOracle.finalizeResult({ from: better1 });
+                assert.isTrue(await votingOracle.isFinished.call());
+                assert.equal((await testTopic.status.call()).toNumber(), statusCollection);
+                assert.equal((await testTopic.getFinalResult())[0].toNumber(), centralizedOracleResult);
+
+                // Winners withdraw
+                // oracle
+                var blockchainTokensWon = await testTopic.calculateBlockchainTokensWon({ from: oracle });
+                var blockchainTokenDiff = (await web3.eth.getBalance(testTopic.address)).sub(blockchainTokensWon);
+                var botTokensWon = await testTopic.calculateBotTokensWon({ from: oracle });
+                var botTokenDiff = (await token.balanceOf(testTopic.address)).sub(botTokensWon);
+                await testTopic.withdrawWinnings({ from: oracle });
+                assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), blockchainTokenDiff.toString());
+                assert.equal((await token.balanceOf(testTopic.address)).toString(), botTokenDiff.toString());
+                assert.equal((await testTopic.getBetBalances({ from: oracle }))[centralizedOracleResult], 0);
+                assert.equal((await testTopic.getVoteBalances({ from: oracle }))[centralizedOracleResult], 0);
+
+                // better3
+                blockchainTokensWon = await testTopic.calculateBlockchainTokensWon({ from: better3 });
+                blockchainTokenDiff = (await web3.eth.getBalance(testTopic.address)).sub(blockchainTokensWon);
+                botTokensWon = await testTopic.calculateBotTokensWon({ from: better3 });
+                botTokenDiff = (await token.balanceOf(testTopic.address)).sub(botTokensWon);
+                await testTopic.withdrawWinnings({ from: better3 });
+                assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), blockchainTokenDiff.toString());
+                assert.equal((await token.balanceOf(testTopic.address)).toString(), botTokenDiff.toString());
+                assert.equal((await testTopic.getBetBalances({ from: better3 }))[centralizedOracleResult], 0);
+                assert.equal((await testTopic.getVoteBalances({ from: better3 }))[centralizedOracleResult], 0);
+
+                // better4
+                blockchainTokensWon = await testTopic.calculateBlockchainTokensWon({ from: better4 });
+                blockchainTokenDiff = (await web3.eth.getBalance(testTopic.address)).sub(blockchainTokensWon);
+                botTokensWon = await testTopic.calculateBotTokensWon({ from: better4 });
+                botTokenDiff = (await token.balanceOf(testTopic.address)).sub(botTokensWon);
+                await testTopic.withdrawWinnings({ from: better4 });
+                assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), blockchainTokenDiff.toString());
+                assert.equal((await token.balanceOf(testTopic.address)).toString(), botTokenDiff.toString());
+                assert.equal((await testTopic.getBetBalances({ from: better4 }))[centralizedOracleResult], 0);
+                assert.equal((await testTopic.getVoteBalances({ from: better4 }))[centralizedOracleResult], 0);
+
+                // Losers withdraw
+                assert.equal(await testTopic.calculateBlockchainTokensWon({ from: better1 }), 0);
+                assert.equal(await testTopic.calculateBotTokensWon({ from: better1 }), 0);
+
+                assert.equal(await testTopic.calculateBlockchainTokensWon({ from: better2 }), 0);
+                assert.equal(await testTopic.calculateBotTokensWon({ from: better2 }), 0);
+            });
+
+            it('throws if status is not Status:Collection', async function() {
+                assert.notEqual((await testTopic.status.call()).toNumber(), statusCollection);
+                try {
+                    await testTopic.withdrawWinnings({ from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
+
+        describe('result is not set', async function() {
+            it('throws if result is not set', async function() {
+                assert.isFalse(await testTopic.resultSet.call());
+                try {
+                    await testTopic.withdrawWinnings({ from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
         });
     });
 
