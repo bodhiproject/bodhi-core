@@ -34,6 +34,7 @@ contract DecentralizedOracle is Oracle {
         require(!_eventName[0].isEmpty());
         require(!_eventResultNames[0].isEmpty());
         require(!_eventResultNames[1].isEmpty());
+        require(_numOfResults > 0);
         require(_lastResultIndex <= 9);
         require(_arbitrationEndBlock > block.number);
         require(_consensusThreshold > 0);
@@ -41,15 +42,7 @@ contract DecentralizedOracle is Oracle {
         eventAddress = _eventAddress;
         eventName = _eventName;
         eventResultNames = _eventResultNames;
-
-        for (uint i = 0; i < _eventResultNames.length; i++) {
-            if (!_eventResultNames[i].isEmpty()) {
-                numOfResults++;
-            } else {
-                break;
-            }
-        }
-
+        numOfResults = _numOfResults;
         lastResultIndex = _lastResultIndex;
         arbitrationEndBlock = _arbitrationEndBlock;
         consensusThreshold = _consensusThreshold;
@@ -73,7 +66,7 @@ contract DecentralizedOracle is Oracle {
         resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
         resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
 
-        totalStakeContributed = totalStakeContributed.add(_botAmount);
+        currentBalance = currentBalance.add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
         OracleResultVoted(msg.sender, _eventResultIndex, _botAmount);
@@ -133,7 +126,7 @@ contract DecentralizedOracle is Oracle {
         isFinished = true;
 
         uint8 finalResultIndex = getFinalResultIndex();
-        ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, totalStakeContributed);
+        ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, currentBalance);
         OracleResultSet(finalResultIndex);
     }
 }

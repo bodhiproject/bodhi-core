@@ -40,6 +40,7 @@ contract CentralizedOracle is Oracle {
         require(_numOfResults > 0);
         require(_bettingEndBlock > block.number);
         require(_resultSettingEndBlock > _bettingEndBlock);
+        require(_consensusThreshold > 0);
 
         oracle = _oracle;
         eventAddress = _eventAddress;

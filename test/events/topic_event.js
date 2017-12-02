@@ -764,7 +764,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getTotalVoteBalance()).toString(), totalVoteBalance.toString());
             assert.equal((await token.balanceOf(testTopic.address)).toString(), 
                 (await testTopic.totalBotValue.call()).toString());
-            assert.isAbove((await votingOracle.totalStakeContributed.call()).toNumber(), 
+            assert.isAbove((await votingOracle.currentBalance.call()).toNumber(), 
                 (await votingOracle.consensusThreshold.call()).toNumber());
             assert.isTrue(await votingOracle.isFinished.call());
         });

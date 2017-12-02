@@ -19,7 +19,7 @@ contract Oracle is Ownable {
     bytes32[10] internal eventResultNames;
     address public eventAddress;
     uint256 public consensusThreshold;
-    uint256 public totalStakeContributed;
+    uint256 public currentBalance;
     ResultBalance[10] internal resultBalances;
 
     // Events

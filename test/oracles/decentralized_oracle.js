@@ -322,7 +322,7 @@ contract('DecentralizedOracle', function(accounts) {
                 "participant1 should have 0 stakeContributed");
             assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
                 "participant1 should not have set result");
-            assert.equal(await oracle.totalStakeContributed.call(), 0, "totalStakeContributed should be 0");
+            assert.equal(await oracle.currentBalance.call(), 0);
 
             let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
             await token.approve(oracle.address, stakeContributed, { from: participant1 });
