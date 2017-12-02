@@ -1,44 +1,10 @@
 pragma solidity ^0.4.18;
 
+import "./Oracle.sol";
 import "../events/ITopicEvent.sol";
-import "../libs/Ownable.sol";
-import "../libs/SafeMath.sol";
-import "../libs/ByteUtils.sol";
 
-contract DecentralizedOracle is Ownable {
-    using ByteUtils for bytes32;
-    using SafeMath for uint256;
-
-    struct ResultBalance {
-        uint256 totalVoteBalance;
-        mapping(address => uint256) voteBalances;
-    }
-
-    bool public isFinished;
+contract DecentralizedOracle is Oracle {
     uint8 public lastResultIndex;
-    uint8 public numOfResults;
-    bytes32[10] private eventName;
-    bytes32[10] public eventResultNames;
-    address public eventAddress;
-    uint256 public arbitrationEndBlock;
-    uint256 public consensusThreshold;
-    uint256 public totalStakeContributed;
-    ResultBalance[10] private resultBalances;
-
-    // Modifiers
-    modifier validResultIndex(uint8 _resultIndex) {
-        require (_resultIndex <= numOfResults - 1);
-        _;
-    }
-
-    modifier isNotFinished() {
-        require(!isFinished);
-        _;
-    }
-
-    // Events
-    event OracleResultVoted(address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
-    event OracleResultSet(uint8 _resultIndex);
 
     /*
     * @notice Creates new DecentralizedOracle contract.
@@ -129,31 +95,6 @@ contract DecentralizedOracle is Ownable {
         isFinished = true;
 
         ITopicEvent(eventAddress).finalizeResult();
-    }
-
-    /*
-    * @notice Gets the Event name as a string.
-    * @return The name of the Event.
-    */
-    function getEventName() 
-        public 
-        view 
-        returns (string) 
-    {
-        return ByteUtils.toString(eventName);
-    }
-
-    /*
-    * @notice Gets the BOT amount voted by the DecentralizedOracle participant given the event result index.
-    * @return The amount of BOT voted.
-    */
-    function getVotedBalance(uint8 _eventResultIndex) 
-        public 
-        view 
-        validResultIndex(_eventResultIndex)
-        returns (uint256)
-    {
-        return resultBalances[_eventResultIndex].voteBalances[msg.sender];
     }
 
     /*
