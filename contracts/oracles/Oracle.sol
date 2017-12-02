@@ -16,7 +16,7 @@ contract Oracle is Ownable {
     bool public isFinished;
     uint8 public numOfResults;
     bytes32[10] internal eventName;
-    bytes32[10] public eventResultNames;
+    bytes32[10] internal eventResultNames;
     address public eventAddress;
     uint256 public arbitrationEndBlock;
     uint256 public consensusThreshold;
@@ -48,6 +48,18 @@ contract Oracle is Ownable {
         returns (string) 
     {
         return ByteUtils.toString(eventName);
+    }
+
+    /*
+    * @notice Gets the Event result names as an array of strings.
+    * @return An array of result name strings.
+    */
+    function getEventResultNames() 
+        public 
+        view 
+        returns (string[10]) 
+    {
+        return ByteUtils.toStringArray(eventResultNames);
     }
 
     /*

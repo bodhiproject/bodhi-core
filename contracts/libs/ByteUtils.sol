@@ -25,4 +25,12 @@ library ByteUtils {
 
         return string(trimmedBytes);
     }
+
+    function toStringArray(bytes32[10] _data) internal pure returns (string[10]) {
+        string[10] memory array;
+        for (uint8 i = 0; i < 10; i++) {
+            array[i] = string(_data[i]);
+        }
+        return array;
+    }
 }
