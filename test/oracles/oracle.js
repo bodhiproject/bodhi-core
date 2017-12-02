@@ -11,12 +11,15 @@ const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('Oracle', function(accounts) {
+    const blockHeightManager = new BlockHeightManager(web3);
+    const getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
+
     // These should match the decimals in the contract.
-    const nativeDecimals = 18;
+    const nativeDecimals = 8;
     const botDecimals = 8;
 
     const admin = accounts[0];
-    const oracleCreator = accounts[1];
+    const centralizedOracle = accounts[1];
     const participant1 = accounts[2];
     const participant2 = accounts[3];
     const participant3 = accounts[4];
@@ -25,59 +28,34 @@ contract('Oracle', function(accounts) {
     const participant6 = accounts[7];
     const botBalance = Utils.getBigNumberWithDecimals(20, botDecimals);
 
-    const blockHeightManager = new BlockHeightManager(web3);
+    const topicEventParams = {
+        _owner: owner,
+        _oracle: centralizedOracle,
+        _name: ["Who will be the next president i", "n the 2020 election?"],
+        _resultNames: ["first", "second", "third"],
+        _bettingEndBlock: 100,
+        _resultSettingEndBlock: 110
+    };
     const testOracleParams = {
         _owner: oracleCreator,
         _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ["first", "second", "third"],
-        _eventBettingEndBlock: 100,
+        _lastResultIndex: 100,
         _decisionEndBlock: 120,
         _arbitrationOptionEndBlock: 140
     };
-    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
 
-    let token;
+    let topicEvent;
     let oracle;
-    let addressManager;
-    let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
+    
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        token = await BodhiToken.deployed({ from: admin });
-
-        await token.mintByOwner(participant1, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant1)).toString(), botBalance.toString(), 
-            'participant1 balance does not match');
-
-        await token.mintByOwner(participant2, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant2)).toString(), botBalance.toString(), 
-            'participant2 balance does not match');
-
-        await token.mintByOwner(participant3, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant3)).toString(), botBalance.toString(), 
-            'participant3 balance does not match');
-
-        await token.mintByOwner(participant4, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant4)).toString(), botBalance.toString(), 
-            'participant4 balance does not match');
-
-        await token.mintByOwner(participant5, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant5)).toString(), botBalance.toString(), 
-            'participant5 balance does not match');
-
-        await token.mintByOwner(participant6, botBalance, { from: admin });
-        assert.equal((await token.balanceOf(participant6)).toString(), botBalance.toString(), 
-            'participant6 balance does not match');
-        
-        addressManager = await AddressManager.deployed({ from: admin });
-        await addressManager.setBodhiTokenAddress(token.address, { from: admin });
-        assert.equal(await addressManager.bodhiTokenAddress.call(), token.address, 'BodhiToken address does not match');
-
+        testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: owner });
         oracle = await Oracle.new(...Object.values(testOracleParams), addressManager.address, { from: oracleCreator });
-        await oracle.addBaseReward({ from: oracleCreator, value: baseReward });
     });
 
     describe("constructor", async function() {
