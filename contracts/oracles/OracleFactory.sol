@@ -1,12 +1,12 @@
 pragma solidity ^0.4.18;
 
 import "./IOracleFactory.sol";
-import "./Oracle.sol";
+import "./DecentralizedOracle.sol";
 import "../storage/IAddressManager.sol";
 
 contract OracleFactory is IOracleFactory {
     address private addressManager;
-    mapping(bytes32 => Oracle) public oracles;
+    mapping(bytes32 => DecentralizedOracle) public oracles;
 
     // Events
     event OracleCreated(address indexed _creator, address indexed _oracleAddress, address indexed _eventAddress,
@@ -34,11 +34,11 @@ contract OracleFactory is IOracleFactory {
     {
         bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
             _arbitrationEndBlock, _consensusThreshold);
-        // Oracle should not exist yet
+        // DecentralizedOracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
 
-        Oracle oracle = new Oracle(msg.sender, _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold);
+        DecentralizedOracle oracle = new DecentralizedOracle(msg.sender, _eventAddress, _eventName, _eventResultNames, 
+            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = oracle;
 
         OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 

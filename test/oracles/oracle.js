@@ -1,5 +1,5 @@
 const web3 = global.web3;
-const Oracle = artifacts.require("./Oracle.sol");
+const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const assert = require('chai').assert;
@@ -10,7 +10,7 @@ const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
-contract('Oracle', function(accounts) {
+contract('DecentralizedOracle', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
     const getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
@@ -29,7 +29,7 @@ contract('Oracle', function(accounts) {
     const botBalance = Utils.getBigNumberWithDecimals(20, botDecimals);
 
     const topicEventParams = {
-        _owner: owner,
+        _owner: admin,
         _oracle: centralizedOracle,
         _name: ["Who will be the next president i", "n the 2020 election?"],
         _resultNames: ["first", "second", "third"],
@@ -37,7 +37,7 @@ contract('Oracle', function(accounts) {
         _resultSettingEndBlock: 110
     };
     const testOracleParams = {
-        _owner: oracleCreator,
+        _owner: admin,
         _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ["first", "second", "third"],
         _lastResultIndex: 100,
@@ -54,12 +54,13 @@ contract('Oracle', function(accounts) {
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: owner });
-        oracle = await Oracle.new(...Object.values(testOracleParams), addressManager.address, { from: oracleCreator });
+        testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: admin });
+        oracle = await DecentralizedOracle.new(...Object.values(testOracleParams), addressManager.address, 
+            { from: admin });
     });
 
     describe("constructor", async function() {
-        it("inits the Oracle with the correct values", async function() {
+        it("inits the DecentralizedOracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
             assert.equal(await oracle.getEventName(), testOracleParams._eventName.join(''), "eventName does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
@@ -83,9 +84,9 @@ contract('Oracle', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
-            oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             assert.equal(await oracle.getEventName(), name.join(''), 'eventName does not match');
         });
@@ -98,9 +99,9 @@ contract('Oracle', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
 
-            oracle = await Oracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
                 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
@@ -112,9 +113,9 @@ contract('Oracle', function(accounts) {
         it('should allow a space as the last character of a name array item', async function() {
             let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
-            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
         });
@@ -123,18 +124,18 @@ contract('Oracle', function(accounts) {
             async function() {
             let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
-            oracle = await Oracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
         });
 
         it('can handle using all 10 eventResultNames', async function() {
-            oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
                 testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
@@ -151,9 +152,9 @@ contract('Oracle', function(accounts) {
         it('should only set the first 10 eventResultNames', async function() {
             let eventResultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", 
                 "ninth", "ten", "eleven"];
-            oracle = await Oracle.new(testOracleParams._owner, testOracleParams._eventName, 
+            oracle = await DecentralizedOracle.new(testOracleParams._owner, testOracleParams._eventName, 
                 eventResultNames, testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: oracleCreator });
+                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
 
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
@@ -176,7 +177,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the eventName is empty", async function() {
             let params = {
-                _owner: oracleCreator,
+                _owner: admin,
                 _eventName: "",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -186,7 +187,7 @@ contract('Oracle', function(accounts) {
             assert.equal(0, params._eventName.length, "eventName.length should be 0");
 
             try {
-                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
+                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -195,7 +196,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the eventResultNames array is not greater than 1", async function() {
             let params = {
-                _owner: oracleCreator,
+                _owner: admin,
                 _eventName: "test",
                 _eventResultNames: ["first"],
                 _eventBettingEndBlock: 100,
@@ -204,7 +205,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
+                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -213,7 +214,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the decisionEndBlock is not greater than eventBettingEndBlock", async function() {
             let params = {
-                _owner: oracleCreator,
+                _owner: admin,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -222,7 +223,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
+                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -231,7 +232,7 @@ contract('Oracle', function(accounts) {
 
         it("throws if the arbitrationOptionEndBlock is not greater than decisionEndBlock", async function() {
             let params = {
-                _owner: oracleCreator,
+                _owner: admin,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -240,7 +241,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), addressManager.address, { from: oracleCreator });
+                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -249,7 +250,7 @@ contract('Oracle', function(accounts) {
         
         it('throws if the AddressManager address is invalid', async function() {
             let params = {
-                _owner: oracleCreator,
+                _owner: admin,
                 _eventName: "test",
                 _eventResultNames: ["first", "second", "third"],
                 _eventBettingEndBlock: 100,
@@ -259,7 +260,7 @@ contract('Oracle', function(accounts) {
             };
 
             try {
-                await Oracle.new(...Object.values(params), { from: oracleCreator });
+                await DecentralizedOracle.new(...Object.values(params), { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -269,12 +270,12 @@ contract('Oracle', function(accounts) {
 
     describe("fallback function", async function() {
         it("throws upon calling", async function() {
-            let o = await Oracle.new(...Object.values(testOracleParams), addressManager.address, 
-                { from: oracleCreator });
+            let o = await DecentralizedOracle.new(...Object.values(testOracleParams), addressManager.address, 
+                { from: admin });
             try {
                 await ethAsync.sendTransactionAsync({
                     to: o.address,
-                    from: oracleCreator,
+                    from: admin,
                     value: baseReward
                 });
                 assert.fail();
@@ -296,11 +297,11 @@ contract('Oracle', function(accounts) {
                 web3.toBigNumber(await oracle.minBaseReward.call()).toNumber(), 
                 "Invalid minBaseReward should be below minBaseReward");
 
-            let o = await Oracle.new(...Object.values(testOracleParams), addressManager.address, 
-                { from: oracleCreator });
+            let o = await DecentralizedOracle.new(...Object.values(testOracleParams), addressManager.address, 
+                { from: admin });
 
             try {
-                await o.addBaseReward({ from: oracleCreator, value: invalidMinBaseReward });
+                await o.addBaseReward({ from: admin, value: invalidMinBaseReward });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);

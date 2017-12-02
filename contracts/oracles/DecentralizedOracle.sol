@@ -5,8 +5,7 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 
-/// @title Base Oracle contract
-contract Oracle is Ownable {
+contract DecentralizedOracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -42,16 +41,16 @@ contract Oracle is Ownable {
     event OracleResultSet(uint8 _resultIndex);
 
     /*
-    * @notice Creates new Oracle contract.
+    * @notice Creates new DecentralizedOracle contract.
     * @param _owner The address of the owner.
-    * @param _eventAddress The address of the Event this Oracle will arbitrate.
-    * @param _eventName The name of the Event this Oracle will arbitrate.
+    * @param _eventAddress The address of the Event this DecentralizedOracle will arbitrate.
+    * @param _eventName The name of the Event this DecentralizedOracle will arbitrate.
     * @param _eventResultNames The result options of the Event.
-    * @param _lastResultIndex The last result index set by the Oracle.
+    * @param _lastResultIndex The last result index set by the DecentralizedOracle.
     * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
-    * @param _consensusThreshold The amount of BOT that needs to be reached in order for this Oracle to be valid.
+    * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
     */
-    function Oracle(
+    function DecentralizedOracle(
         address _owner,
         address _eventAddress,
         bytes32[10] _eventName,
@@ -145,7 +144,7 @@ contract Oracle is Ownable {
     }
 
     /*
-    * @notice Gets the BOT amount voted by the Oracle participant given the event result index.
+    * @notice Gets the BOT amount voted by the DecentralizedOracle participant given the event result index.
     * @return The amount of BOT voted.
     */
     function getVotedBalance(uint8 _eventResultIndex) 
@@ -158,7 +157,7 @@ contract Oracle is Ownable {
     }
 
     /*
-    * @notice Gets the final result index set by the Oracle participants based on majority vote.
+    * @notice Gets the final result index set by the DecentralizedOracle participants based on majority vote.
     * @return The index of the final result.
     */
     function getFinalResultIndex() 
