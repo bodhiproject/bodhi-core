@@ -486,7 +486,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
-        address newOracle = IOracleFactory(oracleFactory).createOracle(address(this), name, resultNames, 
+        address newOracle = IOracleFactory(oracleFactory).createOracle(address(this), name, resultNames, numOfResults,
             finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));

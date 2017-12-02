@@ -10,8 +10,8 @@ contract OracleFactory is IOracleFactory {
 
     // Events
     event OracleCreated(address indexed _creator, address indexed _oracleAddress, address indexed _eventAddress,
-        bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _lastResultIndex, uint256 _arbitrationEndBlock, 
-        uint256 _consensusThreshold);
+        bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _numOfResults, uint8 _lastResultIndex, 
+        uint256 _arbitrationEndBlock, uint256 _consensusThreshold);
 
     /// @notice Creates new OracleFactory contract.
     /// @param _addressManager The address of the AddressManager contract.
@@ -26,23 +26,24 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
+        uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
         uint256 _consensusThreshold)
         public
         returns (address)
     {
-        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold);
+        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _numOfResults, 
+            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         // DecentralizedOracle should not exist yet
         require(address(oracles[oracleHash]) == 0);
 
         DecentralizedOracle oracle = new DecentralizedOracle(msg.sender, _eventAddress, _eventName, _eventResultNames, 
-            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+            _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = oracle;
 
-        OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold);
+        OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
+            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
 
         return address(oracle);
     }
@@ -51,6 +52,7 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
+        uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
         uint256 _consensusThreshold)
@@ -58,8 +60,8 @@ contract OracleFactory is IOracleFactory {
         constant
         returns (bool)
     {
-        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold);
+        bytes32 oracleHash = getOracleHash(_eventAddress, _eventName, _eventResultNames, _numOfResults, 
+            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         return address(oracles[oracleHash]) != 0;
     }
 
@@ -67,6 +69,7 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
+        uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
         uint256 _consensusThreshold) 
@@ -74,7 +77,7 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _eventName, _eventResultNames, _lastResultIndex, _arbitrationEndBlock, 
-            _consensusThreshold);
+        return keccak256(_eventAddress, _eventName, _eventResultNames, _numOfResults, _lastResultIndex, 
+            _arbitrationEndBlock, _consensusThreshold);
     }
 }
