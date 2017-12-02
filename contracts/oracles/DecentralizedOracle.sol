@@ -5,13 +5,15 @@ import "../events/ITopicEvent.sol";
 
 contract DecentralizedOracle is Oracle {
     uint8 public lastResultIndex;
+    uint256 public arbitrationEndBlock;
 
     /*
     * @notice Creates new DecentralizedOracle contract.
     * @param _owner The address of the owner.
-    * @param _eventAddress The address of the Event this DecentralizedOracle will arbitrate.
-    * @param _eventName The name of the Event this DecentralizedOracle will arbitrate.
+    * @param _eventAddress The address of the Event.
+    * @param _eventName The name of the Event.
     * @param _eventResultNames The result options of the Event.
+    * @param _numOfResults The number of result options.
     * @param _lastResultIndex The last result index set by the DecentralizedOracle.
     * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
     * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
@@ -21,6 +23,7 @@ contract DecentralizedOracle is Oracle {
         address _eventAddress,
         bytes32[10] _eventName,
         bytes32[10] _eventResultNames,
+        uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
         uint256 _consensusThreshold)

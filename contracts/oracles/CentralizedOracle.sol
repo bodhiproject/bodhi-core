@@ -1,7 +1,11 @@
 pragma solidity ^0.4.18;
 
+import "./Oracle.sol";
+
 contract CentralizedOracle is Oracle {
     address public oracle;
+    uint256 public bettingEndBlock;
+    uint256 public resultSettingEndBlock;
 
     /*
     * @notice Creates new CentralizedOracle contract.
@@ -10,8 +14,10 @@ contract CentralizedOracle is Oracle {
     * @param _eventAddress The address of the Event.
     * @param _eventName The name of the Event.
     * @param _eventResultNames The result options of the Event.
+    * @param _numOfResults The number of result options.
     * @param _bettingEndBlock The block when betting will end.
     * @param _resultSettingEndBlock The last block the Centralized Oracle can set the result.
+    * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
     function CentralizedOracle(
         address _owner,
@@ -21,7 +27,8 @@ contract CentralizedOracle is Oracle {
         bytes32[10] _eventResultNames,
         uint8 _numOfResults,
         uint256 _bettingEndBlock,
-        uint256 _resultSettingEndBlock)
+        uint256 _resultSettingEndBlock,
+        uint256 _consensusThreshold)
         Ownable(_owner)
         public
         validAddress(_oracle)
@@ -41,5 +48,6 @@ contract CentralizedOracle is Oracle {
         numOfResults = _numOfResults;
         bettingEndBlock = _bettingEndBlock;
         resultSettingEndBlock = _resultSettingEndBlock;
+        consensusThreshold = _consensusThreshold;
     }
 }
