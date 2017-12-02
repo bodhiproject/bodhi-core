@@ -54,12 +54,13 @@ contract Oracle is Ownable {
     * @notice Gets the Event result names as an array of strings.
     * @return An array of result name strings.
     */
-    function getEventResultNames() 
+    function getEventResultName(uint8 _eventResultIndex) 
         public 
         view 
-        returns (string[10]) 
+        validResultIndex(_eventResultIndex)
+        returns (string) 
     {
-        return ByteUtils.toStringArray(eventResultNames);
+        return ByteUtils.toString(eventResultNames[_eventResultIndex]);
     }
 
     /*
