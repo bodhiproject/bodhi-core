@@ -14,8 +14,9 @@ contract Oracle is Ownable {
         mapping(address => uint256) balances;
     }
 
-    bool public isFinished;
+    bool public finished;
     uint8 public numOfResults;
+    uint8 internal resultIndex;
     bytes32[10] internal eventName;
     bytes32[10] internal eventResultNames;
     address public eventAddress;
@@ -34,7 +35,12 @@ contract Oracle is Ownable {
     }
 
     modifier isNotFinished() {
-        require(!isFinished);
+        require(!finished);
+        _;
+    }
+
+    modifier isFinished() {
+        require(finished);
         _;
     }
 
@@ -76,5 +82,16 @@ contract Oracle is Ownable {
         return resultBalances[_eventResultIndex].balances[msg.sender];
     }
 
-    function getFinalResultIndex() public view returns (uint8);
+    /*
+    * @notice Gets the Oracle result index if the result is set.
+    * @return The index of the Oracle result.
+    */
+    function getResultIndex()
+        public 
+        view 
+        isFinished()
+        returns (uint8) 
+    {
+        return resultIndex;
+    }
 }

@@ -89,45 +89,29 @@ contract DecentralizedOracle is Oracle {
     {
         require(block.number >= arbitrationEndBlock);
 
-        isFinished = true;
+        finished = true;
 
         ITopicEvent(eventAddress).finalizeResult();
     }
 
     /*
-    * @notice Gets the final result index set by the DecentralizedOracle participants based on majority vote.
-    * @return The index of the final result.
+    * @dev DecentralizedOracle is validated and set the result of the Event.
     */
-    function getFinalResultIndex() 
-        public 
-        view 
-        returns (uint8) 
+    function setResult() 
+        private 
     {
-        require(isFinished);
+        finished = true;
 
-        uint8 finalResultIndex = 0;
         uint256 winningVoteBalance = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             uint256 totalVoteBalance = resultBalances[i].total;
             if (totalVoteBalance > winningVoteBalance) {
                 winningVoteBalance = totalVoteBalance;
-                finalResultIndex = i;
+                resultIndex = i;
             }
         }
 
-        return finalResultIndex;
-    }
-
-    /*
-    * @dev Sets the result in the Event.
-    */
-    function setResult() 
-        private 
-    {
-        isFinished = true;
-
-        uint8 finalResultIndex = getFinalResultIndex();
-        ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, currentBalance);
-        OracleResultSet(oracleType, finalResultIndex);
+        ITopicEvent(eventAddress).votingOracleSetResult(resultIndex, currentBalance);
+        OracleResultSet(oracleType, resultIndex);
     }
 }

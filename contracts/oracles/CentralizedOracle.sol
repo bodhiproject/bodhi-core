@@ -95,7 +95,8 @@ contract CentralizedOracle is Oracle {
         require(block.number < resultSettingEndBlock);
         require(_botAmount >= consensusThreshold);
 
-        isFinished = true;
+        finished = true;
+        resultIndex = _resultIndex;
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(_resultIndex, _botAmount, consensusThreshold);
         OracleResultSet(oracleType, _resultIndex);
@@ -112,20 +113,20 @@ contract CentralizedOracle is Oracle {
     {
         require(block.number >= resultSettingEndBlock);
 
-        isFinished = true;
+        finished = true;
 
         // Calculates the winning result index based on bet balances
         uint256 winningIndexAmount = 0;
-        uint8 winningResultIndex = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             uint256 totalBetBalance = resultBalances[i].total;
             if (totalBetBalance > winningIndexAmount) {
                 winningIndexAmount = totalBetBalance;
-                winningResultIndex = i;
+                resultIndex = i;
             }
         }
 
-        ITopicEvent(eventAddress).invalidateCentralizedOracle(winningResultIndex);
-        OracleResultSet(oracleType, winningResultIndex);
+
+        ITopicEvent(eventAddress).invalidateCentralizedOracle(resultIndex);
+        OracleResultSet(oracleType, resultIndex);
     }
 }

@@ -123,7 +123,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
 
-        // TODO: create CentralizedOracle
+        createCentralizedOracle(_bettingEndBlock, _resultSettingEndBlock);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -455,6 +455,12 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return totalContribution.mul(totalLosingVotes).div(totalWinningContribution).add(voteBalance);
     }
 
+    function createCentralizedOracle(uint256 _bettingEndBlock, uint256 _resultSettingEndBlock)
+        private
+    {
+
+    }
+
     /*
     * @dev Creates a VotingOracle for this Event.
     * @return Flag indicating successful creation of VotingOracle.
@@ -466,8 +472,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
-        address newOracle = IOracleFactory(oracleFactory).createOracle(address(this), name, resultNames, numOfResults,
-            finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
+        address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), name, resultNames, 
+            numOfResults, finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({
