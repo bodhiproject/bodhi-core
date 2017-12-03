@@ -14,8 +14,6 @@ contract Oracle is Ownable {
         mapping(address => uint256) balances;
     }
 
-    uint8 public constant type;
-
     bool public isFinished;
     uint8 public numOfResults;
     bytes32[10] internal eventName;
@@ -26,7 +24,7 @@ contract Oracle is Ownable {
     ResultBalance[10] internal resultBalances;
 
     // Events
-    event OracleResultVoted(address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
+    event OracleResultVoted(uint8 _oracleType, address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
     event OracleResultSet(uint8 _oracleType, uint8 _resultIndex);
 
     // Modifiers
@@ -75,7 +73,7 @@ contract Oracle is Ownable {
         validResultIndex(_eventResultIndex)
         returns (uint256)
     {
-        return resultBalances[_eventResultIndex].voteBalances[msg.sender];
+        return resultBalances[_eventResultIndex].balances[msg.sender];
     }
 
     function getFinalResultIndex() public view returns (uint8);

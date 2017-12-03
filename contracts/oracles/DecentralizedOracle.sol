@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 import "./Oracle.sol";
 
 contract DecentralizedOracle is Oracle {
-    uint8 public constant type = 1;
+    uint8 public constant oracleType = 1;
 
     uint8 public lastResultIndex;
     uint256 public arbitrationEndBlock;
@@ -64,15 +64,15 @@ contract DecentralizedOracle is Oracle {
         require(_eventResultIndex != lastResultIndex);
 
         ResultBalance storage resultBalance = resultBalances[_eventResultIndex];
-        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
-        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
+        resultBalance.total = resultBalance.total.add(_botAmount);
+        resultBalance.balances[msg.sender] = resultBalance.balances[msg.sender].add(_botAmount);
 
         currentBalance = currentBalance.add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
-        OracleResultVoted(msg.sender, _eventResultIndex, _botAmount);
+        OracleResultVoted(oracleType, msg.sender, _eventResultIndex, _botAmount);
 
-        if (resultBalance.totalVoteBalance >= consensusThreshold) {
+        if (resultBalance.total >= consensusThreshold) {
             setResult();
         }
     }
@@ -108,7 +108,7 @@ contract DecentralizedOracle is Oracle {
         uint8 finalResultIndex = 0;
         uint256 winningVoteBalance = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            uint256 totalVoteBalance = resultBalances[i].totalVoteBalance;
+            uint256 totalVoteBalance = resultBalances[i].total;
             if (totalVoteBalance > winningVoteBalance) {
                 winningVoteBalance = totalVoteBalance;
                 finalResultIndex = i;
@@ -128,6 +128,6 @@ contract DecentralizedOracle is Oracle {
 
         uint8 finalResultIndex = getFinalResultIndex();
         ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, currentBalance);
-        OracleResultSet(type, finalResultIndex);
+        OracleResultSet(oracleType, finalResultIndex);
     }
 }
