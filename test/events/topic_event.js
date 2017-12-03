@@ -311,7 +311,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("bet()", async function() {
+    describe"bet()", async function() {
         it("allows users to bet", async function() {
             let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
             let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
@@ -328,16 +328,9 @@ contract('TopicEvent', function(accounts) {
             assert.equal(betBalances[betResultIndex].toString(), betAmount.toString());
         });
 
-        it('throws on and invalid better address', async function() {
-            try {
-                await centralizedOracle.bet(0, { from: 0, value: 1 });
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-        });
-
         it('throws on an invalid result index', async function() {
+            assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
+
             try {
                 await centralizedOracle.bet(3, { from: better1, value: 1 });
                 assert.fail();
@@ -347,8 +340,10 @@ contract('TopicEvent', function(accounts) {
         });
 
         it('throws if receiving from an address that is not the CentralizedOracle contract', async function() {
+            assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
+
             try {
-                await testTopic.bet(0, { from: better1, value: 1 });
+                await testTopic.bet(better1, 0, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
