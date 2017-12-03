@@ -51,22 +51,16 @@ contract('TopicEvent', function(accounts) {
 
     beforeEach(async function() {
         token = await BodhiToken.deployed({ from: admin });
-
         await token.mintByOwner(owner, botBalance, { from: admin });
         assert.equal((await token.balanceOf(owner)).toString(), botBalance.toString());
-
         await token.mintByOwner(oracle, botBalance, { from: admin });
         assert.equal((await token.balanceOf(oracle)).toString(), botBalance.toString());
-
         await token.mintByOwner(better1, botBalance, { from: admin });
         assert.equal((await token.balanceOf(better1)).toString(), botBalance.toString());
-
         await token.mintByOwner(better2, botBalance, { from: admin });
         assert.equal((await token.balanceOf(better2)).toString(), botBalance.toString());
-
         await token.mintByOwner(better3, botBalance, { from: admin });
         assert.equal((await token.balanceOf(better3)).toString(), botBalance.toString());
-
         await token.mintByOwner(better4, botBalance, { from: admin });
         assert.equal((await token.balanceOf(better4)).toString(), botBalance.toString());
 
@@ -323,23 +317,38 @@ contract('TopicEvent', function(accounts) {
             let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
             let betResultIndex = 0;
 
-            await testTopic.bet(betResultIndex, { from: oracle, value: betAmount });
+            await centralizedOracle.bet(betResultIndex, { from: better1, value: betAmount });
             let newBalance = web3.eth.getBalance(testTopic.address).toNumber();
             let difference = newBalance - initialBalance;
 
             assert.equal(difference, betAmount);
             assert.equal((await testTopic.getTotalBetBalance()).toString(), betAmount.toString());
 
-            let betBalances = await testTopic.getBetBalances({ from: oracle });
+            let betBalances = await testTopic.getBetBalances({ from: better1 });
             assert.equal(betBalances[betResultIndex].toString(), betAmount.toString());
         });
-     
-        it("does not allow betting if the bettingEndBlock has been reached", async function() {
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
+        it('throws on and invalid better address', async function() {
             try {
-                await testTopic.bet(1, { from: oracle, value: 1 })
+                await centralizedOracle.bet(0, { from: 0, value: 1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws on an invalid result index', async function() {
+            try {
+                await centralizedOracle.bet(3, { from: better1, value: 1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it('throws if receiving from an address that is not the CentralizedOracle contract', async function() {
+            try {
+                await testTopic.bet(0, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -350,7 +359,7 @@ contract('TopicEvent', function(accounts) {
             assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             try {
-                await testTopic.bet(1, { from: oracle, value: 0 })
+                await centralizedOracle.bet(0, { from: better1, value: 0 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);

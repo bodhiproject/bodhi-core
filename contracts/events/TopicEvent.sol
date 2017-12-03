@@ -60,6 +60,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier fromCentralizedOracle() {
+        require(msg.sender == oracles[0].oracleAddress);
+        _;
+    }
+
     modifier resultIsSet() {
         require(resultSet);
         _;
@@ -128,18 +133,21 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     /*
     * @notice Allows betting on a result using the blockchain token.
+    * @param _better The address that is placing the bet.
     * @param _resultIndex The index of result to bet on.
     */
-    function bet(uint8 _resultIndex) 
+    function bet(address _better, uint8 _resultIndex) 
         external 
         payable
+        validAddress(_better)
         validResultIndex(_resultIndex)
+        fromCentralizedOracle()
     {
         require(msg.value > 0);
 
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
-        resultBalance.betBalances[msg.sender] = resultBalance.betBalances[msg.sender].add(msg.value);
+        resultBalance.betBalances[_better] = resultBalance.betBalances[_better].add(msg.value);
     }
 
     /* 
@@ -150,8 +158,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     function centralizedOracleSetResult(uint8 _resultIndex, uint256 _botAmount, uint256 _consensusThreshold)
         external 
         validResultIndex(_resultIndex)
+        fromCentralizedOracle()
     {
-        require(msg.sender == oracles[0].oracleAddress);
         require(!oracles[0].didSetResult);
         require(_botAmount >= _consensusThreshold);
         require(token.allowance(msg.sender, address(this)) >= _consensusThreshold);
