@@ -4,6 +4,7 @@ const bluebird = require('bluebird');
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const TopicEvent = artifacts.require("./TopicEvent.sol");
+const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
@@ -41,6 +42,7 @@ contract('TopicEvent', function(accounts) {
     let token;
     let addressManager;
     let testTopic;
+    let centralizedOracle;
     let votingOracle;
     let getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
@@ -73,19 +75,28 @@ contract('TopicEvent', function(accounts) {
         assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
         testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: owner });
+        centralizedOracle = await CentralizedOracle.at((await testTopic.getOracle(0))[0]);
     });
 
     describe("constructor", async function() {
         it("initializes all the values", async function() {
             assert.equal(await testTopic.owner.call(), testTopicParams._owner);
-            assert.equal((await testTopic.getOracle(0))[0], testTopicParams._oracle);
             assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), testTopicParams._resultNames[0]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), testTopicParams._resultNames[1]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal((await testTopic.numOfResults.call()).toNumber(), 3);
-            assert.equal(await testTopic.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
-            assert.equal(await testTopic.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
+
+            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
+            assert.equal(await centralizedOracle.getEventName(), testTopicParams._name.join(''));
+            assert.equal(await centralizedOracle.getEventResultName(0), testTopicParams._resultNames[0]);
+            assert.equal(await centralizedOracle.getEventResultName(1), testTopicParams._resultNames[1]);
+            assert.equal(await centralizedOracle.getEventResultName(2), testTopicParams._resultNames[2]);
+            assert.equal(await centralizedOracle.numOfResults.call(), 3);
+            assert.equal(await centralizedOracle.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
+            assert.equal(await centralizedOracle.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
+            assert.equal((await centralizedOracle.consensusThreshold.call()).toString(), 
+                (await addressManager.startingOracleThreshold.call()).toString());
         });
 
         it('can handle a long name using all 10 array slots', async function() {

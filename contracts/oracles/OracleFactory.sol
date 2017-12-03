@@ -10,7 +10,10 @@ contract OracleFactory is IOracleFactory {
     mapping(bytes32 => address) public oracles;
 
     // Events
-    event OracleCreated(address indexed _creator, address indexed _oracleAddress, address indexed _eventAddress,
+    event CentralizedOracleCreated(address indexed _contractAddress, address indexed _oracle, 
+        address indexed _eventAddress, bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _numOfResults,
+        uint256 _bettingEndBlock, uint256 _resultSettingEndBlock, uint256 _consensusThreshold);
+    event DecentralizedOracleCreated(address indexed _contractAddress, address indexed _eventAddress,
         bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _numOfResults, uint8 _lastResultIndex, 
         uint256 _arbitrationEndBlock, uint256 _consensusThreshold);
 
@@ -46,9 +49,8 @@ contract OracleFactory is IOracleFactory {
             _eventResultNames, _numOfResults, _bettingEndBlock, _resultSettingEndBlock, _consensusThreshold);
         oracles[oracleHash] = address(oracle);
 
-        // TODO: different event for CentralizedOracle?
-        // OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
-        //     _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+        CentralizedOracleCreated(address(oracle), _oracle, _eventAddress, _eventName, _eventResultNames, _numOfResults, 
+            _bettingEndBlock, _resultSettingEndBlock, _consensusThreshold);
 
         return address(oracle);
     }
@@ -73,7 +75,7 @@ contract OracleFactory is IOracleFactory {
             _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = address(oracle);
 
-        OracleCreated(msg.sender, address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
+        DecentralizedOracleCreated(address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
             _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
 
         return address(oracle);
