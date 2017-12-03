@@ -82,7 +82,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     */
     function TopicEvent(
         address _owner,
-        address _oracle,
+        address _centralizedOracle,
         bytes32[10] _name,
         bytes32[10] _resultNames,
         uint256 _bettingEndBlock,
@@ -90,7 +90,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         address _addressManager)
         Ownable(_owner)
         public
-        validAddress(_oracle)
+        validAddress(_centralizedOracle)
         validAddress(_addressManager)
     {
         require(!_name[0].isEmpty());
@@ -100,11 +100,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(_resultSettingEndBlock > _bettingEndBlock);
 
         owner = _owner;
-        oracles.push(Oracle({
-            oracleAddress: _oracle,
-            didSetResult: false
-            }));
-        
         name = _name;
         resultNames = _resultNames;
 
@@ -123,7 +118,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
 
-        createCentralizedOracle(_bettingEndBlock, _resultSettingEndBlock);
+        createCentralizedOracle(_centralizedOracle, _bettingEndBlock, _resultSettingEndBlock);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -455,10 +450,23 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         return totalContribution.mul(totalLosingVotes).div(totalWinningContribution).add(voteBalance);
     }
 
-    function createCentralizedOracle(uint256 _bettingEndBlock, uint256 _resultSettingEndBlock)
+    function createCentralizedOracle(
+        address _centralizedOracle, 
+        uint256 _bettingEndBlock, 
+        uint256 _resultSettingEndBlock)
         private
     {
-
+        uint16 index = addressManager.getLastOracleFactoryIndex();
+        address oracleFactory = addressManager.getOracleFactoryAddress(index);
+        address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(_centralizedOracle, address(this), 
+            name, resultNames, numOfResults, _bettingEndBlock, _resultSettingEndBlock, 
+            addressManager.startingOracleThreshold());
+        
+        assert(newOracle != address(0));
+        oracles.push(Oracle({
+            oracleAddress: newOracle,
+            didSetResult: false
+            }));
     }
 
     /*
