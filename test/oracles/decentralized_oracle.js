@@ -1,13 +1,13 @@
 const web3 = global.web3;
-const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
-const AddressManager = artifacts.require("./storage/AddressManager.sol");
-const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const assert = require('chai').assert;
 const bluebird = require('bluebird');
+const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
+const AddressManager = artifacts.require("./storage/AddressManager.sol");
+const TopicEvent = artifacts.require("./events/TopicEvent.sol");
+const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
-
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('DecentralizedOracle', function(accounts) {
@@ -40,21 +40,21 @@ contract('DecentralizedOracle', function(accounts) {
         _owner: admin,
         _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ["first", "second", "third"],
-        _lastResultIndex: 100,
-        _decisionEndBlock: 120,
-        _arbitrationOptionEndBlock: 140
+        _numOfResults: 3,
+        _lastResultIndex: 2,
+        _arbitrationEndBlock: 120,
+        _consensusThreshold: Utils.getBigNumberWithDecimals(110, botDecimals)
     };
     const validVotingBlock = testOracleParams._eventBettingEndBlock;
 
     let topicEvent;
     let oracle;
-    
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
 
     beforeEach(async function() {
-        testTopic = await TopicEvent.new(...Object.values(testTopicParams), addressManager.address, { from: admin });
+        topicEvent = await TopicEvent.new(...Object.values(topicEventParams), addressManager.address, { from: admin });
         oracle = await DecentralizedOracle.new(...Object.values(testOracleParams), addressManager.address, 
             { from: admin });
     });
