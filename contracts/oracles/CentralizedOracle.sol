@@ -98,7 +98,7 @@ contract CentralizedOracle is Oracle {
         finished = true;
         resultIndex = _resultIndex;
 
-        ITopicEvent(eventAddress).centralizedOracleSetResult(_resultIndex, _botAmount, consensusThreshold);
+        ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, _botAmount, consensusThreshold);
         OracleResultSet(oracleType, _resultIndex);
     }
 
