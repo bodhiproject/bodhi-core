@@ -41,18 +41,15 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     uint8 private finalResultIndex;
     uint8 public numOfResults;
     Status public status = Status.Betting;
-    uint256 public bettingEndBlock;
-    uint256 public resultSettingEndBlock;
-    uint256 public totalBotValue;
     bytes32[10] private name;
     bytes32[10] public resultNames;
+    uint256 public totalBotValue;
     ResultBalance[10] private balances;
     IAddressManager private addressManager;
     ERC20 private token;
     Oracle[] public oracles;
 
     // Events
-    event BetAccepted(address _better, uint8 _resultIndex, uint256 _betAmount, uint256 _betBalance);
     event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
     event WinningsWithdrawn(address indexed _winner, uint256 _blockchainTokenWon, uint256 _botTokenWon);
@@ -123,9 +120,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }
         }
 
-        bettingEndBlock = _bettingEndBlock;
-        resultSettingEndBlock = _resultSettingEndBlock;
-
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
 
@@ -146,14 +140,61 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         payable
         validResultIndex(_resultIndex)
     {
-        require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
         resultBalance.betBalances[msg.sender] = resultBalance.betBalances[msg.sender].add(msg.value);
+    }
 
-        BetAccepted(msg.sender, _resultIndex, msg.value, balances[_resultIndex].betBalances[msg.sender]);
+    /* 
+    * @dev The CentralizedOracle should call setResult() from the CentralizedOracle contract. 
+    * @param _resultIndex The index of the result to set.
+    * @param _botAmount The amount of BOT to transfer.
+    */
+    function centralizedOracleSetResult(uint8 _resultIndex, uint256 _botAmount, uint256 _consensusThreshold)
+        external 
+        validResultIndex(_resultIndex)
+    {
+        require(msg.sender == oracles[0].oracleAddress);
+        require(!oracles[0].didSetResult);
+        require(_botAmount >= _consensusThreshold);
+        require(token.allowance(msg.sender, address(this)) >= _consensusThreshold);
+        require(status == Status.Betting);
+
+        oracles[0].didSetResult = true;
+        resultSet = true;
+        status = Status.OracleVoting;
+        finalResultIndex = _resultIndex;
+
+        ResultBalance storage resultBalance = balances[_resultIndex];
+        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
+        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
+        totalBotValue = totalBotValue.add(_consensusThreshold);
+
+        token.transferFrom(msg.sender, address(this), _consensusThreshold);
+        createVotingOracle(_consensusThreshold);
+    }
+
+    /* 
+    * @notice Allows anyone to set the result based on majority vote if the CentralizedOracle does not set the result 
+    *   in time.
+    * @dev invalidateOracle() should be called from the CentralizedOracle contract to execute this.
+    */
+    function invalidateCentralizedOracle(uint8 _resultIndex) 
+        external 
+        validResultIndex(_resultIndex)
+    {
+        require(msg.sender == oracles[0].oracleAddress);
+        require(!oracles[0].didSetResult);
+        require(status == Status.Betting);
+
+        oracles[0].didSetResult = true;
+        resultSet = true;
+        status = Status.OracleVoting;
+        finalResultIndex = _resultIndex;
+
+        createVotingOracle(addressManager.startingOracleThreshold());
     }
 
     /*
@@ -190,68 +231,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /* 
-    * @dev CentralizedOracle should call this to set the result. Requires the Oracle to approve() BOT in the amount of 
-    *   the starting Oracle threshold.
-    * @param _resultIndex The index of the result to set.
-    * @param _botAmount The amount of BOT to transfer.
-    */
-    function centralizedOracleSetResult(uint8 _resultIndex, uint256 _botAmount)
-        external 
-        validResultIndex(_resultIndex)
-    {
-        require(msg.sender == oracles[0].oracleAddress);
-        require(!oracles[0].didSetResult);
-        require(block.number >= bettingEndBlock);
-        require(block.number < resultSettingEndBlock);
-        uint256 startingOracleThreshold = addressManager.startingOracleThreshold();
-        assert(startingOracleThreshold > 0);
-        require(_botAmount >= startingOracleThreshold);
-        require(token.allowance(msg.sender, address(this)) >= startingOracleThreshold);
-
-        oracles[0].didSetResult = true;
-        resultSet = true;
-        status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
-
-        ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
-        resultBalance.voteBalances[msg.sender] = resultBalance.voteBalances[msg.sender].add(_botAmount);
-        totalBotValue = totalBotValue.add(startingOracleThreshold);
-
-        token.transferFrom(msg.sender, address(this), startingOracleThreshold);
-        createVotingOracle(addressManager.startingOracleThreshold());
-    }
-
-    /* 
-    * @notice Allows anyone to set the result based on majority vote if the CentralizedOracle does not set the result 
-    *   in time.
-    * @dev This insures the funds don't get locked up in the contract. This will create a VotingOracle as usual.
-    */
-    function invalidateCentralizedOracle(uint8 _resultIndex) 
-        external 
-    {
-        require(!oracles[0].didSetResult);
-        require(block.number >= resultSettingEndBlock);
-        require(status == Status.Betting);
-
-        oracles[0].didSetResult = true;
-        resultSet = true;
-        status = Status.OracleVoting;
-
-        // Calculates the winning result index based on bet balances
-        uint256 winningIndexAmount = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            uint256 totalBetBalance = balances[i].totalBetBalance;
-            if (totalBetBalance > winningIndexAmount) {
-                winningIndexAmount = totalBetBalance;
-                finalResultIndex = i;
-            }
-        }
-
-        createVotingOracle(addressManager.startingOracleThreshold());
-    }
-
-    /* 
     * @dev VotingOracle should call this to set the result. Should be allowed when the Oracle passes the consensus 
     *   threshold.
     * @param _resultIndex The index of the result to set.
@@ -272,7 +251,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             }
         }
         require(isValidVotingOracle);
-        require(block.number >= bettingEndBlock);
 
         oracles[oracleIndex].didSetResult = true;
         resultSet = true;
