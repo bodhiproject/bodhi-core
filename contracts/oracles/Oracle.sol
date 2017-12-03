@@ -1,5 +1,6 @@
 pragma solidity ^0.4.18;
 
+import "../events/ITopicEvent.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
@@ -9,9 +10,11 @@ contract Oracle is Ownable {
     using SafeMath for uint256;
 
     struct ResultBalance {
-        uint256 totalVoteBalance;
-        mapping(address => uint256) voteBalances;
+        uint256 total;
+        mapping(address => uint256) balances;
     }
+
+    uint8 public constant type;
 
     bool public isFinished;
     uint8 public numOfResults;
@@ -24,7 +27,7 @@ contract Oracle is Ownable {
 
     // Events
     event OracleResultVoted(address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
-    event OracleResultSet(uint8 _resultIndex);
+    event OracleResultSet(uint8 _oracleType, uint8 _resultIndex);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {

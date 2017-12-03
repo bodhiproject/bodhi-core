@@ -1,9 +1,10 @@
 pragma solidity ^0.4.18;
 
 import "./Oracle.sol";
-import "../events/ITopicEvent.sol";
 
 contract DecentralizedOracle is Oracle {
+    uint8 public constant type = 1;
+
     uint8 public lastResultIndex;
     uint256 public arbitrationEndBlock;
 
@@ -127,6 +128,6 @@ contract DecentralizedOracle is Oracle {
 
         uint8 finalResultIndex = getFinalResultIndex();
         ITopicEvent(eventAddress).votingOracleSetResult(finalResultIndex, currentBalance);
-        OracleResultSet(finalResultIndex);
+        OracleResultSet(type, finalResultIndex);
     }
 }

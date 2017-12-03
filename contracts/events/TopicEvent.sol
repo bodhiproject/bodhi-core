@@ -128,6 +128,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
+
+        // TODO: create CentralizedOracle
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -225,7 +227,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     *   in time.
     * @dev This insures the funds don't get locked up in the contract. This will create a VotingOracle as usual.
     */
-    function invalidateCentralizedOracle() 
+    function invalidateCentralizedOracle(uint8 _resultIndex) 
         external 
     {
         require(!oracles[0].didSetResult);
