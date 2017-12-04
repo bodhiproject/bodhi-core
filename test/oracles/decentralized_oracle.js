@@ -31,7 +31,7 @@ contract('DecentralizedOracle', function(accounts) {
     const centralizedOracleResult = 1;
     const topicEventParams = {
         _owner: admin,
-        _oracle: oracle,
+        _decentralizedOracle: oracle,
         _name: ["Who will be the next president i", "n the 2020 election?"],
         _resultNames: ["Trump", "The Rock", "Hilary"],
         _bettingEndBlock: 100,
@@ -107,8 +107,8 @@ contract('DecentralizedOracle', function(accounts) {
 
         await centralizedOracle.setResult(centralizedOracleResult, startingOracleThreshold, { from: oracle });
 
-        // DecentralizedOracle created
-        decentralizedOracle = await DecentralizedOracle.at((await topicEvent.getOracle(1))[0]);
+        // // DecentralizedOracle created
+        // decentralizedOracle = await DecentralizedOracle.at((await topicEvent.getOracle(1))[0]);
     });
 
     describe("constructor", async function() {
