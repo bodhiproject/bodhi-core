@@ -37,6 +37,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         address oracleAddress;
     }
 
+    uint8 public constant invalidResultIndex = 255;
+
     bool public resultSet;
     uint8 private finalResultIndex;
     uint8 public numOfResults;
@@ -188,22 +190,20 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /* 
-    * @notice Allows anyone to set the result based on majority vote if the CentralizedOracle does not set the result 
-    *   in time.
+    * @notice Allows anyone to invalidate the CentralizedOracle if they did not set the result in time. 
+    *   This creates a new DecentralizedOracle with all results.
     * @dev invalidateOracle() should be called from the CentralizedOracle contract to execute this.
     */
-    function invalidateCentralizedOracle(uint8 _resultIndex) 
+    function invalidateCentralizedOracle() 
         external 
-        validResultIndex(_resultIndex)
     {
         require(msg.sender == oracles[0].oracleAddress);
         require(!oracles[0].didSetResult);
         require(status == Status.Betting);
 
         oracles[0].didSetResult = true;
-        resultSet = true;
         status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
+        finalResultIndex = invalidResultIndex;
 
         createVotingOracle(addressManager.startingOracleThreshold());
     }

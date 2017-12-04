@@ -14,6 +14,8 @@ contract Oracle is Ownable {
         mapping(address => uint256) balances;
     }
 
+    uint8 public constant invalidResultIndex = 255;
+
     bool public finished;
     uint8 public numOfResults;
     uint8 internal resultIndex;
@@ -27,6 +29,7 @@ contract Oracle is Ownable {
     // Events
     event OracleResultVoted(uint8 _oracleType, address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
     event OracleResultSet(uint8 _oracleType, uint8 _resultIndex);
+    event OracleInvalidated(uint8 _oracleType);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -43,6 +46,8 @@ contract Oracle is Ownable {
         require(finished);
         _;
     }
+
+    function invalidateOracle() external;
 
     /*
     * @notice Gets the Event name as a string.

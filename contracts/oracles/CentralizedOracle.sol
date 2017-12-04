@@ -103,9 +103,7 @@ contract CentralizedOracle is Oracle {
     }
 
     /* 
-    * @notice Allows anyone to set the result based on majority vote if the CentralizedOracle does not set the result 
-    *   in time.
-    * @dev This insures the funds don't get locked up in the contract.
+    * @notice Allows anyone to invalidate the CentralizedOracle if they did not set the result in time. 
     */
     function invalidateOracle() 
         external 
@@ -114,19 +112,9 @@ contract CentralizedOracle is Oracle {
         require(block.number >= resultSettingEndBlock);
 
         finished = true;
+        resultIndex = invalidResultIndex;
 
-        // Calculates the winning result index based on bet balances
-        uint256 winningIndexAmount = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            uint256 totalBetBalance = resultBalances[i].total;
-            if (totalBetBalance > winningIndexAmount) {
-                winningIndexAmount = totalBetBalance;
-                resultIndex = i;
-            }
-        }
-
-
-        ITopicEvent(eventAddress).invalidateCentralizedOracle(resultIndex);
-        OracleResultSet(oracleType, resultIndex);
+        ITopicEvent(eventAddress).invalidateCentralizedOracle();
+        OracleInvalidated(oracleType);
     }
 }

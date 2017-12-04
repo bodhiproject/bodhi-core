@@ -521,14 +521,12 @@ contract('TopicEvent', function(accounts) {
     });
 
     describe('invalidateCentralizedOracle()', async function() {
-        let winningResultIndex = 2;
-
         beforeEach(async function() {
             assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             let bet1 = Utils.getBigNumberWithDecimals(20, botDecimals);
-            await centralizedOracle.bet(winningResultIndex, { from: better1, value: bet1 });
-            assert.equal((await testTopic.getBetBalances({ from: better1 }))[winningResultIndex].toString(), 
+            await centralizedOracle.bet(2, { from: better1, value: bet1 });
+            assert.equal((await testTopic.getBetBalances({ from: better1 }))[2].toString(), 
                 bet1.toString());
 
             let bet2 = Utils.getBigNumberWithDecimals(30, botDecimals);
@@ -536,8 +534,8 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getBetBalances({ from: better2 }))[0].toString(), bet2.toString());
 
             let bet3 = Utils.getBigNumberWithDecimals(11, botDecimals);
-            await centralizedOracle.bet(winningResultIndex, { from: better3, value: bet3 });
-            assert.equal((await testTopic.getBetBalances({ from: better3 }))[winningResultIndex].toString(), 
+            await centralizedOracle.bet(2, { from: better3, value: bet3 });
+            assert.equal((await testTopic.getBetBalances({ from: better3 }))[2].toString(), 
                 bet3.toString());
 
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
@@ -558,13 +556,10 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.invalidateOracle();
         });
 
-        it('sets the result based on majority vote and creates a new DecentralizedOracle', async function() {
+        it('sets an invalid result index creates a new DecentralizedOracle', async function() {
             assert.isTrue((await testTopic.getOracle(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
+            assert.isFalse(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);                                
-            let finalResult = await testTopic.getFinalResult();
-            assert.equal(finalResult[0], winningResultIndex);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[winningResultIndex]);
 
             let decentralizedOracle = await testTopic.getOracle(1);
             assert.notEqual(decentralizedOracle[0], 0);
@@ -573,7 +568,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if receiving from an address that is not the CentralizedOracle contract', async function() {
             try {
-                await testTopic.invalidateCentralizedOracle(0, { from: better1 })
+                await testTopic.invalidateCentralizedOracle({ from: better1 })
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);

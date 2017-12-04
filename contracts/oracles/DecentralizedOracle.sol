@@ -36,7 +36,6 @@ contract DecentralizedOracle is Oracle {
         require(!_eventResultNames[0].isEmpty());
         require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
-        require(_lastResultIndex <= 9);
         require(_arbitrationEndBlock > block.number);
         require(_consensusThreshold > 0);
 
@@ -92,6 +91,10 @@ contract DecentralizedOracle is Oracle {
         finished = true;
 
         ITopicEvent(eventAddress).finalizeResult();
+    }
+
+    function invalidateOracle() external {
+
     }
 
     /*
