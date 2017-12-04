@@ -1,7 +1,10 @@
 pragma solidity ^0.4.18;
 
 contract IAddressManager {
+    uint16 public arbitrationBlockLength;
     address public bodhiTokenAddress;
+    uint256 public startingOracleThreshold;
+    uint256 public consensusThresholdIncrement;
 
     function setBodhiTokenAddress(address _tokenAddress) public;
     function setEventFactoryAddress(address _sender, address _contractAddress) public;

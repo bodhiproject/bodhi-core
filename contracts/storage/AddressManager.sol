@@ -4,8 +4,13 @@ import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
 
 contract AddressManager is IAddressManager, Ownable {
+    uint256 public constant botDecimals = 8; // Number of decimals for BOT
+
+    uint16 public arbitrationBlockLength = 100; // Amount of blocks for a VotingOracle arbitration.
     uint16 private currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
     uint16 private currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
+    uint256 public startingOracleThreshold = 100 * (10**botDecimals);
+    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals);
     mapping(uint16 => address) private eventFactoryAddresses;
     mapping(uint16 => address) private oracleFactoryAddresses;
 
@@ -41,9 +46,9 @@ contract AddressManager is IAddressManager, Ownable {
         currentEventFactoryIndex++;
     }
 
-    /// @dev Allows the owner to set the address of an Oracle contract.
+    /// @dev Allows the owner to set the address of an OracleFactory contract.
     /// @param _sender This should be the msg.sender of the OracleFactory instantiation call.
-    /// @param _contractAddress The address of the Oracle contract.
+    /// @param _contractAddress The address of the OracleFactory contract.
     function setOracleFactoryAddress(address _sender, address _contractAddress) 
         public 
         validAddress(_contractAddress) 
@@ -93,9 +98,9 @@ contract AddressManager is IAddressManager, Ownable {
         }
     }
 
-    /// @notice Gets the address of the Oracle contract.
-    /// @param _indexOfAddress The index of the stored Oracle contract address.
-    /// @return The address of Oracle contract.
+    /// @notice Gets the address of the OracleFactory contract.
+    /// @param _indexOfAddress The index of the stored OracleFactory contract address.
+    /// @return The address of OracleFactory contract.
     function getOracleFactoryAddress(uint16 _indexOfAddress) 
         public 
         view 
