@@ -81,7 +81,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     /*
     * @notice Creates new TopicEvent contract.
     * @param _owner The address of the owner.
-    * @param _oracle The address of the Centralized Oracle that will decide the result.
+    * @param _centralizedOracle The address of the CentralizedOracle that will decide the result.
     * @param _name The question or statement prediction broken down by multiple bytes32.
     * @param _resultNames The possible results.
     * @param _bettingEndBlock The block when betting will end.
