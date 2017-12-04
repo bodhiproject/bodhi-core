@@ -891,21 +891,21 @@ contract('TopicEvent', function(accounts) {
             // First round of betting
             let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
 
-            let bet1 = Utils.getBigNumberWithDecimals(13, nativeDecimals);
+            let bet1 = web3.toBigNumber(7777777777);
             await centralizedOracle.bet(0, { from: better1, value: bet1 });
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), bet1.toNumber());
 
-            let bet2 = Utils.getBigNumberWithDecimals(22, nativeDecimals);
+            let bet2 = web3.toBigNumber(2212345678);
             await centralizedOracle.bet(1, { from: better2, value: bet2 });
             var totalBetBalance = bet1.add(bet2);
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
 
-            let bet3 = Utils.getBigNumberWithDecimals(30, nativeDecimals);
+            let bet3 = web3.toBigNumber(3027596457);
             await centralizedOracle.bet(centralizedOracleResult, { from: better3, value: bet3 });
             totalBetBalance = bet1.add(bet2).add(bet3);
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
 
-            let bet4 = Utils.getBigNumberWithDecimals(12, nativeDecimals);
+            let bet4 = web3.toBigNumber(1298765432);
             await centralizedOracle.bet(centralizedOracleResult, { from: better4, value: bet4 });
             totalBetBalance = bet1.add(bet2).add(bet3).add(bet4);
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
