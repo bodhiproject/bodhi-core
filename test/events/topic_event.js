@@ -33,7 +33,7 @@ contract('TopicEvent', function(accounts) {
 
     const testTopicParams = {
         _owner: owner,
-        _oracle: oracle,
+        _centralizedOracle: oracle,
         _name: ["Will Apple stock reach $300 by t", "he end of 2017?"],
         _resultNames: ["first", "second", "third"],
         _bettingEndBlock: 100,
@@ -84,7 +84,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal((await testTopic.numOfResults.call()).toNumber(), 3);
 
-            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
+            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._centralizedOracle);
             assert.equal(await centralizedOracle.getEventName(), testTopicParams._name.join(''));
             assert.equal(await centralizedOracle.getEventResultName(0), testTopicParams._resultNames[0]);
             assert.equal(await centralizedOracle.getEventResultName(1), testTopicParams._resultNames[1]);
@@ -102,7 +102,7 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, name, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingEndBlock, addressManager.address);
 
@@ -116,7 +116,7 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, name, 
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, name, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingEndBlock, addressManager.address);
 
@@ -130,7 +130,7 @@ contract('TopicEvent', function(accounts) {
         it('should allow a space as the last character of a name array item', async function() {
             let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, array, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingEndBlock, addressManager.address);
             assert.equal(await testTopic.getEventName(), expected);
@@ -140,7 +140,7 @@ contract('TopicEvent', function(accounts) {
             async function() {
             let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
             let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, array, 
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, array, 
                 testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingEndBlock, addressManager.address);
 
@@ -148,7 +148,8 @@ contract('TopicEvent', function(accounts) {
         });
 
         it('can handle using all 10 resultNames', async function() {
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, 
+                testTopicParams._name, 
                 ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
 
@@ -167,9 +168,9 @@ contract('TopicEvent', function(accounts) {
         it('should only set the first 10 resultNames', async function() {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
-            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
-                resultNames, testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, 
-                addressManager.address);
+            testTopic = await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, 
+                testTopicParams._name, resultNames, testTopicParams._bettingEndBlock, 
+                testTopicParams._resultSettingEndBlock, addressManager.address);
 
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), "first");
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), "second");
@@ -192,8 +193,9 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if owner address is invalid', async function() {
             try {
-                await TopicEvent.new(0, testTopicParams._oracle, testTopicParams._name, testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                await TopicEvent.new(0, testTopicParams._centralizedOracle, testTopicParams._name, 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                    testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -212,7 +214,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if AddressManager address is invalid', async function() {
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingEndBlock, 0);
                 assert.fail();
@@ -223,8 +225,9 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if name is empty', async function() {
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, [], 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                    testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -233,23 +236,25 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if resultNames 0 or 1 are empty', async function() {
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, [], 
-                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, 
+                    testTopicParams._name, [], testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, 
+                    addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, ["first"], 
-                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                    ["first"], testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, 
+                    addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, testTopicParams._name, 
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     ["", "second"], testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
                 assert.fail();
@@ -263,17 +268,18 @@ contract('TopicEvent', function(accounts) {
             assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, [], 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                    testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock - 1, testTopicParams._resultSettingEndBlock, 
-                    addressManager.address);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, [], 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock - 1, 
+                    testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -282,16 +288,17 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if resultSettingEndBlock is less than or equal to bettingEndBlock', async function() {
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, [], 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._oracle, [], testTopicParams._resultNames, 
-                    testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock - 1);
+                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, [], 
+                    testTopicParams._resultNames, testTopicParams._bettingEndBlock, 
+                    testTopicParams._bettingEndBlock - 1);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
