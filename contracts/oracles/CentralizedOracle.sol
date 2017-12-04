@@ -104,6 +104,7 @@ contract CentralizedOracle is Oracle {
 
     /* 
     * @notice Allows anyone to invalidate the CentralizedOracle if they did not set the result in time. 
+    * @dev It will start a new DecentralizedOracle in the Event and set an invalid result index.
     */
     function invalidateOracle() 
         external 
