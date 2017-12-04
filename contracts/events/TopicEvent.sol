@@ -15,7 +15,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
 
     /*
     * @notice Status types
-    *   Betting: Bets with blockchain token are allowed during this phase.
+    *   Betting: Bets with QTUM tokens are allowed during this phase.
     *   Arbitration: Voting takes place in the VotingOracles during this phase.
     *   Collection: Winners can collect their won tokens during this phase.
     */
@@ -43,6 +43,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     Status public status = Status.Betting;
     bytes32[10] private name;
     bytes32[10] public resultNames;
+    uint256 public totalQtumValue;
     uint256 public totalBotValue;
     ResultBalance[10] private balances;
     IAddressManager private addressManager;
@@ -52,7 +53,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     // Events
     event CentralizedOracleResultSet(uint8 _resultIndex);
     event FinalResultSet(uint8 _finalResultIndex);
-    event WinningsWithdrawn(address indexed _winner, uint256 _blockchainTokenWon, uint256 _botTokenWon);
+    event WinningsWithdrawn(address indexed _winner, uint256 _qtumTokenWon, uint256 _botTokenWon);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -132,7 +133,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Allows betting on a result using the blockchain token.
+    * @notice Allows betting on a result using QTUM tokens.
     * @param _better The address that is placing the bet.
     * @param _resultIndex The index of result to bet on.
     */
@@ -148,6 +149,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         ResultBalance storage resultBalance = balances[_resultIndex];
         resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
         resultBalance.betBalances[_better] = resultBalance.betBalances[_better].add(msg.value);
+        totalQtumValue = totalQtumValue.add(msg.value);
     }
 
     /* 
@@ -291,7 +293,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Allows winners of the Event to withdraw their blockchain and BOT winnings after the final result is set.
+    * @notice Allows winners of the Event to withdraw their QTUM and BOT winnings after the final result is set.
     */
     function withdrawWinnings() 
         public 
@@ -299,23 +301,27 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         inCollectionStatus()
         nonReentrant()
     {
-        require(getTotalBetBalance() > 0);
+        require(totalQtumValue > 0);
 
         ResultBalance storage resultBalance = balances[finalResultIndex];
-        uint256 blockchainTokensWon = calculateBlockchainTokensWon();
-        uint256 botTokensWon = calculateBotTokensWon();
+        uint256 qtumWon = calculateQtumContributorWinnings();
+
+        uint256 qtumReturn;
+        uint256 botWon;
+        (qtumReturn, botWon) = calculateBotContributorWinnings();
+        qtumWon = qtumWon.add(qtumReturn);
 
         resultBalance.betBalances[msg.sender] = 0;
         resultBalance.voteBalances[msg.sender] = 0;
 
-        if (blockchainTokensWon > 0) {
-            msg.sender.transfer(blockchainTokensWon);
+        if (qtumWon > 0) {
+            msg.sender.transfer(qtumWon);
         }
-        if (botTokensWon > 0) {
-            token.transfer(msg.sender, botTokensWon);
+        if (botWon > 0) {
+            token.transfer(msg.sender, botWon);
         }
 
-        WinningsWithdrawn(msg.sender, blockchainTokensWon, botTokensWon);
+        WinningsWithdrawn(msg.sender, qtumWon, botWon);
     }
 
     /*
@@ -376,22 +382,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Gets the total blockchain token bet balance of the TopicEvent.
-    * @return The total blockchain token bet balance.
-    */
-    function getTotalBetBalance() 
-        public 
-        view 
-        returns (uint256) 
-    {
-        uint256 totalTopicBalance = 0;
-        for (uint i = 0; i < numOfResults; i++) {
-            totalTopicBalance = balances[i].totalBetBalance.add(totalTopicBalance);
-        }
-        return totalTopicBalance;
-    }
-
-    /*
     * @notice Gets the total BOT token vote balance of the TopicEvent and it's VotingOracles.
     * @return The total BOT token vote balance.
     */
@@ -421,10 +411,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /* 
-    * @dev Calculates the blockchain tokens won based on the sender's blockchain token contributions.
-    * @return The amount of blockchain tokens won.
+    * @dev Calculates the QTUM tokens won based on the sender's QTUM token contributions.
+    * @return The amount of QTUM tokens won.
     */
-    function calculateBlockchainTokenContributorWinnings() 
+    function calculateQtumContributorWinnings() 
         public 
         view
         inCollectionStatus()
@@ -435,7 +425,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         uint256 losersTotalMinusCut = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             if (i != finalResultIndex) {
-                losersTotalMinusCut = losersTotal.add(balances[i].totalBetBalance);
+                losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBetBalance);
             }
         }
         losersTotalMinusCut = losersTotalMinusCut.mul(90).div(100);
@@ -444,10 +434,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @dev Calculates the blockchain and BOT tokens won based on the sender's BOT contributions.
-    * @return The amount of blockchain and BOT tokens won.
+    * @dev Calculates the QTUM and BOT tokens won based on the sender's BOT contributions.
+    * @return The amount of QTUM and BOT tokens won.
     */
-    function calculateBotTokenContributorWinnings()
+    function calculateBotContributorWinnings()
         public
         view
         inCollectionStatus()
@@ -464,15 +454,11 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         }
         uint256 botWon = senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
 
-        // Calculate blockchain token won
-        uint256 blockchainTokenBalance = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            blockchainTokenBalance = blockchainTokenBalance.add(balances[i].totalBetBalance);
-        }
-        uint256 blockchainTokenReward = blockchainTokenBalance.mul(10).div(100);
-        uint256 blockchainTokenWon = senderContribution.mul(blockchainTokenReward).div(winnersTotal);
+        // Calculate QTUM won
+        uint256 qtumReward = totalQtumValue.mul(10).div(100);
+        uint256 qtumWon = senderContribution.mul(qtumReward).div(winnersTotal);
 
-        return (blockchainTokenWon, botWon);
+        return (qtumWon, botWon);
     }
 
     function createCentralizedOracle(
