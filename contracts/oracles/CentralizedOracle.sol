@@ -115,7 +115,7 @@ contract CentralizedOracle is Oracle {
         finished = true;
         resultIndex = invalidResultIndex;
 
-        ITopicEvent(eventAddress).invalidateCentralizedOracle();
+        ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
         OracleInvalidated(oracleType);
     }
 }

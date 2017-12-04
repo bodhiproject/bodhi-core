@@ -520,7 +520,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe('invalidateCentralizedOracle()', async function() {
+    describe('invalidateOracle()', async function() {
         beforeEach(async function() {
             assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
@@ -568,7 +568,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if receiving from an address that is not the CentralizedOracle contract', async function() {
             try {
-                await testTopic.invalidateCentralizedOracle({ from: better1 })
+                await testTopic.invalidateOracle(startingOracleThreshold, { from: better1 })
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);

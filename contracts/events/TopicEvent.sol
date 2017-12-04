@@ -189,25 +189,6 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         createVotingOracle(_consensusThreshold);
     }
 
-    /* 
-    * @notice Allows anyone to invalidate the CentralizedOracle if they did not set the result in time. 
-    *   This creates a new DecentralizedOracle with all results.
-    * @dev invalidateOracle() should be called from the CentralizedOracle contract to execute this.
-    */
-    function invalidateCentralizedOracle() 
-        external 
-    {
-        require(msg.sender == oracles[0].oracleAddress);
-        require(!oracles[0].didSetResult);
-        require(status == Status.Betting);
-
-        oracles[0].didSetResult = true;
-        status = Status.OracleVoting;
-        finalResultIndex = invalidResultIndex;
-
-        createVotingOracle(addressManager.startingOracleThreshold());
-    }
-
     /*
     * @dev VotingOracles will call this to vote on a Result on behalf of a participant. Participants must BOT approve()
     *   with the amount before voting. We are storing the voted amounts here to have a centralized contract to withdraw
@@ -269,6 +250,31 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         finalResultIndex = _resultIndex;
 
         return createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
+    }
+
+    /* 
+    * @notice Allows anyone to invalidate an Oracle if the result was not set. It creates a new DecentralizedOracle.
+    * @dev invalidateOracle() should be called from the Oracle contract to execute this.
+    */
+    function invalidateOracle(uint256 _consensusThreshold) 
+        external 
+    {
+        bool isValidOracle = false;
+        uint8 oracleIndex;
+        for (uint8 i = 0; i < oracles.length; i++) {
+            if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
+                isValidOracle = true;
+                oracleIndex = i;
+                break;
+            }
+        }
+        require(isValidOracle);
+
+        oracles[oracleIndex].didSetResult = true;
+        status = Status.OracleVoting;
+        finalResultIndex = invalidResultIndex;
+
+        createVotingOracle(_consensusThreshold);
     }
 
     /*

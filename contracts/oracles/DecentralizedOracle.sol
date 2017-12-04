@@ -84,8 +84,9 @@ contract DecentralizedOracle is Oracle {
         require(block.number >= arbitrationEndBlock);
 
         finished = true;
+        resultIndex = invalidResultIndex;
 
-        // TODO: call TopicEvent.invalidate()
+        ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
         OracleInvalidated(oracleType);
     }
 
