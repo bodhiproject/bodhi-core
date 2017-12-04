@@ -46,9 +46,9 @@ contract AddressManager is IAddressManager, Ownable {
         currentEventFactoryIndex++;
     }
 
-    /// @dev Allows the owner to set the address of an Oracle contract.
+    /// @dev Allows the owner to set the address of an OracleFactory contract.
     /// @param _sender This should be the msg.sender of the OracleFactory instantiation call.
-    /// @param _contractAddress The address of the Oracle contract.
+    /// @param _contractAddress The address of the OracleFactory contract.
     function setOracleFactoryAddress(address _sender, address _contractAddress) 
         public 
         validAddress(_contractAddress) 
@@ -98,9 +98,9 @@ contract AddressManager is IAddressManager, Ownable {
         }
     }
 
-    /// @notice Gets the address of the Oracle contract.
-    /// @param _indexOfAddress The index of the stored Oracle contract address.
-    /// @return The address of Oracle contract.
+    /// @notice Gets the address of the OracleFactory contract.
+    /// @param _indexOfAddress The index of the stored OracleFactory contract address.
+    /// @return The address of OracleFactory contract.
     function getOracleFactoryAddress(uint16 _indexOfAddress) 
         public 
         view 
