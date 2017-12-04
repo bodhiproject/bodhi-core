@@ -554,19 +554,42 @@ contract('TopicEvent', function(accounts) {
             }
 
             await centralizedOracle.invalidateOracle();
+
+            let oracleArray = await testTopic.getOracle(1);
+            assert.notEqual(oracleArray[0], 0);
+            assert.isFalse(oracleArray[1]);
+            decentralizedOracle = await DecentralizedOracle.at(oracleArray[0]);
         });
 
-        it('sets an invalid result index creates a new DecentralizedOracle', async function() {
+        it('sets the values and creates a new DecentralizedOracle when invalidating a CentralizedOracle', 
+            async function() {
             assert.isTrue((await testTopic.getOracle(0))[1]);
             assert.isFalse(await testTopic.resultSet.call());
-            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);                                
-
-            let decentralizedOracle = await testTopic.getOracle(1);
-            assert.notEqual(decentralizedOracle[0], 0);
-            assert.isFalse(decentralizedOracle[1]);
+            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);            
         });
 
-        it('throws if receiving from an address that is not the CentralizedOracle contract', async function() {
+        it('sets the values and creates a new DecentralizedOracle when invalidating a DecentralizedOracle', 
+            async function() {
+            await blockHeightManager.mineTo(await decentralizedOracle.arbitrationEndBlock.call());
+
+            try {
+                assert.equal((await testTopic.getOracle(2))[0], 0);
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+
+            await decentralizedOracle.invalidateOracle();
+            assert.isTrue((await testTopic.getOracle(1))[1]);
+            assert.isFalse(await testTopic.resultSet.call());
+            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
+
+            let oracleArray = await testTopic.getOracle(2);
+            assert.notEqual(oracleArray[0], 0);
+            assert.isFalse(oracleArray[1]);
+        });
+
+        it('throws if receiving from an address that is not an Oracle contract', async function() {
             try {
                 await testTopic.invalidateOracle(startingOracleThreshold, { from: better1 })
                 assert.fail();
@@ -575,7 +598,7 @@ contract('TopicEvent', function(accounts) {
             }
         });
 
-        it('throws if the CentralizedOracle result is already set', async function() {
+        it('throws if the Oracle result is already set', async function() {
             try {
                 await centralizedOracle.invalidateOracle();
                 assert.fail();
