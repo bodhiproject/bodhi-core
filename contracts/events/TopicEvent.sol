@@ -304,10 +304,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         didWithdraw[msg.sender] = true;
 
         uint256 qtumWon = calculateQtumContributorWinnings();
-        uint256 qtumReturn;
-        uint256 botWon;
-        (qtumReturn, botWon) = calculateBotContributorWinnings();
-        qtumWon = qtumWon.add(qtumReturn);
+        uint256 botWon = calculateBotContributorWinnings();
 
         if (qtumWon > 0) {
             msg.sender.transfer(qtumWon);
@@ -431,17 +428,27 @@ contract TopicEvent is ITopicEvent, Ownable {
         inCollectionStatus()
         returns (uint256)  
     {
+        // uint256 senderContribution = balances[finalResultIndex].betBalances[msg.sender];
+        // uint256 winnersTotal = balances[finalResultIndex].totalBetBalance;
+        // uint256 losersTotalMinusCut = 0;
+        // for (uint8 i = 0; i < numOfResults; i++) {
+        //     if (i != finalResultIndex) {
+        //         losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBetBalance);
+        //     }
+        // }
+        // losersTotalMinusCut = losersTotalMinusCut.mul(90).div(100);
+        // uint256 senderContributionMinusCut = senderContribution.mul(90).div(100);
+        // return senderContribution.mul(losersTotalMinusCut).div(winnersTotal).add(senderContributionMinusCut);
+
         uint256 senderContribution = balances[finalResultIndex].bets[msg.sender];
         uint256 winnersTotal = balances[finalResultIndex].totalBets;
-        uint256 losersTotalMinusCut = 0;
+        uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             if (i != finalResultIndex) {
-                losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBets);
+                losersTotal = losersTotal.add(balances[i].totalBets);
             }
         }
-        losersTotalMinusCut = losersTotalMinusCut.mul(90).div(100);
-        uint256 senderContributionMinusCut = senderContribution.mul(90).div(100);
-        return senderContribution.mul(losersTotalMinusCut).div(winnersTotal).add(senderContributionMinusCut);
+        return senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
     }
 
     /*
@@ -452,9 +459,25 @@ contract TopicEvent is ITopicEvent, Ownable {
         public
         view
         inCollectionStatus()
-        returns (uint256, uint256) 
+        returns (uint256) 
     {
-        // Calculate BOT won
+        // // Calculate BOT won
+        // uint256 senderContribution = balances[finalResultIndex].voteBalances[msg.sender];
+        // uint256 winnersTotal = balances[finalResultIndex].totalVoteBalance;
+        // uint256 losersTotal = 0;
+        // for (uint8 i = 0; i < numOfResults; i++) {
+        //     if (i != finalResultIndex) {
+        //         losersTotal = losersTotal.add(balances[i].totalVoteBalance);
+        //     }
+        // }
+        // uint256 botWon = senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
+
+        // // Calculate QTUM won
+        // uint256 qtumReward = totalQtumValue.mul(10).div(100);
+        // uint256 qtumWon = senderContribution.mul(qtumReward).div(winnersTotal);
+
+        // return (qtumWon, botWon);
+
         uint256 senderContribution = balances[finalResultIndex].votes[msg.sender];
         uint256 winnersTotal = balances[finalResultIndex].totalVotes;
         uint256 losersTotal = 0;
@@ -463,13 +486,7 @@ contract TopicEvent is ITopicEvent, Ownable {
                 losersTotal = losersTotal.add(balances[i].totalVotes);
             }
         }
-        uint256 botWon = senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
-
-        // Calculate QTUM won
-        uint256 qtumReward = totalQtumValue.mul(10).div(100);
-        uint256 qtumWon = senderContribution.mul(qtumReward).div(winnersTotal);
-
-        return (qtumWon, botWon);
+        return senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
     }
 
     function createCentralizedOracle(
