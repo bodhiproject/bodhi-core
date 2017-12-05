@@ -31,8 +31,14 @@ contract('EventFactory', function(accounts) {
 
     beforeEach(async function() {
         addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
+        
         eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
+        await addressManager.setEventFactoryAddress(eventFactory.address, { from: eventFactoryCreator });
+        assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
+
         oracleFactory = await OracleFactory.deployed(addressManager.address, { from: eventFactoryCreator });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: eventFactoryCreator });
+        assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
         
         let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
         topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);

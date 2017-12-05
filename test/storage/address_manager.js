@@ -1,8 +1,11 @@
 const web3 = global.web3;
-const AdddressManager = artifacts.require("./AddressManager.sol");
 const assert = require('chai').assert;
+const AdddressManager = artifacts.require("./AddressManager.sol");
+const BlockHeightManager = require('../helpers/block_height_manager');
 
 contract("AdddressManager", function(accounts) {
+    const blockHeightManager = new BlockHeightManager(web3);
+
     const owner = accounts[0];
     const tokenAddress1 = "0x1111111111111111111111111111111111111111";
     const tokenAddress2 = "0x2222222222222222222222222222222222222222";
@@ -15,8 +18,11 @@ contract("AdddressManager", function(accounts) {
 
     let instance;
 
+    beforeEach(blockHeightManager.snapshot);
+    afterEach(blockHeightManager.revert);
+
     beforeEach(async function() {
-        instance = await AdddressManager.new({ from: owner });
+        instance = await AdddressManager.deployed({ from: owner });
     });
 
     describe("BodhiTokenAddress", async function() {
@@ -68,9 +74,9 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(1), 0);
             assert.equal(await instance.getEventFactoryAddress(2), 0);
 
-            await instance.setEventFactoryAddress(owner, eventAddress1, { from: owner });
-            await instance.setEventFactoryAddress(owner, eventAddress2, { from: owner });
-            await instance.setEventFactoryAddress(owner, eventAddress3, { from: owner }); 
+            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress3, { from: owner }); 
 
             assert.equal(await instance.getEventFactoryAddress(0), eventAddress1);
             assert.equal(await instance.getEventFactoryAddress(1), eventAddress2);
@@ -80,13 +86,13 @@ contract("AdddressManager", function(accounts) {
         it("should return the last EventFactory index", async function() {
             assert.equal(await instance.getLastEventFactoryIndex(), 0);
 
-            await instance.setEventFactoryAddress(owner, eventAddress1, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress1, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 0);
 
-            await instance.setEventFactoryAddress(owner, eventAddress2, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress2, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 1);
 
-            await instance.setEventFactoryAddress(owner, eventAddress3, { from: owner });
+            await instance.setEventFactoryAddress(eventAddress3, { from: owner });
             assert.equal(await instance.getLastEventFactoryIndex(), 2);
         });
 
@@ -94,7 +100,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(0), 0);
 
             try {
-                await instance.setEventFactoryAddress(accounts[1], eventAddress1, { from: accounts[1] });
+                await instance.setEventFactoryAddress(eventAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -107,7 +113,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getEventFactoryAddress(0), 0);
 
             try {
-                await instance.setEventFactoryAddress(owner, 0, { from: owner });
+                await instance.setEventFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -121,9 +127,9 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(1), 0);
             assert.equal(await instance.getOracleFactoryAddress(2), 0);
 
-            await instance.setOracleFactoryAddress(owner, oracleAddress1, { from: owner });
-            await instance.setOracleFactoryAddress(owner, oracleAddress2, { from: owner });
-            await instance.setOracleFactoryAddress(owner, oracleAddress3, { from: owner }); 
+            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner }); 
 
             assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1);
             assert.equal(await instance.getOracleFactoryAddress(1), oracleAddress2);
@@ -133,13 +139,13 @@ contract("AdddressManager", function(accounts) {
         it("should return the last OracleFactory index", async function() {
             assert.equal(await instance.getLastOracleFactoryIndex(), 0);
 
-            await instance.setOracleFactoryAddress(owner, oracleAddress1, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 0);
 
-            await instance.setOracleFactoryAddress(owner, oracleAddress2, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 1);
 
-            await instance.setOracleFactoryAddress(owner, oracleAddress3, { from: owner });
+            await instance.setOracleFactoryAddress(oracleAddress3, { from: owner });
             assert.equal(await instance.getLastOracleFactoryIndex(), 2);
         });
 
@@ -147,7 +153,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), 0);
 
             try {
-                await instance.setOracleFactoryAddress(accounts[1], oracleAddress1, { from: accounts[1] });
+                await instance.setOracleFactoryAddress(oracleAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
@@ -160,7 +166,7 @@ contract("AdddressManager", function(accounts) {
             assert.equal(await instance.getOracleFactoryAddress(0), 0);
 
             try {
-                await instance.setOracleFactoryAddress(owner, 0, { from: owner });
+                await instance.setOracleFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);

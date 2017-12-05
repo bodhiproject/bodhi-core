@@ -19,6 +19,6 @@ module.exports = function(deployer) {
     deployer.deploy(AddressManager).then(function() {
         return deployer.deploy(EventFactory, AddressManager.address).then(function() {
             return deployer.deploy(OracleFactory, AddressManager.address);
-        })
+        });
     });
 };

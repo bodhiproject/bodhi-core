@@ -29,36 +29,35 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
         validAddress(_tokenAddress) 
     {
-        BodhiTokenAddressChanged(bodhiTokenAddress, _tokenAddress);
         bodhiTokenAddress = _tokenAddress;
+
+        BodhiTokenAddressChanged(bodhiTokenAddress, _tokenAddress);
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
-    /// @param _sender This should be the msg.sender of the EventFactory instantiation call.
     /// @param _contractAddress The address of the EventFactory contract.
-    function setEventFactoryAddress(address _sender, address _contractAddress) 
+    function setEventFactoryAddress(address _contractAddress) 
         public 
         onlyOwner()
-        validAddress(_contractAddress) 
+        validAddress(_contractAddress)
     {
-        require(_sender == owner);
         eventFactoryAddresses[currentEventFactoryIndex] = _contractAddress;
-        EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
         currentEventFactoryIndex++;
+
+        EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
     }
 
     /// @dev Allows the owner to set the address of an OracleFactory contract.
-    /// @param _sender This should be the msg.sender of the OracleFactory instantiation call.
     /// @param _contractAddress The address of the OracleFactory contract.
-    function setOracleFactoryAddress(address _sender, address _contractAddress) 
+    function setOracleFactoryAddress(address _contractAddress) 
         public 
         onlyOwner()
         validAddress(_contractAddress) 
     {
-        require(_sender == owner);
         oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
-        OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
         currentOracleFactoryIndex++;
+
+        OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
     }
 
     /*
@@ -70,6 +69,7 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
     {   
         require(_newArbitrationBlockLength > 0);
+
         arbitrationBlockLength = _newArbitrationBlockLength;
     }
 

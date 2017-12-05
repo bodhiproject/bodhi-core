@@ -15,7 +15,6 @@ contract EventFactory {
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
         addressManager = _addressManager;
-        IAddressManager(addressManager).setEventFactoryAddress(msg.sender, address(this));
     }
     
     function createTopic(

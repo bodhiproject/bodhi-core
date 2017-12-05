@@ -3,6 +3,8 @@ const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
+const EventFactory = artifacts.require("./events/EventFactory.sol");
+const OracleFactory = artifacts.require("./oracles/OracleFactory.sol");
 const TopicEvent = artifacts.require("./TopicEvent.sol");
 const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
@@ -32,8 +34,7 @@ contract('CentralizedOracle', function(accounts) {
     const startingOracleThreshold = Utils.getBigNumberWithDecimals(100, botDecimals);
 
     const topicEventParams = {
-        _owner: owner,
-        _centralizedOracle: oracle,
+        _oracle: oracle,
         _name: ["Will Apple stock reach $300 by t", "he end of 2017?"],
         _resultNames: ["first", "second", "third"],
         _bettingEndBlock: 100,
@@ -70,8 +71,17 @@ contract('CentralizedOracle', function(accounts) {
         await addressManager.setBodhiTokenAddress(token.address, { from: admin });
         assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
-        topicEvent = await TopicEvent.new(...Object.values(topicEventParams), addressManager.address, { from: owner });
-        centralizedOracle = await CentralizedOracle.at((await topicEvent.getOracle(0))[0]);
+        let eventFactory = await EventFactory.deployed(addressManager.address, { from: admin });
+        await addressManager.setEventFactoryAddress(eventFactory.address, { from: admin });
+        assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
+
+        let oracleFactory = await OracleFactory.deployed(addressManager.address, { from: admin });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: admin });
+        assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+
+        let tx = await eventFactory.createTopic(...Object.values(topicEventParams), { from: owner });
+        topicEvent = TopicEvent.at(tx.logs[0].args._topicAddress);
+        centralizedOracle = CentralizedOracle.at((await topicEvent.getOracle(0))[0]);
     });
 
     describe('constructor', async function() {

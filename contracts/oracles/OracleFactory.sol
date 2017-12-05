@@ -24,8 +24,6 @@ contract OracleFactory is IOracleFactory {
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
         addressManager = _addressManager;
-        IAddressManager addressManagerInterface = IAddressManager(addressManager);
-        addressManagerInterface.setOracleFactoryAddress(msg.sender, address(this));
     }
 
     function createCentralizedOracle(
