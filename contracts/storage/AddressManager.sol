@@ -26,7 +26,7 @@ contract AddressManager is IAddressManager, Ownable {
     /// @param _tokenAddress The address of the Bodhi Token contract.
     function setBodhiTokenAddress(address _tokenAddress) 
         public 
-        onlyOwner 
+        onlyOwner()
         validAddress(_tokenAddress) 
     {
         BodhiTokenAddressChanged(bodhiTokenAddress, _tokenAddress);
@@ -38,6 +38,7 @@ contract AddressManager is IAddressManager, Ownable {
     /// @param _contractAddress The address of the EventFactory contract.
     function setEventFactoryAddress(address _sender, address _contractAddress) 
         public 
+        onlyOwner()
         validAddress(_contractAddress) 
     {
         require(_sender == owner);
@@ -51,12 +52,47 @@ contract AddressManager is IAddressManager, Ownable {
     /// @param _contractAddress The address of the OracleFactory contract.
     function setOracleFactoryAddress(address _sender, address _contractAddress) 
         public 
+        onlyOwner()
         validAddress(_contractAddress) 
     {
         require(_sender == owner);
         oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
         OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
         currentOracleFactoryIndex++;
+    }
+
+    /*
+    * @dev Sets the arbitrationBlockLength that DecentralizedOracles will use.
+    * @param _newArbitrationBlockLength The new block length of an arbitration period.
+    */
+    function setArbitrationBlockLength(uint16 _newArbitrationBlockLength) 
+        public
+        onlyOwner()
+    {   
+        require(_newArbitrationBlockLength > 0);
+        arbitrationBlockLength = _newArbitrationBlockLength;
+    }
+
+    /*
+    * @dev Sets the startingOracleThreshold that CentralizedOracles will use.
+    * @param _newThreshold The new consensusThreshold for CentralizedOracles.
+    */
+    function setStartingOracleThreshold(uint256 _newThreshold) 
+        public
+        onlyOwner()
+    {   
+        startingOracleThreshold = _newThreshold;
+    }
+
+    /*
+    * @dev Sets the consensusThresholdIncrement that DecentralizedOracles will use.
+    * @param _newIncrement The new increment amount for DecentralizedOracles.
+    */
+    function setConsensusThresholdIncrement(uint256 _newIncrement) 
+        public
+        onlyOwner()
+    {   
+        consensusThresholdIncrement = _newIncrement;
     }
 
     /// @notice Gets the latest index of a deployed EventFactory contract.
