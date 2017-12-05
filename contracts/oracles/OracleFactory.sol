@@ -15,7 +15,7 @@ contract OracleFactory is IOracleFactory {
         uint256 _bettingEndBlock, uint256 _resultSettingEndBlock, uint256 _consensusThreshold);
     event DecentralizedOracleCreated(address indexed _contractAddress, address indexed _eventAddress,
         bytes32[10] _eventName, bytes32[10] _eventResultNames, uint8 _numOfResults, uint8 _lastResultIndex, 
-        uint256 _arbitrationEndBlock, uint256 _consensusThreshold);
+        bool[10] _validResultIndexes, uint256 _arbitrationEndBlock, uint256 _consensusThreshold);
 
     /*
     * @notice Creates new OracleFactory contract.
@@ -71,12 +71,17 @@ contract OracleFactory is IOracleFactory {
         // DecentralizedOracle should not exist yet
         require(oracles[oracleHash] == address(0));
 
+        bool[10] memory validResultIndexes;
+        for (uint8 i = 0; i < _numOfResults; i++) {
+            validResultIndexes[i] = i != _lastResultIndex;
+        }
+
         DecentralizedOracle oracle = new DecentralizedOracle(msg.sender, _eventAddress, _eventName, _eventResultNames, 
             _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = address(oracle);
 
         DecentralizedOracleCreated(address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
-            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+            _lastResultIndex, validResultIndexes, _arbitrationEndBlock, _consensusThreshold);
 
         return address(oracle);
     }

@@ -27,9 +27,10 @@ contract Oracle is Ownable {
     ResultBalance[10] internal resultBalances;
 
     // Events
-    event OracleResultVoted(uint8 _oracleType, address indexed _participant, uint8 _resultIndex, uint256 _votedAmount);
-    event OracleResultSet(uint8 _oracleType, uint8 _resultIndex);
-    event OracleInvalidated(uint8 _oracleType);
+    event OracleResultVoted(address indexed _oracleAddress, address indexed _participant, uint8 _resultIndex, 
+        uint256 _votedAmount);
+    event OracleResultSet(address indexed _oracleAddress, uint8 _resultIndex);
+    event OracleInvalidated(address indexed _oracleAddress);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {

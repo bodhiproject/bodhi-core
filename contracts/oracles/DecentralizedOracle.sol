@@ -3,8 +3,6 @@ pragma solidity ^0.4.18;
 import "./Oracle.sol";
 
 contract DecentralizedOracle is Oracle {
-    uint8 public constant oracleType = 1;
-
     uint8 public lastResultIndex;
     uint256 public arbitrationEndBlock;
 
@@ -69,7 +67,7 @@ contract DecentralizedOracle is Oracle {
         currentBalance = currentBalance.add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
-        OracleResultVoted(oracleType, msg.sender, _eventResultIndex, _botAmount);
+        OracleResultVoted(address(this), msg.sender, _eventResultIndex, _botAmount);
 
         if (resultBalance.total >= consensusThreshold) {
             setResult();
@@ -87,7 +85,7 @@ contract DecentralizedOracle is Oracle {
         resultIndex = invalidResultIndex;
 
         ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
-        OracleInvalidated(oracleType);
+        OracleInvalidated(address(this));
     }
 
     /*
@@ -126,6 +124,6 @@ contract DecentralizedOracle is Oracle {
         }
 
         ITopicEvent(eventAddress).votingOracleSetResult(resultIndex, currentBalance);
-        OracleResultSet(oracleType, resultIndex);
+        OracleResultSet(address(this), resultIndex);
     }
 }

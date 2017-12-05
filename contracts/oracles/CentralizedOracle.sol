@@ -3,8 +3,6 @@ pragma solidity ^0.4.18;
 import "./Oracle.sol";
 
 contract CentralizedOracle is Oracle {
-    uint8 public constant oracleType = 0;
-
     address public oracle;
     uint256 public bettingEndBlock;
     uint256 public resultSettingEndBlock;
@@ -76,7 +74,7 @@ contract CentralizedOracle is Oracle {
         resultBalance.balances[msg.sender] = resultBalance.balances[msg.sender].add(msg.value);
 
         ITopicEvent(eventAddress).bet.value(msg.value)(msg.sender, _resultIndex);
-        OracleResultVoted(oracleType, msg.sender, _resultIndex, msg.value);
+        OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
     }
 
     /* 
@@ -99,7 +97,7 @@ contract CentralizedOracle is Oracle {
         resultIndex = _resultIndex;
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, _botAmount, consensusThreshold);
-        OracleResultSet(oracleType, _resultIndex);
+        OracleResultSet(address(this), _resultIndex);
     }
 
     /* 
@@ -116,6 +114,6 @@ contract CentralizedOracle is Oracle {
         resultIndex = invalidResultIndex;
 
         ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
-        OracleInvalidated(oracleType);
+        OracleInvalidated(address(this));
     }
 }
