@@ -1003,8 +1003,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: better3 });
                 assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
-                assert.equal((await testTopic.getBetBalances({ from: better3 }))[centralizedOracleResult], 0);
-                assert.equal((await testTopic.getVoteBalances({ from: better3 }))[centralizedOracleResult], 0);
+                assert.isTrue(await testTopic.didWithdraw.call(better3));
 
                 // better4
                 qtumWon = await testTopic.calculateQtumContributorWinnings({ from: better4 });
@@ -1017,8 +1016,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: better4 });
                 assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
-                assert.equal((await testTopic.getBetBalances({ from: better4 }))[centralizedOracleResult], 0);
-                assert.equal((await testTopic.getVoteBalances({ from: better4 }))[centralizedOracleResult], 0);
+                assert.isTrue(await testTopic.didWithdraw.call(better4));
 
                 // // oracle
                 qtumWon = await testTopic.calculateQtumContributorWinnings({ from: oracle });
@@ -1031,19 +1029,22 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: oracle });
                 assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
-                assert.equal((await testTopic.getBetBalances({ from: oracle }))[centralizedOracleResult], 0);
-                assert.equal((await testTopic.getVoteBalances({ from: oracle }))[centralizedOracleResult], 0);
+                assert.isTrue(await testTopic.didWithdraw.call(oracle));
 
                 // Losers withdraw
                 assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better1 }), 0);
                 botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better1 });
                 assert.equal(botWinningsArray[0], 0);
                 assert.equal(botWinningsArray[1], 0);
+                await testTopic.withdrawWinnings({ from: better1 });
+                assert.isTrue(await testTopic.didWithdraw.call(better1));
 
                 assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better2 }), 0);
                 botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better2 });
                 assert.equal(botWinningsArray[0], 0);
                 assert.equal(botWinningsArray[1], 0);
+                await testTopic.withdrawWinnings({ from: better2 });
+                assert.isTrue(await testTopic.didWithdraw.call(better2));
             });
 
             it('throws if status is not Status:Collection', async function() {

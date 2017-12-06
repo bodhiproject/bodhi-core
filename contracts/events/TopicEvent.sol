@@ -51,6 +51,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     IAddressManager private addressManager;
     ERC20 private token;
     Oracle[] public oracles;
+    mapping(address => bool) public didWithdraw;
 
     // Events
     event CentralizedOracleResultSet(uint8 _resultIndex);
@@ -307,6 +308,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         inCollectionStatus()
         nonReentrant()
     {
+        require(!didWithdraw[msg.sender]);
         require(totalQtumValue > 0);
 
         ResultBalance storage resultBalance = balances[finalResultIndex];
@@ -317,8 +319,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         (qtumReturn, botWon) = calculateBotContributorWinnings();
         qtumWon = qtumWon.add(qtumReturn);
 
-        resultBalance.betBalances[msg.sender] = 0;
-        resultBalance.voteBalances[msg.sender] = 0;
+        didWithdraw[msg.sender] = true;
 
         if (qtumWon > 0) {
             msg.sender.transfer(qtumWon);
