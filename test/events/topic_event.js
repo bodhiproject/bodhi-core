@@ -762,7 +762,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getTotalVoteBalance()).toString(), totalVoteBalance.toString());
             assert.equal((await token.balanceOf(testTopic.address)).toString(), 
                 (await testTopic.totalBotValue.call()).toString());
-            assert.isAbove((await decentralizedOracle.currentBalance.call()).toNumber(), 
+            assert.isAbove((await decentralizedOracle.getTotalVotes())[votingOracle1ResultIndex].toNumber(), 
                 (await decentralizedOracle.consensusThreshold.call()).toNumber());
             assert.isTrue(await decentralizedOracle.finished.call());
         });

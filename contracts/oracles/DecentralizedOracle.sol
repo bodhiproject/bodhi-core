@@ -64,8 +64,6 @@ contract DecentralizedOracle is Oracle {
         resultBalances[_eventResultIndex].votes[msg.sender] = resultBalances[_eventResultIndex].votes[msg.sender]
             .add(_botAmount);
 
-        currentBalance = currentBalance.add(_botAmount);
-
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
         OracleResultVoted(address(this), msg.sender, _eventResultIndex, _botAmount);
 
@@ -123,7 +121,7 @@ contract DecentralizedOracle is Oracle {
             }
         }
 
-        ITopicEvent(eventAddress).votingOracleSetResult(resultIndex, currentBalance);
+        ITopicEvent(eventAddress).votingOracleSetResult(resultIndex, winningVoteBalance);
         OracleResultSet(address(this), resultIndex);
     }
 }

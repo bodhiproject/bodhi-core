@@ -8,7 +8,7 @@ import "../libs/ByteUtils.sol";
 contract Oracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
-    
+
     struct ResultBalance {
         uint256 totalBets;
         uint256 totalVotes;
@@ -25,7 +25,6 @@ contract Oracle is Ownable {
     bytes32[10] internal eventResultNames;
     address public eventAddress;
     uint256 public consensusThreshold;
-    uint256 public currentBalance;
     ResultBalance[10] internal resultBalances;
 
     // Events
@@ -107,6 +106,38 @@ contract Oracle is Ownable {
             voteBalances[i] = resultBalances[i].votes[msg.sender];
         }
         return voteBalances;
+    }
+
+    /*
+    * @notice Gets total bets for all the results.
+    * @return An array of total bets for all results.
+    */
+    function getTotalBets() 
+        public
+        view
+        returns (uint256[10])
+    {
+        uint256[10] memory totalBets;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalBets[i] = resultBalances[i].totalBets;
+        }
+        return totalBets;
+    }
+
+    /*
+    * @notice Gets total votes for all the results.
+    * @return An array of total votes for all results.
+    */
+    function getTotalVotes() 
+        public
+        view
+        returns (uint256[10])
+    {
+        uint256[10] memory totalVotes;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalVotes[i] = resultBalances[i].totalVotes;
+        }
+        return totalVotes;
     }
 
     /*
