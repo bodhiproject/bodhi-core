@@ -398,16 +398,16 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     /*
-    * @notice Gets the final result index and name set by the Oracle (if it was set).
-    * @return The index and name of the final result.
+    * @notice Gets the final result index, name, and flag indicating if the result is final.
+    * @return The result index, name, and finalized bool.
     */
     function getFinalResult() 
         public 
         view
         resultIsSet()
-        returns (uint8, bytes32) 
+        returns (uint8, string, bool) 
     {
-        return (finalResultIndex, resultNames[finalResultIndex]);
+        return (finalResultIndex, ByteUtils.toString(resultNames[finalResultIndex]), status == Status.Collection);
     }
 
     /* 

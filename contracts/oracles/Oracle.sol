@@ -141,15 +141,15 @@ contract Oracle is Ownable {
     }
 
     /*
-    * @notice Gets the Oracle result index if the result is set.
-    * @return The index of the Oracle result.
+    * @notice Gets the Oracle result index, name, and flag indicating if the result is final.
+    * @return The result index, name, and finalized bool.
     */
-    function getResultIndex()
+    function getResult()
         public 
         view 
         isFinished()
-        returns (uint8) 
+        returns (uint8, string, bool) 
     {
-        return resultIndex;
+        return (resultIndex, ByteUtils.toString(eventResultNames[resultIndex]), finished);
     }
 }
