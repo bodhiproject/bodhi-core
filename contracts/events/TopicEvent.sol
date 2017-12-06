@@ -26,10 +26,10 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     }
 
     struct ResultBalance {
-        uint256 totalBetBalance;
-        uint256 totalVoteBalance;
-        mapping(address => uint256) betBalances;
-        mapping(address => uint256) voteBalances;
+        uint256 totalBets;
+        uint256 totalVotes;
+        mapping(address => uint256) bets;
+        mapping(address => uint256) votes;
     }
 
     struct Oracle {
@@ -115,8 +115,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
                 balances[i] = ResultBalance({
-                    totalBetBalance: 0,
-                    totalVoteBalance: 0
+                    totalBets: 0,
+                    totalVotes: 0
                     });
                 numOfResults++;
             } else {
@@ -149,8 +149,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     {
         require(msg.value > 0);
 
-        balances[_resultIndex].totalBetBalance = balances[_resultIndex].totalBetBalance.add(msg.value);
-        balances[_resultIndex].betBalances[_better] = balances[_resultIndex].betBalances[_better].add(msg.value);
+        balances[_resultIndex].totalBets = balances[_resultIndex].totalBets.add(msg.value);
+        balances[_resultIndex].bets[_better] = balances[_resultIndex].bets[_better].add(msg.value);
         totalQtumValue = totalQtumValue.add(msg.value);
     }
 
@@ -177,9 +177,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        balances[_resultIndex].totalVoteBalance = balances[_resultIndex].totalVoteBalance.add(_consensusThreshold);
-        balances[_resultIndex].voteBalances[_oracle] = balances[_resultIndex].voteBalances[_oracle]
-            .add(_consensusThreshold);
+        balances[_resultIndex].totalVotes = balances[_resultIndex].totalVotes.add(_consensusThreshold);
+        balances[_resultIndex].votes[_oracle] = balances[_resultIndex].votes[_oracle].add(_consensusThreshold);
         totalBotValue = totalBotValue.add(_consensusThreshold);
 
         token.transferFrom(_oracle, address(this), _consensusThreshold);
@@ -211,8 +210,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(_amount > 0);
         require(token.allowance(_sender, address(this)) >= _amount);
 
-        balances[_resultIndex].totalVoteBalance = balances[_resultIndex].totalVoteBalance.add(_amount);
-        balances[_resultIndex].voteBalances[_sender] = balances[_resultIndex].voteBalances[_sender].add(_amount);
+        balances[_resultIndex].totalVotes = balances[_resultIndex].totalVotes.add(_amount);
+        balances[_resultIndex].votes[_sender] = balances[_resultIndex].votes[_sender].add(_amount);
         totalBotValue = totalBotValue.add(_amount);
 
         return token.transferFrom(_sender, address(this), _amount);
@@ -360,7 +359,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     {
         uint256[10] memory betBalances;
         for (uint8 i = 0; i < numOfResults; i++) {
-            betBalances[i] = balances[i].betBalances[msg.sender];
+            betBalances[i] = balances[i].bets[msg.sender];
         }
         return betBalances;
     }
@@ -376,25 +375,9 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     {
         uint256[10] memory voteBalances;
         for (uint8 i = 0; i < numOfResults; i++) {
-            voteBalances[i] = balances[i].voteBalances[msg.sender];
+            voteBalances[i] = balances[i].votes[msg.sender];
         }
         return voteBalances;
-    }
-
-    /*
-    * @notice Gets the total BOT token vote balance of the TopicEvent and it's VotingOracles.
-    * @return The total BOT token vote balance.
-    */
-    function getTotalVoteBalance() 
-        public 
-        view 
-        returns (uint256) 
-    {
-        uint256 totalVoteBalance = 0;
-        for (uint i = 0; i < numOfResults; i++) {
-            totalVoteBalance = balances[i].totalVoteBalance.add(totalVoteBalance);
-        }
-        return totalVoteBalance;
     }
 
     /*
@@ -420,12 +403,12 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         inCollectionStatus()
         returns (uint256)  
     {
-        uint256 senderContribution = balances[finalResultIndex].betBalances[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalBetBalance;
+        uint256 senderContribution = balances[finalResultIndex].bets[msg.sender];
+        uint256 winnersTotal = balances[finalResultIndex].totalBets;
         uint256 losersTotalMinusCut = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             if (i != finalResultIndex) {
-                losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBetBalance);
+                losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBets);
             }
         }
         losersTotalMinusCut = losersTotalMinusCut.mul(90).div(100);
@@ -444,12 +427,12 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         returns (uint256, uint256) 
     {
         // Calculate BOT won
-        uint256 senderContribution = balances[finalResultIndex].voteBalances[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalVoteBalance;
+        uint256 senderContribution = balances[finalResultIndex].votes[msg.sender];
+        uint256 winnersTotal = balances[finalResultIndex].totalVotes;
         uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             if (i != finalResultIndex) {
-                losersTotal = losersTotal.add(balances[i].totalVoteBalance);
+                losersTotal = losersTotal.add(balances[i].totalVotes);
             }
         }
         uint256 botWon = senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
