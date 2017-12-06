@@ -297,7 +297,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     * @notice Allows winners of the Event to withdraw their QTUM and BOT winnings after the final result is set.
     */
     function withdrawWinnings() 
-        public 
+        external 
         resultIsSet()
         inCollectionStatus()
         nonReentrant()
@@ -378,6 +378,38 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
             voteBalances[i] = balances[i].votes[msg.sender];
         }
         return voteBalances;
+    }
+
+    /*
+    * @notice Gets total bets for all the results.
+    * @return An array of total bets for all results.
+    */
+    function getTotalBets() 
+        public
+        view
+        returns (uint256[10])
+    {
+        uint256[10] memory totalBets;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalBets[i] = balances[i].totalBets;
+        }
+        return totalBets;
+    }
+
+    /*
+    * @notice Gets total votes for all the results.
+    * @return An array of total votes for all results.
+    */
+    function getTotalVotes() 
+        public
+        view
+        returns (uint256[10])
+    {
+        uint256[10] memory totalVotes;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalVotes[i] = balances[i].totalVotes;
+        }
+        return totalVotes;
     }
 
     /*
