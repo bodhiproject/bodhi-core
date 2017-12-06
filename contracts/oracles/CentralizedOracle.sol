@@ -69,10 +69,8 @@ contract CentralizedOracle is Oracle {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
-        ResultBalance storage resultBalance = resultBalances[_resultIndex];
-        resultBalance.totalBets = resultBalance.totalBets.add(msg.value);
-        resultBalance.bets[msg.sender] = resultBalance.bets[msg.sender].add(msg.value);
-        resultBalances[_resultIndex] = resultBalance;
+        resultBalances[_resultIndex].totalBets = resultBalances[_resultIndex].totalBets.add(msg.value);
+        resultBalances[_resultIndex].bets[msg.sender] = resultBalances[_resultIndex].bets[msg.sender].add(msg.value);
 
         ITopicEvent(eventAddress).bet.value(msg.value)(msg.sender, _resultIndex);
         OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
@@ -95,10 +93,9 @@ contract CentralizedOracle is Oracle {
         finished = true;
         resultIndex = _resultIndex;
 
-        ResultBalance storage resultBalance = resultBalances[_resultIndex];
-        resultBalance.totalVotes = resultBalance.totalVotes.add(consensusThreshold);
-        resultBalance.votes[msg.sender] = resultBalance.votes[msg.sender].add(consensusThreshold);
-        resultBalances[_resultIndex] = resultBalance;
+        resultBalances[_resultIndex].totalVotes = resultBalances[_resultIndex].totalVotes.add(consensusThreshold);
+        resultBalances[_resultIndex].votes[msg.sender] = resultBalances[_resultIndex].votes[msg.sender]
+            .add(consensusThreshold);
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
         OracleResultSet(address(this), _resultIndex);

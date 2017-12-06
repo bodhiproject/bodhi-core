@@ -149,9 +149,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     {
         require(msg.value > 0);
 
-        ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.totalBetBalance = resultBalance.totalBetBalance.add(msg.value);
-        resultBalance.betBalances[_better] = resultBalance.betBalances[_better].add(msg.value);
+        balances[_resultIndex].totalBetBalance = balances[_resultIndex].totalBetBalance.add(msg.value);
+        balances[_resultIndex].betBalances[_better] = balances[_resultIndex].betBalances[_better].add(msg.value);
         totalQtumValue = totalQtumValue.add(msg.value);
     }
 
@@ -178,9 +177,9 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_consensusThreshold);
-        resultBalance.voteBalances[_oracle] = resultBalance.voteBalances[_oracle].add(_consensusThreshold);
+        balances[_resultIndex].totalVoteBalance = balances[_resultIndex].totalVoteBalance.add(_consensusThreshold);
+        balances[_resultIndex].voteBalances[_oracle] = balances[_resultIndex].voteBalances[_oracle]
+            .add(_consensusThreshold);
         totalBotValue = totalBotValue.add(_consensusThreshold);
 
         token.transferFrom(_oracle, address(this), _consensusThreshold);
@@ -212,9 +211,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(_amount > 0);
         require(token.allowance(_sender, address(this)) >= _amount);
 
-        ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_amount);
-        resultBalance.voteBalances[_sender] = resultBalance.voteBalances[_sender].add(_amount);
+        balances[_resultIndex].totalVoteBalance = balances[_resultIndex].totalVoteBalance.add(_amount);
+        balances[_resultIndex].voteBalances[_sender] = balances[_resultIndex].voteBalances[_sender].add(_amount);
         totalBotValue = totalBotValue.add(_amount);
 
         return token.transferFrom(_sender, address(this), _amount);
