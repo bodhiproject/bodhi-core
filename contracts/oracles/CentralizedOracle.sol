@@ -70,8 +70,9 @@ contract CentralizedOracle is Oracle {
         require(msg.value > 0);
 
         ResultBalance storage resultBalance = resultBalances[_resultIndex];
-        resultBalance.total = resultBalance.total.add(msg.value);
-        resultBalance.balances[msg.sender] = resultBalance.balances[msg.sender].add(msg.value);
+        resultBalance.totalBets = resultBalance.totalBets.add(msg.value);
+        resultBalance.bets[msg.sender] = resultBalance.bets[msg.sender].add(msg.value);
+        resultBalances[_resultIndex] = resultBalance;
 
         ITopicEvent(eventAddress).bet.value(msg.value)(msg.sender, _resultIndex);
         OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
@@ -96,6 +97,12 @@ contract CentralizedOracle is Oracle {
         finished = true;
         resultIndex = _resultIndex;
 
+        ResultBalance storage resultBalance = resultBalances[_resultIndex];
+        resultBalance.totalVotes = resultBalance.totalVotes.add(consensusThreshold);
+        resultBalance.votes[msg.sender] = resultBalance.votes[msg.sender].add(consensusThreshold);
+        resultBalances[_resultIndex] = resultBalance;
+
+        // TODO: remove _botAmount
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, _botAmount, consensusThreshold);
         OracleResultSet(address(this), _resultIndex);
     }

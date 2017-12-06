@@ -61,15 +61,16 @@ contract DecentralizedOracle is Oracle {
         require(_eventResultIndex != lastResultIndex);
 
         ResultBalance storage resultBalance = resultBalances[_eventResultIndex];
-        resultBalance.total = resultBalance.total.add(_botAmount);
-        resultBalance.balances[msg.sender] = resultBalance.balances[msg.sender].add(_botAmount);
+        resultBalance.totalVotes = resultBalance.totalVotes.add(_botAmount);
+        resultBalance.votes[msg.sender] = resultBalance.votes[msg.sender].add(_botAmount);
+        resultBalances[_eventResultIndex] = resultBalance;
 
         currentBalance = currentBalance.add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
         OracleResultVoted(address(this), msg.sender, _eventResultIndex, _botAmount);
 
-        if (resultBalance.total >= consensusThreshold) {
+        if (resultBalance.totalVotes >= consensusThreshold) {
             setResult();
         }
     }
@@ -116,7 +117,7 @@ contract DecentralizedOracle is Oracle {
 
         uint256 winningVoteBalance = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            uint256 totalVoteBalance = resultBalances[i].total;
+            uint256 totalVoteBalance = resultBalances[i].totalVotes;
             if (totalVoteBalance > winningVoteBalance) {
                 winningVoteBalance = totalVoteBalance;
                 resultIndex = i;

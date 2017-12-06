@@ -8,10 +8,12 @@ import "../libs/ByteUtils.sol";
 contract Oracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
-
+    
     struct ResultBalance {
-        uint256 total;
-        mapping(address => uint256) balances;
+        uint256 totalBets;
+        uint256 totalVotes;
+        mapping(address => uint256) bets;
+        mapping(address => uint256) votes;
     }
 
     uint8 public constant invalidResultIndex = 255;
@@ -76,16 +78,35 @@ contract Oracle is Ownable {
     }
 
     /*
-    * @notice Gets the amount voted by the Oracle participant given the Event result index.
-    * @return The amount voted.
+    * @notice Gets the bet balances of the sender for all the results.
+    * @return An array of all the bet balances of the sender.
     */
-    function getVotedBalance(uint8 _eventResultIndex) 
-        public 
-        view 
-        validResultIndex(_eventResultIndex)
-        returns (uint256)
+    function getBetBalances() 
+        public
+        view
+        returns (uint256[10]) 
     {
-        return resultBalances[_eventResultIndex].balances[msg.sender];
+        uint256[10] memory betBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            betBalances[i] = resultBalances[i].bets[msg.sender];
+        }
+        return betBalances;
+    }
+
+    /*
+    * @notice Gets the vote balances of the sender for all the results.
+    * @return An array of all the vote balances of the sender.
+    */
+    function getVoteBalances() 
+        public
+        view
+        returns (uint256[10]) 
+    {
+        uint256[10] memory voteBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            voteBalances[i] = resultBalances[i].votes[msg.sender];
+        }
+        return voteBalances;
     }
 
     /*
