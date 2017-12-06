@@ -159,20 +159,17 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     * @dev The CentralizedOracle should call setResult() from the CentralizedOracle contract. 
     * @param _oracle The address of the CentralizedOracle.
     * @param _resultIndex The index of the result to set.
-    * @param _botAmount The amount of BOT to transfer.
     * @param _consensusThreshold The BOT threshold that the CentralizedOracle has to contribute for validating the result.
     */
     function centralizedOracleSetResult(
         address _oracle, 
         uint8 _resultIndex, 
-        uint256 _botAmount, 
         uint256 _consensusThreshold)
         external 
         validResultIndex(_resultIndex)
         fromCentralizedOracle()
     {
         require(!oracles[0].didSetResult);
-        require(_botAmount >= _consensusThreshold);
         require(token.allowance(_oracle, address(this)) >= _consensusThreshold);
         require(status == Status.Betting);
 
@@ -182,8 +179,8 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         finalResultIndex = _resultIndex;
 
         ResultBalance storage resultBalance = balances[_resultIndex];
-        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_botAmount);
-        resultBalance.voteBalances[_oracle] = resultBalance.voteBalances[_oracle].add(_botAmount);
+        resultBalance.totalVoteBalance = resultBalance.totalVoteBalance.add(_consensusThreshold);
+        resultBalance.voteBalances[_oracle] = resultBalance.voteBalances[_oracle].add(_consensusThreshold);
         totalBotValue = totalBotValue.add(_consensusThreshold);
 
         token.transferFrom(_oracle, address(this), _consensusThreshold);
@@ -311,9 +308,7 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
         require(!didWithdraw[msg.sender]);
         require(totalQtumValue > 0);
 
-        ResultBalance storage resultBalance = balances[finalResultIndex];
         uint256 qtumWon = calculateQtumContributorWinnings();
-
         uint256 qtumReturn;
         uint256 botWon;
         (qtumReturn, botWon) = calculateBotContributorWinnings();

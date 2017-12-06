@@ -82,9 +82,8 @@ contract CentralizedOracle is Oracle {
     * @notice CentralizedOracle should call this to set the result. Requires the Oracle to approve() BOT in the amount 
     *   of the consensus threshold.
     * @param _resultIndex The index of the result to set.
-    * @param _botAmount The amount of BOT that was approved and will transfer to the Event contract.
     */
-    function setResult(uint8 _resultIndex, uint256 _botAmount)
+    function setResult(uint8 _resultIndex)
         external 
         validResultIndex(_resultIndex)
         isNotFinished()
@@ -92,7 +91,6 @@ contract CentralizedOracle is Oracle {
         require(msg.sender == oracle);
         require(block.number >= bettingEndBlock);
         require(block.number < resultSettingEndBlock);
-        require(_botAmount >= consensusThreshold);
 
         finished = true;
         resultIndex = _resultIndex;
@@ -102,8 +100,7 @@ contract CentralizedOracle is Oracle {
         resultBalance.votes[msg.sender] = resultBalance.votes[msg.sender].add(consensusThreshold);
         resultBalances[_resultIndex] = resultBalance;
 
-        // TODO: remove _botAmount
-        ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, _botAmount, consensusThreshold);
+        ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
         OracleResultSet(address(this), _resultIndex);
     }
 
