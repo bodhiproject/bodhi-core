@@ -9,7 +9,7 @@ import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 import "../ReentrancyGuard.sol";
 
-contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
+contract TopicEvent is ITopicEvent, Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -298,20 +298,17 @@ contract TopicEvent is ITopicEvent, Ownable, ReentrancyGuard {
     */
     function withdrawWinnings() 
         external 
-        resultIsSet()
         inCollectionStatus()
-        nonReentrant()
     {
         require(!didWithdraw[msg.sender]);
-        require(totalQtumValue > 0);
+
+        didWithdraw[msg.sender] = true;
 
         uint256 qtumWon = calculateQtumContributorWinnings();
         uint256 qtumReturn;
         uint256 botWon;
         (qtumReturn, botWon) = calculateBotContributorWinnings();
         qtumWon = qtumWon.add(qtumReturn);
-
-        didWithdraw[msg.sender] = true;
 
         if (qtumWon > 0) {
             msg.sender.transfer(qtumWon);
