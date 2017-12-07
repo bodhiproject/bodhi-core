@@ -1199,6 +1199,44 @@ contract('TopicEvent', function(accounts) {
                 assertInvalidOpcode(e);
             }
         });
+
+        it('throws if already withdrawn', async function() {
+            // DecentralizedOracle finalize result
+            let arbitrationEndBlock = await decentralizedOracle.arbitrationEndBlock.call();
+            await blockHeightManager.mineTo(arbitrationEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock.toNumber());
+            
+            await decentralizedOracle.finalizeResult({ from: better1 });
+            assert.isTrue(await decentralizedOracle.finished.call());
+            assert.equal((await testTopic.status.call()).toNumber(), statusCollection);
+
+            let finalResult = await testTopic.getFinalResult();
+            assert.equal(finalResult[0], cOracleResult);
+            assert.equal(finalResult[1], testTopicParams._resultNames[cOracleResult]);
+            assert.isTrue(finalResult[2]);
+
+            // Winner withdraw
+            await testTopic.withdrawWinnings({ from: better3 });
+            assert.isTrue(await testTopic.didWithdraw.call(better3));
+
+            try {
+                await testTopic.withdrawWinnings({ from: better3 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+
+            // Loser withdraw
+            await testTopic.withdrawWinnings({ from: better1 });
+            assert.isTrue(await testTopic.didWithdraw.call(better1));
+
+            try {
+                await testTopic.withdrawWinnings({ from: better1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
     });
 
     describe("getOracle()", async function() {
