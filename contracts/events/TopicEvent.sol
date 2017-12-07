@@ -7,7 +7,6 @@ import "../tokens/ERC20.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
-import "../ReentrancyGuard.sol";
 
 contract TopicEvent is ITopicEvent, Ownable {
     using ByteUtils for bytes32;
