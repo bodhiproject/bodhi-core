@@ -914,8 +914,6 @@ contract('TopicEvent', function(accounts) {
 
         beforeEach(async function() {
             // First round of betting
-            let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
-
             bet1 = web3.toBigNumber(7777777777);
             await centralizedOracle.bet(0, { from: better1, value: bet1 });
             assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), bet1.toNumber());
@@ -1000,10 +998,7 @@ contract('TopicEvent', function(accounts) {
             // Winners withdraw
             // better3
             var qtumWon = await testTopic.calculateQtumContributorWinnings({ from: better3 });
-            var botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better3 });
-            var botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            var botWon = await testTopic.calculateBotContributorWinnings({ from: better3 });
             var expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             var expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             await testTopic.withdrawWinnings({ from: better3 });
@@ -1013,10 +1008,7 @@ contract('TopicEvent', function(accounts) {
 
             // better4
             qtumWon = await testTopic.calculateQtumContributorWinnings({ from: better4 });
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better4 });
-            botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            botWon = await testTopic.calculateBotContributorWinnings({ from: better4 });
             expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             await testTopic.withdrawWinnings({ from: better4 });
@@ -1026,10 +1018,7 @@ contract('TopicEvent', function(accounts) {
 
             // // oracle
             qtumWon = await testTopic.calculateQtumContributorWinnings({ from: oracle });
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: oracle });
-            botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            botWon = await testTopic.calculateBotContributorWinnings({ from: oracle });
             expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             await testTopic.withdrawWinnings({ from: oracle });
@@ -1039,16 +1028,12 @@ contract('TopicEvent', function(accounts) {
 
             // Losers withdraw
             assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better1 }), 0);
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better1 });
-            assert.equal(botWinningsArray[0], 0);
-            assert.equal(botWinningsArray[1], 0);
+            assert.equal(await testTopic.calculateBotContributorWinnings({ from: better1 }), 0);
             await testTopic.withdrawWinnings({ from: better1 });
             assert.isTrue(await testTopic.didWithdraw.call(better1));
 
             assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better2 }), 0);
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better2 });
-            assert.equal(botWinningsArray[0], 0);
-            assert.equal(botWinningsArray[1], 0);
+            assert.equal(await testTopic.calculateBotContributorWinnings({ from: better2 }), 0);
             await testTopic.withdrawWinnings({ from: better2 });
             assert.isTrue(await testTopic.didWithdraw.call(better2));
         });
@@ -1131,10 +1116,7 @@ contract('TopicEvent', function(accounts) {
 
             // better3 winner withdraw
             var qtumWon = await testTopic.calculateQtumContributorWinnings({ from: better3 });
-            var botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better3 });
-            var botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            var botWon = await testTopic.calculateBotContributorWinnings({ from: better3 });
             var expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             var expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             assert.isFalse(await testTopic.didWithdraw.call(better3));
@@ -1145,10 +1127,7 @@ contract('TopicEvent', function(accounts) {
 
             // better4 winner withdraw
             qtumWon = await testTopic.calculateQtumContributorWinnings({ from: better4 });
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better4 });
-            botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            botWon = await testTopic.calculateBotContributorWinnings({ from: better4 });
             expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             assert.isFalse(await testTopic.didWithdraw.call(better4));
@@ -1159,10 +1138,7 @@ contract('TopicEvent', function(accounts) {
 
             // oracle winner withdraw
             qtumWon = await testTopic.calculateQtumContributorWinnings({ from: oracle });
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: oracle });
-            botWon = botWinningsArray[1];
-            qtumWon = qtumWon.add(botWinningsArray[0]);
-            
+            botWon = await testTopic.calculateBotContributorWinnings({ from: oracle });
             expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
             expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
             assert.isFalse(await testTopic.didWithdraw.call(oracle));
@@ -1173,18 +1149,14 @@ contract('TopicEvent', function(accounts) {
 
             // better1 loser withdraw
             assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better1 }), 0);
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better1 });
-            assert.equal(botWinningsArray[0], 0);
-            assert.equal(botWinningsArray[1], 0);
+            assert.equal(await testTopic.calculateBotContributorWinnings({ from: better1 }), 0);
             assert.isFalse(await testTopic.didWithdraw.call(better1));
             await testTopic.withdrawWinnings({ from: better1 });
             assert.isTrue(await testTopic.didWithdraw.call(better1));
 
             // better2 loser withdraw
             assert.equal(await testTopic.calculateQtumContributorWinnings({ from: better2 }), 0);
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better2 });
-            assert.equal(botWinningsArray[0], 0);
-            assert.equal(botWinningsArray[1], 0);
+            assert.equal(await testTopic.calculateBotContributorWinnings({ from: better2 }), 0);
             assert.isFalse(await testTopic.didWithdraw.call(better2));
             await testTopic.withdrawWinnings({ from: better2 });
             assert.isTrue(await testTopic.didWithdraw.call(better2));
@@ -1398,18 +1370,14 @@ contract('TopicEvent', function(accounts) {
                     assert.isTrue(finalResult[2]);
 
                     // Withdrawing: winning result 2 = better3, better4
-                    let losingBlockingTokens = bet1.add(bet2).mul(90).div(100);
+                    let losingBlockingTokens = bet1.add(bet2);
                     let winningBlockchainTokens = bet3.add(bet4);
 
-                    // better3: 30 * 31 / 42 = 22 + 27 = 49 blockchain tokens won
-                    let bet3MinusCut = bet3.mul(90).div(100);
-                    var winnings = bet3.mul(losingBlockingTokens).div(winningBlockchainTokens).add(bet3MinusCut);
+                    var winnings = bet3.mul(losingBlockingTokens).div(winningBlockchainTokens).add(bet3);
                     assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better3 })).toString(), 
                         winnings.toString());
 
-                    // better4: 12 * 31 / 42 = 8 + 10 = 18 blockchain tokens won
-                    let bet4MinusCut = bet4.mul(90).div(100);
-                    winnings = bet4.mul(losingBlockingTokens).div(winningBlockchainTokens).add(bet4MinusCut);
+                    winnings = bet4.mul(losingBlockingTokens).div(winningBlockchainTokens).add(bet4);
                     assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better4 })).toString(), 
                         winnings.toString());
                 });
@@ -1425,7 +1393,7 @@ contract('TopicEvent', function(accounts) {
             });
 
             describe('calculateBotContributorWinnings()', async function() {
-                it('returns the QTUM and BOT tokens won', async function() {
+                it('returns the BOT tokens won', async function() {
                     // DecentralizedOracle voting under consensusThreshold
                     let vote1 = Utils.getBigNumberWithDecimals(45, botDecimals);
                     await token.approve(testTopic.address, vote1, { from: better1 });
@@ -1459,18 +1427,16 @@ contract('TopicEvent', function(accounts) {
                     let winningTotalContribution = startingOracleThreshold.add(bet3).add(bet4);
 
                     // better3: 0 BOT votes
-                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better3 }))[0].toString(), 0);
-                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better3 }))[1].toString(), 0);
+                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better3 })).toString(), 0);
 
                     // better4: 0 BOT votes        
-                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better4 }))[0].toString(), 0);
-                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better4 }))[1].toString(), 0);
+                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: better4 })).toString(), 0);
 
                     // oracle: 100 * 99 / 100 = 99 + 100 = 199 BOT tokens won
                     let oracleBotVote = startingOracleThreshold;
                     let totalBotContribution = startingOracleThreshold;
                     winnings = Math.trunc(oracleBotVote.mul(losingBotTokens).div(totalBotContribution).add(oracleBotVote));
-                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: oracle }))[1].toString(), 
+                    assert.equal((await testTopic.calculateBotContributorWinnings({ from: oracle })).toString(), 
                         winnings.toString());
                 });
 
@@ -1610,71 +1576,54 @@ contract('TopicEvent', function(accounts) {
 
             // Withdraw winnings: better3, better4, better5, oracle
             let totalQtum = await testTopic.totalQtumValue.call();
-            let losersQtum = Math.floor(bet1.add(bet2).mul(90).div(100));
+            let losersQtum = Math.floor(bet1.add(bet2));
             let winnersQtum = Math.floor(bet3.add(bet4));
             let losersBot = Math.floor(vote1a.add(vote2a).add(vote1b).add(vote2b));
             let winnersBot = Math.floor(startingOracleThreshold.add(vote3a).add(vote4a).add(vote5a));
-            let rewardQtum = Math.floor(totalQtum.mul(10).div(100));
 
             // better3 winner
-            var betMinusCut = Math.floor(bet3.mul(90).div(100));
-            var expectedQtum = Math.floor(bet3.mul(losersQtum).div(winnersQtum).add(betMinusCut));
+            var expectedQtum = Math.floor(bet3.mul(losersQtum).div(winnersQtum).add(bet3));
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better3 })).toString(), 
                 expectedQtum.toString());
 
             var botContribution = vote3a;
             var expectedBot = Math.floor(botContribution.mul(losersBot).div(winnersBot).add(botContribution));
-            var botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better3 });
-            assert.equal(botWinningsArray[1].toString(), expectedBot.toString());
-
-            expectedQtum = Math.floor(botContribution.mul(rewardQtum).div(winnersBot));
-            assert.equal(botWinningsArray[0].toString(), expectedQtum.toString());
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better3 })).toString(), 
+                expectedBot.toString());
 
             // better4 winner
-            betMinusCut = Math.floor(bet4.mul(90).div(100));
-            expectedQtum = Math.floor(bet4.mul(losersQtum).div(winnersQtum).add(betMinusCut));
+            expectedQtum = Math.floor(bet4.mul(losersQtum).div(winnersQtum).add(bet4));
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better4 })).toString(), 
                 expectedQtum.toString());
 
             botContribution = vote4a;
             expectedBot = Math.floor(botContribution.mul(losersBot).div(winnersBot).add(botContribution));
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better4 });
-            assert.equal(botWinningsArray[1].toString(), expectedBot.toString());
-
-            expectedQtum = Math.floor(botContribution.mul(rewardQtum).div(winnersBot));
-            assert.equal(botWinningsArray[0].toString(), expectedQtum.toString());
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better4 })).toString(), 
+                expectedBot.toString());
 
             // better5 winner
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better5 })).toString(), 0);
 
             botContribution = vote5a;
             expectedBot = Math.floor(botContribution.mul(losersBot).div(winnersBot).add(botContribution));
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: better5 });
-            assert.equal(botWinningsArray[1].toString(), expectedBot.toString());
-
-            expectedQtum = Math.floor(botContribution.mul(rewardQtum).div(winnersBot));
-            assert.equal(botWinningsArray[0].toString(), expectedQtum.toString());
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better5 })).toString(), 
+                expectedBot.toString());
 
             // CentralizedOracle winner
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: oracle })).toString(), 0);
 
             botContribution = startingOracleThreshold;
             expectedBot = Math.floor(botContribution.mul(losersBot).div(winnersBot).add(botContribution));
-            botWinningsArray = await testTopic.calculateBotContributorWinnings({ from: oracle });
-            assert.equal(botWinningsArray[1].toString(), expectedBot.toString());
-
-            expectedQtum = Math.floor(botContribution.mul(rewardQtum).div(winnersBot));
-            assert.equal(botWinningsArray[0].toString(), expectedQtum.toString());
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: oracle })).toString(), 
+                expectedBot.toString());
 
             // better1 loser
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better1 })).toString(), 0);
-            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better1 }))[0].toString(), 0);
-            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better1 }))[1].toString(), 0);
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better1 })).toString(), 0);
 
             // better2 loser
             assert.equal((await testTopic.calculateQtumContributorWinnings({ from: better2 })).toString(), 0);
-            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better2 }))[0].toString(), 0);
-            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better2 }))[1].toString(), 0);
+            assert.equal((await testTopic.calculateBotContributorWinnings({ from: better2 })).toString(), 0);
         });
     });
 });
