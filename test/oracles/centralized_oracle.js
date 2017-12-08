@@ -11,6 +11,7 @@ const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 const Utils = require('../helpers/utils');
+const ethAsync = bluebird.promisifyAll(web3.eth);
 
 contract('CentralizedOracle', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
@@ -218,6 +219,69 @@ contract('CentralizedOracle', function(accounts) {
                     topicEventParams._resultNames, await topicEvent.numOfResults.call(), 
                     topicEventParams._bettingEndBlock, topicEventParams._bettingEndBlock - 1, 
                     await addressManager.startingOracleThreshold.call());
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+    });
+
+    describe("fallback function", async function() {
+        it("throws upon calling", async function() {
+            try {
+                await ethAsync.sendTransactionAsync({
+                    to: centralizedOracle.address,
+                    from: user1,
+                    value: 1
+                });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+    });
+
+    describe("bet()", async function() {
+        it("allows betting", async function() {
+            assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
+
+            let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
+            let betResultIndex = 1;
+            await centralizedOracle.bet(betResultIndex, { from: user1, value: betAmount });
+
+            assert.equal((await centralizedOracle.getTotalBets())[betResultIndex].toString(), betAmount.toString());
+            assert.equal((await centralizedOracle.getBetBalances({ from: user1 }))[betResultIndex].toString(), 
+                betAmount.toString());
+        });
+
+        it("throws if resultIndex is invalid", async function() {
+            assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
+
+            try {
+                await centralizedOracle.bet(3, { from: user1, value: 1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it("throws if the block is at the bettingEndBlock or higher", async function() {
+            await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
+            
+            try {
+                await centralizedOracle.bet(0, { from: user1, value: 1 });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+        });
+
+        it("throws if the bet is 0", async function() {
+            assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
+            
+            try {
+                await centralizedOracle.bet(0, { from: user1, value: 0 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
