@@ -226,8 +226,8 @@ contract('CentralizedOracle', function(accounts) {
         });
     });
 
-    describe("fallback function", async function() {
-        it("throws upon calling", async function() {
+    describe('fallback function', async function() {
+        it('throws upon calling', async function() {
             try {
                 await ethAsync.sendTransactionAsync({
                     to: centralizedOracle.address,
@@ -241,8 +241,8 @@ contract('CentralizedOracle', function(accounts) {
         });
     });
 
-    describe("bet()", async function() {
-        it("allows betting", async function() {
+    describe('bet()', async function() {
+        it('allows betting', async function() {
             assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
 
             let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
@@ -254,7 +254,7 @@ contract('CentralizedOracle', function(accounts) {
                 betAmount.toString());
         });
 
-        it("throws if resultIndex is invalid", async function() {
+        it('throws if resultIndex is invalid', async function() {
             assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
 
             try {
@@ -265,7 +265,7 @@ contract('CentralizedOracle', function(accounts) {
             }
         });
 
-        it("throws if the block is at the bettingEndBlock or higher", async function() {
+        it('throws if the block is at the bettingEndBlock', async function() {
             await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
             assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
             
@@ -277,7 +277,7 @@ contract('CentralizedOracle', function(accounts) {
             }
         });
 
-        it("throws if the bet is 0", async function() {
+        it('throws if the bet is 0', async function() {
             assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
             
             try {
@@ -286,6 +286,106 @@ contract('CentralizedOracle', function(accounts) {
             } catch(e) {
                 assertInvalidOpcode(e);
             }
+        });
+    });
+
+    describe('setResult()', async function() {
+        let startingOracleThreshold;
+
+        beforeEach(async function() {
+            assert.isFalse(await centralizedOracle.finished.call());
+            assert.equal(await centralizedOracle.oracle.call(), oracle);
+
+            startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+
+            await token.approve(topicEvent.address, startingOracleThreshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
+                startingOracleThreshold.toString());
+        });
+
+        describe('in valid block', async function() {
+            beforeEach(async function() {
+                await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
+                assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
+                assert.isBelow(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
+            });
+
+            it('sets the result index', async function() {
+                let resultIndex = 2;
+                await centralizedOracle.setResult(resultIndex, { from: oracle });
+                assert.isTrue(await centralizedOracle.finished.call());
+                let finalResult = await centralizedOracle.getResult();
+                assert.equal(finalResult[0], resultIndex);
+                assert.equal(finalResult[1], topicEventParams._resultNames[resultIndex]);
+                assert.isTrue(finalResult[2]);
+                assert.equal((await centralizedOracle.getTotalVotes())[resultIndex].toString(), 
+                    startingOracleThreshold.toString());
+                assert.equal((await centralizedOracle.getVoteBalances({ from: oracle }))[resultIndex].toString(), 
+                    startingOracleThreshold.toString());
+            });
+
+            it('throws if resultIndex is invalid', async function() {
+                try {
+                    await centralizedOracle.setResult(3, { from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+
+            it('throws if it is already finished', async function() {
+                await centralizedOracle.setResult(0, { from: oracle });
+                assert.isTrue(await centralizedOracle.finished.call());
+
+                await token.approve(topicEvent.address, startingOracleThreshold, { from: oracle });
+                    assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
+                        startingOracleThreshold.toString());
+
+                try {
+                    await centralizedOracle.setResult(1, { from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+
+            it('throws if the sender is not the oracle', async function() {
+                await token.approve(topicEvent.address, startingOracleThreshold, { from: user1 });
+                assert.equal((await token.allowance(user1, topicEvent.address)).toString(), 
+                    startingOracleThreshold.toString());
+
+                try {
+                    await centralizedOracle.setResult(0, { from: user1 });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
+
+        describe('in invalid block', async function() {
+            it('throws if block is below the bettingEndBlock', async function() {
+                assert.isBelow(await getBlockNumber(), topicEventParams._bettingEndBlock);
+
+                try {
+                    await centralizedOracle.setResult(0, { from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+
+            it('throws if block is at the resultSettingEndBlock', async function() {
+                await blockHeightManager.mineTo(topicEventParams._resultSettingEndBlock);
+                assert.isAtLeast(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
+
+                try {
+                    await centralizedOracle.setResult(0, { from: oracle });
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
         });
     });
 });
