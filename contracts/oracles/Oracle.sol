@@ -1,43 +1,37 @@
 pragma solidity ^0.4.18;
 
+import "../events/ITopicEvent.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
-import "../ReentrancyGuard.sol";
-import "../storage/IAddressManager.sol";
-import "../tokens/ERC20.sol";
 
-/// @title Base Oracle contract
-contract Oracle is Ownable, ReentrancyGuard {
+contract Oracle is Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
-    struct Participant {
-        bool didSetResult;
-        bool didWithdrawEarnings;
-        uint8 resultIndex;
-        uint256 stakeContributed;
+    struct ResultBalance {
+        uint256 totalBets;
+        uint256 totalVotes;
+        mapping(address => uint256) bets;
+        mapping(address => uint256) votes;
     }
 
-    struct Result {
-        bytes32 name;
-        uint256 votedBalance;
-    }
+    uint8 public constant invalidResultIndex = 255;
 
-    uint256 public constant nativeDecimals = 18; // Number of decimals of token used to create Oracle
-    uint256 public constant botDecimals = 8; // Number of decimals for BOT
-    uint256 public constant minBaseReward = 1 * (10**nativeDecimals); // Minimum amount needed to create Oracle
-    uint256 public constant maxStakeContribution = 101 * (10**botDecimals); // Maximum amount of BOT staking contributions allowed
-
+    bool public finished;
     uint8 public numOfResults;
-    bytes32[10] private eventName;
-    uint256 public eventBettingEndBlock;
-    uint256 public decisionEndBlock; // Block number when Oracle participants can no longer set a result
-    uint256 public arbitrationOptionEndBlock; // Block number when Oracle participants can no longer start arbitration
-    uint256 public totalStakeContributed;
-    Result[10] private eventResults;
-    IAddressManager private addressManager;
-    mapping(address => Participant) private participants;
+    uint8 internal resultIndex;
+    bytes32[10] internal eventName;
+    bytes32[10] internal eventResultNames;
+    address public eventAddress;
+    uint256 public consensusThreshold;
+    ResultBalance[10] internal resultBalances;
+
+    // Events
+    event OracleResultVoted(address indexed _oracleAddress, address indexed _participant, uint8 _resultIndex, 
+        uint256 _votedAmount);
+    event OracleResultSet(address indexed _oracleAddress, uint8 _resultIndex);
+    event OracleInvalidated(address indexed _oracleAddress);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -45,126 +39,22 @@ contract Oracle is Ownable, ReentrancyGuard {
         _;
     }
 
-    // Events
-    event OracleCreated(bytes32[10] _eventName, bytes32[10] _eventResultNames, uint256 _eventBettingEndBlock, 
-        uint256 _decisionEndBlock, uint256 _arbitrationOptionEndBlock);
-    event OracleFunded(uint256 _baseRewardAmount);
-    event ParticipantVoted(address _participant, uint256 _stakeContributed, uint8 _resultIndex);
-    event EarningsWithdrawn(uint256 _amountWithdrawn);
-
-    /// @notice Creates new Oracle contract.
-    /// @param _owner The address of the owner.
-    /// @param _eventName The name of the Event this Oracle will arbitrate.
-    /// @param _eventResultNames The result options of the Event.
-    /// @param _eventBettingEndBlock The block when Event betting ended.
-    /// @param _decisionEndBlock The block when Oracle voting will end.
-    /// @param _arbitrationOptionEndBlock The block when the option to start an arbitration will end.
-    /// @param _addressManager The address of the AddressManager contract.
-    function Oracle(
-        address _owner,
-        bytes32[10] _eventName,
-        bytes32[10] _eventResultNames, 
-        uint256 _eventBettingEndBlock,
-        uint256 _decisionEndBlock,
-        uint256 _arbitrationOptionEndBlock,
-        address _addressManager)
-        Ownable(_owner)
-        public
-        validAddress(_addressManager)
-    {
-        require(!_eventName[0].isEmpty());
-        require(!_eventResultNames[0].isEmpty());
-        require(!_eventResultNames[1].isEmpty());
-        require(_decisionEndBlock > _eventBettingEndBlock);
-        require(_arbitrationOptionEndBlock > _decisionEndBlock);
-
-        eventName = _eventName;
-
-        for (uint i = 0; i < _eventResultNames.length; i++) {
-            if (!_eventResultNames[i].isEmpty()) {
-                eventResults[i] = Result({
-                    name: _eventResultNames[i],
-                    votedBalance: 0
-                });
-                numOfResults++;
-            } else {
-                break;
-            }
-        }
-
-        eventBettingEndBlock = _eventBettingEndBlock;
-        decisionEndBlock = _decisionEndBlock;
-        arbitrationOptionEndBlock = _arbitrationOptionEndBlock;
-
-        OracleCreated(eventName, _eventResultNames, _eventBettingEndBlock, _decisionEndBlock, 
-            arbitrationOptionEndBlock);
-
-        addressManager = IAddressManager(_addressManager);
+    modifier isNotFinished() {
+        require(!finished);
+        _;
     }
 
-    /// @notice Fallback function that rejects any amount sent to the contract.
-    function() external payable {
-        revert();
+    modifier isFinished() {
+        require(finished);
+        _;
     }
 
-    /// @notice Deposit the base reward for the Oracle.
-    function addBaseReward()
-        external
-        payable
-        nonReentrant()
-    {
-        require(msg.value >= minBaseReward);
-        OracleFunded(msg.value);
-    }
+    function invalidateOracle() external;
 
-    /// @notice Vote an Event result which requires BOT payment.
-    /// @param _eventResultIndex The Event result which is being voted on.
-    /// @param _botAmount The amount of BOT to use for voting.
-    function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
-        public 
-        validResultIndex(_eventResultIndex) 
-    {
-        require(_botAmount > 0);
-        require(totalStakeContributed.add(_botAmount) <= maxStakeContribution);
-        require(block.number >= eventBettingEndBlock);
-        require(block.number < decisionEndBlock);
-        require(!participants[msg.sender].didSetResult);
-        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
-        require(token.allowance(msg.sender, address(this)) >= _botAmount);
-
-        Participant storage participant = participants[msg.sender];
-        participant.didSetResult = true;
-        participant.resultIndex = _eventResultIndex;
-        participant.stakeContributed = _botAmount;
-
-        eventResults[_eventResultIndex].votedBalance = eventResults[_eventResultIndex].votedBalance.add(_botAmount);
-        totalStakeContributed = totalStakeContributed.add(_botAmount);
-
-        token.transferFrom(msg.sender, address(this), _botAmount);
-
-        ParticipantVoted(msg.sender, _botAmount, _eventResultIndex);
-    }
-
-    /// @notice Withdraw earnings if you picked the correct result.
-    function withdrawEarnings() 
-        public 
-    {
-        require(block.number >= arbitrationOptionEndBlock);
-        require(participants[msg.sender].stakeContributed > 0);
-        require(totalStakeContributed > 0);
-        require(!participants[msg.sender].didWithdrawEarnings);
-
-        uint256 withdrawAmount = getEarningsAmount();
-        participants[msg.sender].didWithdrawEarnings = true;
-
-        require(withdrawAmount > 0);
-        msg.sender.transfer(withdrawAmount);
-
-        EarningsWithdrawn(withdrawAmount);
-    }
-
-    /// @notice Gets the Event name as a string.
-    /// @return The name of the Event.
+    /*
+    * @notice Gets the Event name as a string.
+    * @return The name of the Event.
+    */
     function getEventName() 
         public 
         view 
@@ -173,98 +63,93 @@ contract Oracle is Ownable, ReentrancyGuard {
         return ByteUtils.toString(eventName);
     }
 
-    /// @notice Gets the Event result name given a valid index.
-    /// @param _eventResultIndex The index of the wanted result name.
-    /// @return The name of the Event result.
+    /*
+    * @notice Gets the Event result names as an array of strings.
+    * @return An array of result name strings.
+    */
     function getEventResultName(uint8 _eventResultIndex) 
         public 
-        validResultIndex(_eventResultIndex) 
         view 
-        returns (bytes32) 
+        validResultIndex(_eventResultIndex)
+        returns (string) 
     {
-        return eventResults[_eventResultIndex].name;
+        return ByteUtils.toString(eventResultNames[_eventResultIndex]);
     }
 
-    /// @notice Gets the stake contributed by the Oracle participant.
-    /// @return The amount of stake contributed by the Oracle participant.
-    function getStakeContributed() 
-        public 
-        view 
-        returns(uint256) 
+    /*
+    * @notice Gets the bet balances of the sender for all the results.
+    * @return An array of all the bet balances of the sender.
+    */
+    function getBetBalances() 
+        public
+        view
+        returns (uint256[10]) 
     {
-        return participants[msg.sender].stakeContributed;
+        uint256[10] memory betBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            betBalances[i] = resultBalances[i].bets[msg.sender];
+        }
+        return betBalances;
     }
 
-    /// @notice Shows if the Oracle participant has voted yet.
-    /// @return Flag that shows if the Oracle participant has voted yet.
-    function didSetResult() 
-        public 
-        view 
-        returns(bool) 
+    /*
+    * @notice Gets the vote balances of the sender for all the results.
+    * @return An array of all the vote balances of the sender.
+    */
+    function getVoteBalances() 
+        public
+        view
+        returns (uint256[10]) 
     {
-        return participants[msg.sender].didSetResult;
+        uint256[10] memory voteBalances;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            voteBalances[i] = resultBalances[i].votes[msg.sender];
+        }
+        return voteBalances;
     }
 
-    /// @notice Gets the result index the Oracle participant previously voted on.
-    /// @return The voted result index.
-    function getVotedResultIndex() 
-        public 
-        view 
-        returns(uint8) 
+    /*
+    * @notice Gets total bets for all the results.
+    * @return An array of total bets for all results.
+    */
+    function getTotalBets() 
+        public
+        view
+        returns (uint256[10])
     {
-        require(participants[msg.sender].didSetResult);
-        return participants[msg.sender].resultIndex;
+        uint256[10] memory totalBets;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalBets[i] = resultBalances[i].totalBets;
+        }
+        return totalBets;
     }
 
-    /// @notice Gets the final result index set by the Oracle participants.
-    /// @return The index of the final result set by Oracle participants.
-    function getFinalResultIndex() 
-        public 
-        view 
-        returns (uint8) 
+    /*
+    * @notice Gets total votes for all the results.
+    * @return An array of total votes for all results.
+    */
+    function getTotalVotes() 
+        public
+        view
+        returns (uint256[10])
     {
-        require(block.number >= decisionEndBlock);
-
-        uint8 finalResultIndex = 0;
-        uint256 winningIndexAmount = 0;
-        for (uint8 i = 0; i < eventResults.length; i++) {
-            uint256 votedBalance = eventResults[i].votedBalance;
-            if (votedBalance > winningIndexAmount) {
-                winningIndexAmount = votedBalance;
-                finalResultIndex = i;
-            }
+        uint256[10] memory totalVotes;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            totalVotes[i] = resultBalances[i].totalVotes;
         }
-
-        return finalResultIndex;
+        return totalVotes;
     }
 
-    /// @notice Gets the amount of earnings you can withdraw.
-    /// @return The amount of earnings you can withdraw.
-    function getEarningsAmount() 
+    /*
+    * @notice Gets the Oracle result index, name, and flag indicating if the result is final.
+    * @return The result index, name, and finalized bool.
+    */
+    function getResult()
         public 
         view 
-        returns(uint256) 
+        isFinished()
+        returns (uint8, string, bool) 
     {
-        uint256 stakeContributed = participants[msg.sender].stakeContributed;
-        if (stakeContributed == 0) {
-            return 0;
-        }
-
-        if (!participants[msg.sender].didSetResult) {
-            return 0;
-        }
-
-        if (participants[msg.sender].didWithdrawEarnings) {
-            return 0;
-        }
-
-        uint8 finalResultIndex = getFinalResultIndex();
-        if (participants[msg.sender].resultIndex != finalResultIndex) {
-            return 0;
-        }
-
-        uint256 winningResultContributions = eventResults[finalResultIndex].votedBalance;
-        uint256 losingResultContributions = totalStakeContributed.sub(winningResultContributions);
-        return stakeContributed.mul(losingResultContributions).div(winningResultContributions).add(stakeContributed);
+        return (resultIndex, ByteUtils.toString(eventResultNames[resultIndex]), finished);
     }
 }
