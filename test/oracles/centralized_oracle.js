@@ -388,4 +388,7 @@ contract('CentralizedOracle', function(accounts) {
             });
         });
     });
+
+    describe('invalidateOracle()', async function() {
+    });
 });
