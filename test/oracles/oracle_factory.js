@@ -1,13 +1,13 @@
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
-const Oracle = artifacts.require('./oracles/Oracle.sol');
-const BlockHeightManager = require('./helpers/block_height_manager');
-const Utils = require('./helpers/utils');
+const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol');
+const BlockHeightManager = require('../helpers/block_height_manager');
+const Utils = require('../helpers/utils');
 const assert = require('chai').assert;
 const web3 = global.web3;
 
 contract('OracleFactory', function(accounts) {
-    // These should match the decimals in the Oracle contract.
+    // These should match the decimals in the DecentralizedOracle contract.
     const nativeDecimals = 18;
     const botDecimals = 8;
 
@@ -34,11 +34,14 @@ contract('OracleFactory', function(accounts) {
 
     beforeEach(async function() {
         addressManager = await AddressManager.deployed({ from: oracleFactoryCreator });
-        oracleFactory = await OracleFactory.deployed(addressManager.contract.address, { from: oracleFactoryCreator });
+
+        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: oracleFactoryCreator });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: oracleFactoryCreator });
+        assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
 
         let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
             { from: oracleCreator, value: baseReward });
-        oracle = await Oracle.at(transaction.logs[0].args._oracleAddress);
+        oracle = await DecentralizedOracle.at(transaction.logs[0].args._oracleAddress);
     });
 
     describe('constructor', async function() {
@@ -59,7 +62,7 @@ contract('OracleFactory', function(accounts) {
     });
 
     describe('createOracle', async function() {
-        it('initializes all the values of the new Oracle', async function() {
+        it('initializes all the values of the new DecentralizedOracle', async function() {
             assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
             assert.equal(await oracle.getEventName(), testParams._eventName.join(''), 'eventName does not match');
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testParams._eventResultNames[0], 
@@ -81,9 +84,9 @@ contract('OracleFactory', function(accounts) {
             assert.equal(balance.toString(), baseReward.toString(), 'baseReward does not match');
         });
 
-        it('does not allow recreating the same Oracle twice', async function() {
+        it('does not allow recreating the same DecentralizedOracle twice', async function() {
             let oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
-            assert.isTrue(oracleExists, 'Oracle should already exist');
+            assert.isTrue(oracleExists, 'DecentralizedOracle should already exist');
 
             try {
                 await oracleFactory.createOracle(...Object.values(testParams), 
@@ -95,13 +98,13 @@ contract('OracleFactory', function(accounts) {
     });
 
     describe('doesOracleExist', async function() {
-        it('returns true if the Oracle exists', async function() {
+        it('returns true if the DecentralizedOracle exists', async function() {
             var oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
-            assert.isTrue(oracleExists, 'Oracle 1 should already exist');
+            assert.isTrue(oracleExists, 'DecentralizedOracle 1 should already exist');
 
             var oracleExists = await oracleFactory.doesOracleExist(['oracle 2'], ['first', 'second', 'third'], 100, 120, 
                 140);
-            assert.isFalse(oracleExists, 'Oracle 2 should not exist');
+            assert.isFalse(oracleExists, 'DecentralizedOracle 2 should not exist');
         });
     });
 });
