@@ -53,7 +53,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     mapping(address => bool) public didWithdraw;
 
     // Events
-    event FinalResultSet(address _eventAddress, uint8 _finalResultIndex);
+    event FinalResultSet(address indexed _eventAddress, uint8 _finalResultIndex);
     event WinningsWithdrawn(address indexed _winner, uint256 _qtumTokenWon, uint256 _botTokenWon);
 
     // Modifiers
