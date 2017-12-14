@@ -53,8 +53,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     mapping(address => bool) public didWithdraw;
 
     // Events
-    event CentralizedOracleResultSet(uint8 _resultIndex);
-    event FinalResultSet(uint8 _finalResultIndex);
+    event FinalResultSet(address _eventAddress, uint8 _finalResultIndex);
     event WinningsWithdrawn(address indexed _winner, uint256 _qtumTokenWon, uint256 _botTokenWon);
 
     // Modifiers
@@ -287,7 +286,7 @@ contract TopicEvent is ITopicEvent, Ownable {
 
         status = Status.Collection;
  
-        FinalResultSet(finalResultIndex);
+        FinalResultSet(address(this), finalResultIndex);
 
         return true;
     }
