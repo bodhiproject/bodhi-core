@@ -1,0 +1,6 @@
+9fa92fea: bet(address,uint8)
+74513913: centralizedOracleSetResult(address,uint8,uint256)
+61cac418: finalizeResult()
+86b17bf3: invalidateOracle(uint256)
+006a8a32: voteFromOracle(uint8,address,uint256)
+a2f82c0e: votingOracleSetResult(uint8,uint256)

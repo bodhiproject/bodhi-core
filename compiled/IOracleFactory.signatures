@@ -1,0 +1,2 @@
+6ca735a2: createCentralizedOracle(address,address,bytes32[10],bytes32[10],uint8,uint256,uint256,uint256)
+28868b41: createDecentralizedOracle(address,bytes32[10],bytes32[10],uint8,uint8,uint256,uint256)
