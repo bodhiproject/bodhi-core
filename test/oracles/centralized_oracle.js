@@ -90,7 +90,8 @@ contract('CentralizedOracle', function(accounts) {
             assert.equal(await centralizedOracle.owner.call(), topicEvent.address);
             assert.equal(await centralizedOracle.oracle.call(), oracle);
             assert.equal(await centralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal(await centralizedOracle.getEventName(), topicEventParams._name.join(''));
+            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(0)), topicEventParams._name[0]);
+            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(1)), topicEventParams._name[1]);
             assert.equal(await centralizedOracle.getEventResultName(0), topicEventParams._resultNames[0]);
             assert.equal(await centralizedOracle.getEventResultName(1), topicEventParams._resultNames[1]);
             assert.equal(await centralizedOracle.getEventResultName(2), topicEventParams._resultNames[2]);

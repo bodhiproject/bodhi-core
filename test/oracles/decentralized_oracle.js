@@ -114,7 +114,8 @@ contract('DecentralizedOracle', function(accounts) {
     describe("constructor", async function() {
         it("inits the DecentralizedOracle with the correct values", async function() {
             assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
-            assert.equal(await oracle.getEventName(), testOracleParams._eventName.join(''), "eventName does not match");
+            assert.equal(web3.toUtf8(await oracle.eventName.call(0)), testOracleParams._name[0]);
+            assert.equal(web3.toUtf8(await oracle.eventName.call(1)), testOracleParams._name[1]);
             assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
                 "eventResultName 1 does not match");
             assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testOracleParams._eventResultNames[1], 

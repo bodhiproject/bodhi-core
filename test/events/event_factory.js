@@ -71,8 +71,8 @@ contract('EventFactory', function(accounts) {
             assert.equal((await topic.numOfResults.call()).toNumber(), 3);
 
             let centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
-            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
-            assert.equal(await centralizedOracle.getEventName(), testTopicParams._name.join(''));
+            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(0)), testTopicParams._name[0]);
+            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(1)), testTopicParams._name[1]);
             assert.equal(await centralizedOracle.getEventResultName(0), testTopicParams._resultNames[0]);
             assert.equal(await centralizedOracle.getEventResultName(1), testTopicParams._resultNames[1]);
             assert.equal(await centralizedOracle.getEventResultName(2), testTopicParams._resultNames[2]);
