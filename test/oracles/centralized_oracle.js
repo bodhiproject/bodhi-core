@@ -82,7 +82,7 @@ contract('CentralizedOracle', function(accounts) {
 
         let tx = await eventFactory.createTopic(...Object.values(topicEventParams), { from: owner });
         topicEvent = TopicEvent.at(tx.logs[0].args._topicAddress);
-        centralizedOracle = CentralizedOracle.at((await topicEvent.getOracle(0))[0]);
+        centralizedOracle = CentralizedOracle.at((await topicEvent.oracles.call(0))[0]);
     });
 
     describe('constructor', async function() {

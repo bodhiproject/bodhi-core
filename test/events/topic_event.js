@@ -83,7 +83,8 @@ contract('TopicEvent', function(accounts) {
 
         let tx = await eventFactory.createTopic(...Object.values(testTopicParams), { from: owner });
         testTopic = TopicEvent.at(tx.logs[0].args._topicAddress);
-        centralizedOracle = CentralizedOracle.at((await testTopic.getOracle(0))[0]);
+
+        centralizedOracle = CentralizedOracle.at((await testTopic.oracles.call(0))[0]);
     });
 
     describe("constructor", async function() {
@@ -389,7 +390,7 @@ contract('TopicEvent', function(accounts) {
                     startingOracleThreshold.toString());
 
                 try {
-                    assert.equal((await testTopic.getOracle(1))[0], 0);
+                    assert.equal((await testTopic.oracles(1))[0], 0);
                     assert.fail();
                 } catch(e) {
                     assertInvalidOpcode(e);
@@ -398,7 +399,7 @@ contract('TopicEvent', function(accounts) {
                 let finalResultIndex = 1;
                 await centralizedOracle.setResult(finalResultIndex, { from: oracle });
 
-                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue((await testTopic.oracles.call(0))[1]);
                 assert.isTrue(await testTopic.resultSet.call());
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
@@ -408,7 +409,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.totalBotValue.call()).toString(), startingOracleThreshold.toString());
 
                 assert.equal((await token.balanceOf(testTopic.address)).toString(), startingOracleThreshold.toString());
-                let decentralizedOracle = await testTopic.getOracle(1);
+                let decentralizedOracle = await testTopic.oracles.call(1);
                 assert.notEqual(decentralizedOracle[0], 0);
                 assert.isFalse(decentralizedOracle[1]);
             });
@@ -419,7 +420,7 @@ contract('TopicEvent', function(accounts) {
                     startingOracleThreshold.toString());
 
                 try {
-                    assert.equal((await testTopic.getOracle(1))[0], 0);
+                    assert.equal((await testTopic.oracles.call(1))[0], 0);
                     assert.fail();
                 } catch(e) {
                     assertInvalidOpcode(e);
@@ -452,7 +453,7 @@ contract('TopicEvent', function(accounts) {
                 let finalResultIndex = 1;
                 await centralizedOracle.setResult(finalResultIndex, { from: oracle });
 
-                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue((await testTopic.oracles.call(0))[1]);
                 assert.isTrue(await testTopic.resultSet.call());
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
@@ -543,7 +544,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
 
             try {
-                assert.equal((await testTopic.getOracle(1))[0], 0);
+                assert.equal((await testTopic.oracles.call(1))[0], 0);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -551,7 +552,7 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.invalidateOracle();
 
-            let oracleArray = await testTopic.getOracle(1);
+            let oracleArray = await testTopic.oracles.call(1);
             assert.notEqual(oracleArray[0], 0);
             assert.isFalse(oracleArray[1]);
             decentralizedOracle = await DecentralizedOracle.at(oracleArray[0]);
@@ -559,7 +560,7 @@ contract('TopicEvent', function(accounts) {
 
         it('sets the values and creates a new DecentralizedOracle when invalidating a CentralizedOracle', 
             async function() {
-            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
             assert.isFalse(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);            
         });
@@ -569,18 +570,18 @@ contract('TopicEvent', function(accounts) {
             await blockHeightManager.mineTo(await decentralizedOracle.arbitrationEndBlock.call());
 
             try {
-                assert.equal((await testTopic.getOracle(2))[0], 0);
+                assert.equal((await testTopic.oracles.call(2))[0], 0);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
 
             await decentralizedOracle.invalidateOracle();
-            assert.isTrue((await testTopic.getOracle(1))[1]);
+            assert.isTrue((await testTopic.oracles.call(1))[1]);
             assert.isFalse(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
 
-            let oracleArray = await testTopic.getOracle(2);
+            let oracleArray = await testTopic.oracles.call(2);
             assert.notEqual(oracleArray[0], 0);
             assert.isFalse(oracleArray[1]);
         });
@@ -618,7 +619,7 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.setResult(firstResultIndex, { from: oracle });
 
-            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
             assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
@@ -626,7 +627,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(finalResult[1], testTopicParams._resultNames[firstResultIndex]);
             assert.isFalse(finalResult[2]);
 
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
         });
 
         it('allows votes from DecentralizedOracles', async function() {
@@ -720,7 +721,7 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.setResult(centralizedOracleResultIndex, { from: oracle });
 
-            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
             assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResultIndex);
@@ -730,7 +731,7 @@ contract('TopicEvent', function(accounts) {
             assert.isFalse(finalResult[2]);
 
             // DecentralizedOracle voting
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
             assert.equal((await testTopic.totalBotValue.call()).toString(), startingOracleThreshold.toString());
 
@@ -748,7 +749,7 @@ contract('TopicEvent', function(accounts) {
 
             // Verify no DecentralizedOracle at index 2
             try {
-                await testTopic.getOracle(2);
+                await testTopic.oracles.call(2);
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
@@ -772,13 +773,13 @@ contract('TopicEvent', function(accounts) {
         });
 
         it('sets the result and creates a new DecentralizedOracle', async function() {
-            assert.isTrue((await testTopic.getOracle(1))[1]);
+            assert.isTrue((await testTopic.oracles.call(1))[1]);
             assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             assert.equal((await testTopic.getFinalResult())[0], votingOracle1ResultIndex);
 
-            assert.notEqual((await testTopic.getOracle(2))[0], 0);
-            votingOracle2 = await DecentralizedOracle.at((await testTopic.getOracle(2))[0]);
+            assert.notEqual((await testTopic.oracles.call(2))[0], 0);
+            votingOracle2 = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
             assert.equal(await votingOracle2.lastResultIndex.call(), votingOracle1ResultIndex);
         });
 
@@ -790,7 +791,7 @@ contract('TopicEvent', function(accounts) {
             votingOracle2 = await DecentralizedOracle.new(owner, testTopic.address, testTopicParams._name, 
                 testTopicParams._resultNames, numOfResults, votingOracle1ResultIndex, arbitrationEndBlock, threshold, 
                 { from: owner });
-            assert.notEqual((await testTopic.getOracle(2))[0], votingOracle2.address);
+            assert.notEqual((await testTopic.oracles.call(2))[0], votingOracle2.address);
 
             let winningVote = threshold.add(1);
             await token.approve(testTopic.address, winningVote, { from: better1 });
@@ -820,7 +821,7 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.setResult(centralizedOracleResult, { from: oracle });
 
-            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
             assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
@@ -829,7 +830,7 @@ contract('TopicEvent', function(accounts) {
             assert.isFalse(finalResult[2]);
 
             // DecentralizedOracle voting under consensusThreshold
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
             let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
             await token.approve(testTopic.address, vote1, { from: better1 });
@@ -953,7 +954,7 @@ contract('TopicEvent', function(accounts) {
                 startingOracleThreshold.toString());
 
             await centralizedOracle.setResult(cOracleResult, { from: oracle });
-            assert.isTrue((await testTopic.getOracle(0))[1]);
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
             assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
@@ -961,7 +962,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(finalResult[1], testTopicParams._resultNames[cOracleResult]);
             assert.isFalse(finalResult[2]);
 
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
         });
 
         it('transfers the tokens for a single voting round', async function() {
@@ -1075,7 +1076,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await token.balanceOf(testTopic.address)).toString(), totalBotValue.toString());
 
             // DecentralizedOracle2 voting hits consensusThreshold
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(2))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
             assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), 
                 Utils.getBigNumberWithDecimals(110, botDecimals).toString());
 
@@ -1099,7 +1100,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await token.balanceOf(testTopic.address)).toString(), totalBotValue.toString());
 
             // DecentralizedOracle3 voting under consensusThreshold
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(3))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
             assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), 
                 Utils.getBigNumberWithDecimals(120, botDecimals).toString());
 
@@ -1239,13 +1240,6 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("getOracle()", async function() {
-        it("returns the oracle address and didSetResult flag", async function() {
-            assert.equal((await testTopic.getOracle(0))[0], centralizedOracle.address);
-            assert.isFalse((await testTopic.getOracle(0))[1]);
-        });
-    });
-
     describe("getEventName()", async function() {
         it("returns the event name as a string", async function() {
             assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
@@ -1275,7 +1269,7 @@ contract('TopicEvent', function(accounts) {
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
             await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
             await centralizedOracle.setResult(1, { from: oracle });
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
             let vote1 = Utils.getBigNumberWithDecimals(20, botDecimals);
             await token.approve(testTopic.address, vote1, { from: better1 });
@@ -1308,7 +1302,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(finalResult[1], testTopicParams._resultNames[finalResultIndex]);
             assert.isFalse(finalResult[2]);
 
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
             await blockHeightManager.mineTo(await decentralizedOracle.arbitrationEndBlock.call());
             await decentralizedOracle.finalizeResult();
 
@@ -1371,7 +1365,7 @@ contract('TopicEvent', function(accounts) {
                     startingOracleThreshold.toString());
 
                 await centralizedOracle.setResult(centralizedOracleResult, { from: oracle });
-                assert.isTrue((await testTopic.getOracle(0))[1]);
+                assert.isTrue((await testTopic.oracles.call(0))[1]);
                 assert.isTrue(await testTopic.resultSet.call());
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
@@ -1379,7 +1373,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResult]);
                 assert.isFalse(finalResult[2]);
 
-                decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+                decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
             });
 
             describe('calculateQtumContributorWinnings()', async function() {
@@ -1525,7 +1519,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResult);
             
             // DecentralizedOracle1 voting. Threshold hits and result becomes 0.
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(1))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
             assert.equal((await testTopic.totalBotValue.call()).toString(), threshold.toString());
             assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), 
                 startingOracleThreshold.toString());
@@ -1549,7 +1543,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getFinalResult())[0], decentralizedOracle1Result);
 
             // DecentralizedOracle2 voting. Threshold hits and result becomes 2.
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(2))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
             threshold = vote1a.add(vote2a).add(consensusThresholdIncrement);
             assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), threshold.toString());
 
@@ -1579,7 +1573,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getFinalResult())[0], decentralizedOracle2Result);
 
             // DecentralizedOracle3 voting. Fails and result gets finalized to 2.
-            decentralizedOracle = await DecentralizedOracle.at((await testTopic.getOracle(3))[0]);
+            decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
             threshold = vote3a.add(vote4a).add(vote5a).add(consensusThresholdIncrement);
             assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), threshold.toString());
 
