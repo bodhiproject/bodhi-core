@@ -63,7 +63,8 @@ contract('EventFactory', function(accounts) {
     describe('TopicEvent:', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator);
-            assert.equal(await topic.getEventName(), testTopicParams._name.join(''));
+            assert.equal(web3.toUtf8(await topic.name.call(0)), testTopicParams._name[0]);
+            assert.equal(web3.toUtf8(await topic.name.call(1)), testTopicParams._name[1]);
             assert.equal(web3.toUtf8(await topic.resultNames.call(0)), testTopicParams._resultNames[0]);
             assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[1]);
             assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[2]);

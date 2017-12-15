@@ -90,7 +90,8 @@ contract('TopicEvent', function(accounts) {
     describe("constructor", async function() {
         it("initializes all the values", async function() {
             assert.equal(await testTopic.owner.call(), owner);
-            assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
+            assert.equal(web3.toUtf8(await testTopic.name.call(0)), testTopicParams._name[0]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(1)), testTopicParams._name[1]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(0)), testTopicParams._resultNames[0]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(1)), testTopicParams._resultNames[1]);
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(2)), testTopicParams._resultNames[2]);
@@ -117,7 +118,16 @@ contract('TopicEvent', function(accounts) {
 
             testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
-            assert.equal(await testTopic.getEventName(), name.join(''));
+            assert.equal(web3.toUtf8(await testTopic.name.call(0)), name[0]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(1)), name[1]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(2)), name[2]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(3)), name[3]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(4)), name[4]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(5)), name[5]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(6)), name[6]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(7)), name[7]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(8)), name[8]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(9)), name[9]);
         });
 
         it('should only concatenate first 10 array slots of the name array', async function() {
@@ -130,30 +140,33 @@ contract('TopicEvent', function(accounts) {
             testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
 
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
-            assert.equal(await testTopic.getEventName(), expected);
+            assert.equal(web3.toUtf8(await testTopic.name.call(0)), name[0]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(1)), name[1]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(2)), name[2]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(3)), name[3]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(4)), name[4]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(5)), name[5]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(6)), name[6]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(7)), name[7]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(8)), name[8]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(9)), name[9]);
         });
 
         it('should allow a space as the last character of a name array item', async function() {
-            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
-
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, array, testTopicParams._resultNames, 
+            let name = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
+            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
-            assert.equal(await testTopic.getEventName(), expected);
+            assert.equal(web3.toUtf8(await testTopic.name.call(0)), name[0]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(1)), name[1]);
         });
 
         it('should allow a space as the first character if the next character is not empty in a name array item', 
             async function() {
-            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, array, testTopicParams._resultNames, 
+            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
+            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
-
-            assert.equal(await testTopic.getEventName(), expected);
+            assert.equal(web3.toUtf8(await testTopic.name.call(0)), name[0]);
+            assert.equal(web3.toUtf8(await testTopic.name.call(1)), name[1]);
         });
 
         it('can handle using all 10 resultNames', async function() {
@@ -1237,12 +1250,6 @@ contract('TopicEvent', function(accounts) {
             } catch(e) {
                 assertInvalidOpcode(e);
             }
-        });
-    });
-
-    describe("getEventName()", async function() {
-        it("returns the event name as a string", async function() {
-            assert.equal(await testTopic.getEventName(), testTopicParams._name.join(''));
         });
     });
 
