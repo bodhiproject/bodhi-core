@@ -418,7 +418,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], finalResultIndex);
-                assert.equal(finalResult[1], testTopicParams._resultNames[finalResultIndex]);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
                 assert.isFalse(finalResult[2]);
                 assert.equal((await testTopic.totalBotValue.call()).toString(), startingOracleThreshold.toString());
 
@@ -472,7 +472,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], finalResultIndex);
-                assert.equal(finalResult[1], testTopicParams._resultNames[finalResultIndex]);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
                 assert.isFalse(finalResult[2]);
 
                 await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
@@ -638,7 +638,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], firstResultIndex);
-            assert.equal(finalResult[1], testTopicParams._resultNames[firstResultIndex]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[firstResultIndex]);
             assert.isFalse(finalResult[2]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -741,7 +741,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResultIndex);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResultIndex);
-            assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResultIndex]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResultIndex]);
             assert.isFalse(finalResult[2]);
 
             // DecentralizedOracle voting
@@ -840,7 +840,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);
-            assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResult]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
             assert.isFalse(finalResult[2]);
 
             // DecentralizedOracle voting under consensusThreshold
@@ -885,7 +885,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);
-            assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResult]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
             assert.isTrue(finalResult[2]);
         });
 
@@ -973,7 +973,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(finalResult[1], testTopicParams._resultNames[cOracleResult]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
             assert.isFalse(finalResult[2]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -1009,7 +1009,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(finalResult[1], testTopicParams._resultNames[cOracleResult]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
             assert.isTrue(finalResult[2]);
 
             // Winners withdraw
@@ -1136,7 +1136,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], dOracle2Result);
-            assert.equal(finalResult[1], testTopicParams._resultNames[dOracle2Result]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[dOracle2Result]);
             assert.isTrue(finalResult[2]);
 
             let expectedQtumValue = bet1.add(bet2).add(bet3).add(bet4);
@@ -1227,7 +1227,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(finalResult[1], testTopicParams._resultNames[cOracleResult]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
             assert.isTrue(finalResult[2]);
 
             // Winner withdraw
@@ -1307,7 +1307,7 @@ contract('TopicEvent', function(accounts) {
 
             var finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
-            assert.equal(finalResult[1], testTopicParams._resultNames[finalResultIndex]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
             assert.isFalse(finalResult[2]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -1316,7 +1316,7 @@ contract('TopicEvent', function(accounts) {
 
             finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
-            assert.equal(finalResult[1], testTopicParams._resultNames[finalResultIndex]);
+            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
             assert.isTrue(finalResult[2]);
         });
 
@@ -1378,7 +1378,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], centralizedOracleResult);
-                assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResult]);
+                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
                 assert.isFalse(finalResult[2]);
 
                 decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -1396,7 +1396,7 @@ contract('TopicEvent', function(accounts) {
                     assert.equal((await testTopic.status.call()).toNumber(), statusCollection);
                     let finalResult = await testTopic.getFinalResult();
                     assert.equal(finalResult[0], centralizedOracleResult);
-                    assert.equal(finalResult[1], testTopicParams._resultNames[centralizedOracleResult]);
+                    assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
                     assert.isTrue(finalResult[2]);
 
                     // Withdrawing: winning result 2 = better3, better4
