@@ -317,7 +317,7 @@ contract('CentralizedOracle', function(accounts) {
                 assert.isTrue(await centralizedOracle.finished.call());
                 let finalResult = await centralizedOracle.getResult();
                 assert.equal(finalResult[0], resultIndex);
-                assert.equal(finalResult[1], topicEventParams._resultNames[resultIndex]);
+                assert.equal(web3.toUtf8(finalResult[1]), topicEventParams._resultNames[resultIndex]);
                 assert.isTrue(finalResult[2]);
                 assert.equal((await centralizedOracle.getTotalVotes())[resultIndex].toString(), 
                     startingOracleThreshold.toString());
