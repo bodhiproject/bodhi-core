@@ -290,7 +290,7 @@ contract('CentralizedOracle', function(accounts) {
         });
     });
 
-    describe.only('setResult()', async function() {
+    describe('setResult()', async function() {
         let startingOracleThreshold;
 
         beforeEach(async function() {
@@ -387,6 +387,72 @@ contract('CentralizedOracle', function(accounts) {
         });
     });
 
-    describe('invalidateOracle()', async function() {
+    describe('getBetBalances()', async function() {
+        it('returns the bet balances', async function() {
+            let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
+            await centralizedOracle.bet(0, { from: user1, value: betAmount });
+            assert.equal((await centralizedOracle.getBetBalances({ from: user1 }))[0].toString(), 
+                betAmount.toString());
+
+            await centralizedOracle.bet(1, { from: user2, value: betAmount });
+            assert.equal((await centralizedOracle.getBetBalances({ from: user2 }))[1].toString(), 
+                betAmount.toString());
+
+            await centralizedOracle.bet(2, { from: user3, value: betAmount });
+            assert.equal((await centralizedOracle.getBetBalances({ from: user3 }))[2].toString(), 
+                betAmount.toString());            
+        });
+    });
+
+    describe('getTotalBets()', async function() {
+        it('returns the total bets', async function() {
+            let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
+            await centralizedOracle.bet(0, { from: user1, value: betAmount });
+            assert.equal((await centralizedOracle.getTotalBets())[0].toString(), betAmount.toString());
+
+            await centralizedOracle.bet(0, { from: user2, value: betAmount });
+            assert.equal((await centralizedOracle.getTotalBets({ from: user2 }))[0].toString(), 
+                betAmount.mul(2).toString());
+
+            await centralizedOracle.bet(0, { from: user3, value: betAmount });
+            assert.equal((await centralizedOracle.getTotalBets({ from: user3 }))[0].toString(), 
+                betAmount.mul(3).toString());            
+        });
+    });
+
+    describe('getVoteBalances()', async function() {
+        it('returns the vote balances', async function() {
+            await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
+
+            let startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+            await token.approve(topicEvent.address, startingOracleThreshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
+                startingOracleThreshold.toString());
+
+            let resultIndex = 2;
+            await centralizedOracle.setResult(resultIndex, { from: oracle });
+            assert.equal((await centralizedOracle.getVoteBalances({ from: oracle }))[resultIndex].toString(),
+                startingOracleThreshold.toString());
+        });
+    });
+
+    describe('getTotalVotes()', async function() {
+        it('returns the total votes', async function() {
+            await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
+            assert.isBelow(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
+
+            let startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+            await token.approve(topicEvent.address, startingOracleThreshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
+                startingOracleThreshold.toString());
+
+            let resultIndex = 2;
+            await centralizedOracle.setResult(resultIndex, { from: oracle });
+            assert.equal((await centralizedOracle.getTotalVotes())[resultIndex].toString(),
+                startingOracleThreshold.toString());          
+        });
     });
 });
