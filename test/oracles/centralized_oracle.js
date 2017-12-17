@@ -290,7 +290,7 @@ contract('CentralizedOracle', function(accounts) {
         });
     });
 
-    describe('setResult()', async function() {
+    describe.only('setResult()', async function() {
         let startingOracleThreshold;
 
         beforeEach(async function() {
@@ -315,10 +315,7 @@ contract('CentralizedOracle', function(accounts) {
                 let resultIndex = 2;
                 await centralizedOracle.setResult(resultIndex, { from: oracle });
                 assert.isTrue(await centralizedOracle.finished.call());
-                let finalResult = await centralizedOracle.getResult();
-                assert.equal(finalResult[0], resultIndex);
-                assert.equal(web3.toUtf8(finalResult[1]), topicEventParams._resultNames[resultIndex]);
-                assert.isTrue(finalResult[2]);
+                assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
                 assert.equal((await centralizedOracle.getTotalVotes())[resultIndex].toString(), 
                     startingOracleThreshold.toString());
                 assert.equal((await centralizedOracle.getVoteBalances({ from: oracle }))[resultIndex].toString(), 
