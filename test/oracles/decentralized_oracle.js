@@ -237,149 +237,128 @@ contract('DecentralizedOracle', function(accounts) {
         });
     });
 
-    describe("voteResult()", async function() {
-        it("allows voting", async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
-                "Block should be at or after eventBettingEndBlock");
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                "Block should be below decisionEndBlock");
+    describe.only('voteResult()', async function() {
+        it('allows voting', async function() {
+            assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
 
-            assert.equal(await oracle.getStakeContributed({ from: participant1 }), 0, 
-                "participant1 should have 0 stakeContributed");
-            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
-                "participant1 should not have set result");
-            assert.equal(await oracle.currentBalance.call(), 0);
+            let vote1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+            await token.approve(topicEvent.address, vote1, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), vote1.toString());
+            await decentralizedOracle.vote(0, vote1, { from: user1 });
+            assert.equal((await decentralizedOracle.getVoteBalances({ from: user1 }))[0].toString(),
+                vote1.toString());
 
-            let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-            await token.approve(oracle.address, stakeContributed, { from: participant1 });
-            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stakeContributed.toString(), 
-                'allowance does not match approved stake');
+            let vote2 = Utils.getBigNumberWithDecimals(5, botDecimals);
+            await token.approve(topicEvent.address, vote2, { from: user2 });
+            assert.equal((await token.allowance(user2, topicEvent.address)).toString(), vote2.toString());
+            await decentralizedOracle.vote(2, vote2, { from: user2 });
+            assert.equal((await decentralizedOracle.getVoteBalances({ from: user2 }))[2].toString(),
+                vote2.toString());
 
-            let votedResultIndex = 2;
-            await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
-
-            let actualStakeContributed = await oracle.getStakeContributed({ from: participant1 });
-            assert.equal(actualStakeContributed.toString(), stakeContributed.toString(), 
-                "participant1 stakeContributed does not match");
-            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
-            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
-                "participant1 voted resultIndex does not match");
+            assert.equal((await decentralizedOracle.getTotalVotes())[0].toString(), vote1.toString());  
+            assert.equal((await decentralizedOracle.getTotalVotes())[2].toString(), vote2.toString());  
         });
 
-        it("throws if the eventResultIndex is invalid", async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
-                "Block should be at or after eventBettingEndBlock");
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                "Block should be below decisionEndBlock");
+        it('sets the result if the vote passes the consensusThreshold', async function() {
+            assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
+
+            assert.isFalse(await decentralizedOracle.finished.call());
+            assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 
+                (await decentralizedOracle.invalidResultIndex.call()).toNumber());
+
+            let consensusThreshold = await decentralizedOracle.consensusThreshold.call();
+            await token.approve(topicEvent.address, consensusThreshold, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), consensusThreshold.toString());
+
+            await decentralizedOracle.vote(2, consensusThreshold, { from: user1 });
+            assert.equal((await decentralizedOracle.getVoteBalances({ from: user1 }))[2].toString(),
+                consensusThreshold.toString());
+            assert.equal((await decentralizedOracle.getTotalVotes())[2].toString(), consensusThreshold.toString());  
+
+            assert.isTrue(await decentralizedOracle.finished.call());
+            assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 2);
+        });
+
+        it('throws if eventResultIndex is invalid', async function() {
+            assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
+
+            let vote1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+            await token.approve(topicEvent.address, vote1, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), vote1.toString());
 
             try {
-                let votedResultIndex = 3;
-                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+                await decentralizedOracle.vote(centralizedOracleResult, vote1, { from: user1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if the botAmount is 0", async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= testOracleParams._eventBettingEndBlock, 
-                "Block should be at or after eventBettingEndBlock");
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                "Block should be below decisionEndBlock");
+        it('throws if the Oracle is finished', async function() {
+            let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+            await blockHeightManager.mineTo(arbitrationEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
 
+            assert.isFalse(await decentralizedOracle.finished.call());
+            await decentralizedOracle.finalizeResult();
+            assert.isTrue(await decentralizedOracle.finished.call());
+            assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), centralizedOracleResult);
+
+            let vote1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+            await token.approve(topicEvent.address, vote1, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), vote1.toString());
             try {
-                let votedResultIndex = 0;
-                await oracle.voteResult(votedResultIndex, 0, { from: participant1 });
+                await decentralizedOracle.vote(0, vote1, { from: user1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if trying to vote before the eventBettingEndBlock", async function() {
-            assert.isBelow(web3.eth.blockNumber, (await oracle.eventBettingEndBlock.call()).toNumber(), 
-                "Block should be below eventBettingEndBlock");
+        it('throws if botAmount is 0', async function() {
+            assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
 
             try {
-                let votedResultIndex = 1;
-                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+                await decentralizedOracle.vote(centralizedOracleResult, 0, { from: user1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if trying to vote after the decisionEndBlock", async function() {
-            await blockHeightManager.mineTo(testOracleParams._decisionEndBlock);
-            assert(web3.eth.blockNumber >= (await oracle.decisionEndBlock.call()).toNumber(),
-                "Block should be greater than or equal to decisionEndBlock");
+        it('throws if the block is at the arbitrationEndBlock', async function() {
+            let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+            await blockHeightManager.mineTo(arbitrationEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
+            
+            let vote1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+            await token.approve(topicEvent.address, vote1, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), vote1.toString());
 
             try {
-                let votedResultIndex = 1;
-                let stakeContributed = Utils.getBigNumberWithDecimals(3, botDecimals);
-                await oracle.voteResult(votedResultIndex, stakeContributed, { from: participant1 });
+                await decentralizedOracle.vote(0, vote1, { from: user1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if trying to vote again", async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
-                "Block should be at or after eventBettingEndBlock");
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                "Block should be below decisionEndBlock");
+        it('throws if the voting on the lastResultIndex', async function() {
+            let lastResultIndex = (await decentralizedOracle.lastResultIndex.call()).toNumber();
+            
+            let vote1 = Utils.getBigNumberWithDecimals(7, botDecimals);
+            await token.approve(topicEvent.address, vote1, { from: user1 });
+            assert.equal((await token.allowance(user1, topicEvent.address)).toString(), vote1.toString());
 
-            assert.isFalse(await oracle.didSetResult({ from: participant1 }), 
-                "participant1 should not have set result");
-
-            let stake = Utils.getBigNumberWithDecimals(5, botDecimals);
-            await token.approve(oracle.address, stake, { from: participant1 });
-            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stake.toString(), 
-                'first allowance does not match approved stake');
-
-            let votedResultIndex = 2;
-            await oracle.voteResult(votedResultIndex, stake, { from: participant1 });
-
-            assert.isTrue(await oracle.didSetResult({ from: participant1 }), "participant1 should have set result");
-            assert.equal(await oracle.getVotedResultIndex({ from: participant1 }), votedResultIndex,
-                "participant1 voted resultIndex does not match");
-
-            await token.approve(oracle.address, stake, { from: participant1 });
-            assert.equal((await token.allowance(participant1, oracle.address)).toString(), stake.toString(), 
-                'second allowance does not match approved stake');
             try {
-                await oracle.voteResult(votedResultIndex, stake, { from: participant1 });
+                await decentralizedOracle.vote(lastResultIndex, vote1, { from: user1 });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
+    });
 
-        it('throws if the transferFrom allowance is less than the staking amount', async function() {
-            await blockHeightManager.mineTo(validVotingBlock);
-            let blockNumber = web3.eth.blockNumber;
-            assert(blockNumber >= (await oracle.eventBettingEndBlock.call()).toNumber(), 
-                'Block should be at or after eventBettingEndBlock');
-            assert.isBelow(blockNumber, (await oracle.decisionEndBlock.call()).toNumber(), 
-                'Block should be below decisionEndBlock');
-
-            try {
-                await oracle.voteResult(0, Utils.getBigNumberWithDecimals(5, botDecimals), { from: participant1 });
-                assert.fail();
-            } catch(e) {
-                assertInvalidOpcode(e);
-            }
-        });
+    describe("finalizeResult()", async function() {
     });
 });
