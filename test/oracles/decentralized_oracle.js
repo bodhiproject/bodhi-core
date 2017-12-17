@@ -3,7 +3,9 @@ const assert = require('chai').assert;
 const bluebird = require('bluebird');
 const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
+const EventFactory = artifacts.require("./events/EventFactory.sol");
 const TopicEvent = artifacts.require("./events/TopicEvent.sol");
+const OracleFactory = artifacts.require("./oracles/OracleFactory.sol");
 const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
@@ -26,12 +28,10 @@ contract('DecentralizedOracle', function(accounts) {
     const user4 = accounts[5];
     const user5 = accounts[6];
     const user6 = accounts[7];
-    const botBalance = Utils.getBigNumberWithDecimals(20, botDecimals);
-    const startingOracleThreshold = Utils.getBigNumberWithDecimals(100, botDecimals);
+    const botBalance = Utils.getBigNumberWithDecimals(10000, botDecimals);
     const centralizedOracleResult = 1;
     const topicEventParams = {
-        _owner: admin,
-        _decentralizedOracle: oracle,
+        _oracle: oracle,
         _name: ["Who will be the next president i", "n the 2020 election?"],
         _resultNames: ["Trump", "The Rock", "Hilary"],
         _bettingEndBlock: 100,
@@ -43,6 +43,8 @@ contract('DecentralizedOracle', function(accounts) {
     let topicEvent;
     let centralizedOracle;
     let decentralizedOracle;
+    let arbitrationBlockLength;
+    let consensusIncrement;
 
     beforeEach(blockHeightManager.snapshot);
     afterEach(blockHeightManager.revert);
@@ -70,10 +72,22 @@ contract('DecentralizedOracle', function(accounts) {
         await addressManager.setBodhiTokenAddress(token.address, { from: admin });
         assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
+        arbitrationBlockLength = (await addressManager.arbitrationBlockLength.call()).toNumber();
+        consensusIncrement = (await addressManager.consensusThresholdIncrement.call()).toNumber();
+
+        // Init factories
+        let eventFactory = await EventFactory.deployed(addressManager.address, { from: admin });
+        await addressManager.setEventFactoryAddress(eventFactory.address, { from: admin });
+        assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
+
+        let oracleFactory = await OracleFactory.deployed(addressManager.address, { from: admin });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: admin });
+        assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+
         // Init TopicEvent
-        topicEvent = await TopicEvent.new(...Object.values(topicEventParams), addressManager.address, 
-            { from: admin });
-        centralizedOracle = await CentralizedOracle.at((await topicEvent.getOracle(0))[0]);
+        let tx = await eventFactory.createTopic(...Object.values(topicEventParams), { from: oracle });
+        topicEvent = TopicEvent.at(tx.logs[0].args._topicAddress);
+        centralizedOracle = CentralizedOracle.at((await topicEvent.oracles.call(0))[0]);
 
         // Betting
         let bet1 = Utils.getBigNumberWithDecimals(20, botDecimals);
@@ -88,232 +102,134 @@ contract('DecentralizedOracle', function(accounts) {
 
         let bet3 = Utils.getBigNumberWithDecimals(11, botDecimals);
         await centralizedOracle.bet(0, { from: user3, value: bet3 });
-        assert.equal((await topicEvent.getBetBalances({ from: user3 }))[0].toString(), 
-            bet3.toString());
+        assert.equal((await topicEvent.getBetBalances({ from: user3 }))[0].toString(), bet3.toString());
 
         // CentralizedOracle set result
-        await token.approve(topicEvent.address, startingOracleThreshold, { from: oracle });
-        assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
-            startingOracleThreshold.toString());
-
         await blockHeightManager.mineTo(topicEventParams._bettingEndBlock);
+        assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
+        assert.isBelow(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
 
         assert.isFalse(await centralizedOracle.finished.call());
         assert.equal(await centralizedOracle.oracle.call(), oracle);
-        assert.isAtLeast(await getBlockNumber(), topicEventParams._bettingEndBlock);
-        assert.isBelow(await getBlockNumber(), topicEventParams._resultSettingEndBlock);
-        assert.isAtLeast(startingOracleThreshold.toNumber(), 
-            (await centralizedOracle.consensusThreshold.call()).toNumber());
 
-        await centralizedOracle.setResult(centralizedOracleResult, startingOracleThreshold, { from: oracle });
+        let consensusThreshold = await centralizedOracle.consensusThreshold.call();
+        await token.approve(topicEvent.address, consensusThreshold, { from: oracle });
+        assert.equal((await token.allowance(oracle, topicEvent.address)).toString(), 
+            consensusThreshold.toString());
+        await centralizedOracle.setResult(centralizedOracleResult, { from: oracle });
 
-        // // DecentralizedOracle created
-        // decentralizedOracle = await DecentralizedOracle.at((await topicEvent.getOracle(1))[0]);
+        // DecentralizedOracle created
+        decentralizedOracle = await DecentralizedOracle.at((await topicEvent.oracles.call(1))[0]);
     });
 
     describe("constructor", async function() {
+        let numOfResults = 3;
+        let arbitrationEndBlock = 220;
+        let consensusThreshold = Utils.getBigNumberWithDecimals(100, botDecimals);
+
         it("inits the DecentralizedOracle with the correct values", async function() {
-            assert.equal(await oracle.owner.call(), testOracleParams._owner, "owner does not match");
-            assert.equal(web3.toUtf8(await oracle.eventName.call(0)), testOracleParams._name[0]);
-            assert.equal(web3.toUtf8(await oracle.eventName.call(1)), testOracleParams._name[1]);
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testOracleParams._eventResultNames[0], 
-                "eventResultName 1 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testOracleParams._eventResultNames[1], 
-                "eventResultName 2 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), testOracleParams._eventResultNames[2], 
-                "eventResultName 3 does not match");
-            assert.equal(await oracle.eventBettingEndBlock.call(), testOracleParams._eventBettingEndBlock, 
-                "eventBettingEndBlock does not match");
-            assert.equal(await oracle.decisionEndBlock.call(), testOracleParams._decisionEndBlock, 
-                "decisionEndBlock does not match");
-            assert.equal(await oracle.arbitrationOptionEndBlock.call(), testOracleParams._arbitrationOptionEndBlock, 
-                "arbitrationEndBlock does not match");
+            assert.equal(await decentralizedOracle.eventAddress.call(), topicEvent.address);
+            assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(0)), topicEventParams._name[0]);
+            assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(1)), topicEventParams._name[1]);
+            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(0)), 
+                topicEventParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(1)), 
+                topicEventParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(2)), 
+                topicEventParams._resultNames[2]);
+            assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), 3);
+            assert.equal(await decentralizedOracle.lastResultIndex.call(), centralizedOracleResult);
+            assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 
+                (await getBlockNumber()) + arbitrationBlockLength);
+
+            let threshold = await addressManager.startingOracleThreshold.call();
+            assert.equal((await decentralizedOracle.consensusThreshold.call()).toNumber(), threshold.toNumber());
         });
 
-        it('can handle a long name using all 10 array slots', async function() {
-            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
-
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
-                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            assert.equal(await oracle.getEventName(), name.join(''), 'eventName does not match');
-        });
-
-        it('should only concatenate first 10 array slots of the name array', async function() {
-            let name = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
-                'abcdefghijklmnopqrstuvwxyzabcdef'];
-
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, name, testOracleParams._eventResultNames,
-                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef' +
-                'abcdefghijklmnopqrstuvwxyzabcdefabcdefghijklmnopqrstuvwxyzabcdef';
-            assert.equal(await oracle.getEventName(), expected, 'eventName does not match');
-        });
-
-        it('should allow a space as the last character of a name array item', async function() {
-            let array = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcde fghijklmnopqrstuvwxyz';
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
-                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
-        });
-
-        it('should allow a space as the first character if the next character is not empty in a name array item', 
-            async function() {
-            let array = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
-            let expected = 'abcdefghijklmnopqrstuvwxyzabcdef ghijklmnopqrstuvwxyz';
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, array, testOracleParams._eventResultNames,
-                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            assert.equal(await oracle.getEventName(), expected, 'Expected string does not match');
-        });
-
-        it('can handle using all 10 eventResultNames', async function() {
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, testOracleParams._eventName, 
-                ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"],
-                testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), "third", "eventResultName 2 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(3)), "fourth", "eventResultName 3 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(4)), "fifth", "eventResultName 4 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(5)), "sixth", "eventResultName 5 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(6)), "seventh", "eventResultName 6 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(7)), "eighth", "eventResultName 7 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(8)), "ninth", "eventResultName 8 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
-        });
-
-        it('should only set the first 10 eventResultNames', async function() {
-            let eventResultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", 
-                "ninth", "ten", "eleven"];
-            oracle = await DecentralizedOracle.new(testOracleParams._owner, testOracleParams._eventName, 
-                eventResultNames, testOracleParams._eventBettingEndBlock, testOracleParams._decisionEndBlock, 
-                testOracleParams._arbitrationOptionEndBlock, addressManager.address, { from: admin });
-
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), "first", "eventResultName 0 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), "second", "eventResultName 1 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), "third", "eventResultName 2 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(3)), "fourth", "eventResultName 3 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(4)), "fifth", "eventResultName 4 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(5)), "sixth", "eventResultName 5 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(6)), "seventh", "eventResultName 6 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(7)), "eighth", "eventResultName 7 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(8)), "ninth", "eventResultName 8 does not match");
-            assert.equal(web3.toUtf8(await oracle.getEventResultName(9)), "ten", "eventResultName 9 does not match");
-
+        it('throws if eventAddress is invalid', async function() {
             try {
-                await oracle.getEventResultName(10);
+                await DecentralizedOracle.new(admin, 0, topicEventParams._name, topicEventParams._resultNames, 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if the eventName is empty", async function() {
-            let params = {
-                _owner: admin,
-                _eventName: "",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 140
-            };
-            assert.equal(0, params._eventName.length, "eventName.length should be 0");
+        it("throws if eventName is empty", async function() {
+            try {
+                await DecentralizedOracle.new(admin, topicEvent.address, [], topicEventParams._resultNames, 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
 
             try {
-                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
+                await DecentralizedOracle.new(admin, topicEvent.address, [''], topicEventParams._resultNames, 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if the eventResultNames array is not greater than 1", async function() {
-            let params = {
-                _owner: admin,
-                _eventName: "test",
-                _eventResultNames: ["first"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 140
-            };
+        it("throws if the eventResultNames 0 or 1 are empty", async function() {
+            try {
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, [], 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
 
             try {
-                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, ['first'], 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
+                assert.fail();
+            } catch(e) {
+                assertInvalidOpcode(e);
+            }
+
+            try {
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, ['', 'second'], 
+                    numOfResults, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if the decisionEndBlock is not greater than eventBettingEndBlock", async function() {
-            let params = {
-                _owner: admin,
-                _eventName: "test",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 99,
-                _arbitrationOptionEndBlock: 140
-            };
-
+        it('throws if numOfResults is 0', async function() {
             try {
-                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, 
+                    topicEventParams._resultNames, 0, centralizedOracleResult, arbitrationEndBlock, consensusThreshold, 
+                    { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
 
-        it("throws if the arbitrationOptionEndBlock is not greater than decisionEndBlock", async function() {
-            let params = {
-                _owner: admin,
-                _eventName: "test",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 110
-            };
+        it('throws if arbitrationEndBlock is less than or equal to current block', async function() {
+            await blockHeightManager.mineTo(arbitrationEndBlock);
+            assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
 
             try {
-                await DecentralizedOracle.new(...Object.values(params), addressManager.address, { from: admin });
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, 
+                    topicEventParams._resultNames, numOfResults, centralizedOracleResult, arbitrationEndBlock, 
+                    consensusThreshold, { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
             }
         });
-        
-        it('throws if the AddressManager address is invalid', async function() {
-            let params = {
-                _owner: admin,
-                _eventName: "test",
-                _eventResultNames: ["first", "second", "third"],
-                _eventBettingEndBlock: 100,
-                _decisionEndBlock: 120,
-                _arbitrationOptionEndBlock: 140,
-                _addressManager: 0
-            };
 
+        it('throws if consensusThreshold is 0', async function() {
             try {
-                await DecentralizedOracle.new(...Object.values(params), { from: admin });
+                await DecentralizedOracle.new(admin, topicEvent.address, topicEventParams._name, 
+                    topicEventParams._resultNames, numOfResults, centralizedOracleResult, arbitrationEndBlock, 0, 
+                    { from: admin });
                 assert.fail();
             } catch(e) {
                 assertInvalidOpcode(e);
