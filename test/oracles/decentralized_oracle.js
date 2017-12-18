@@ -237,7 +237,7 @@ contract('DecentralizedOracle', function(accounts) {
         });
     });
 
-    describe.only('voteResult()', async function() {
+    describe('voteResult()', async function() {
         it('allows voting', async function() {
             assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
 
