@@ -403,4 +403,43 @@ contract('DecentralizedOracle', function(accounts) {
             });
         });
     });
+
+    describe('getVoteBalances()', async function() {
+        it('returns the vote balances', async function() {
+            let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+            assert.isBelow(await getBlockNumber(), arbitrationEndBlock);
+
+            let vote1 = Utils.getBigNumberWithDecimals(10, BOT_DECIMALS);
+            await token.approve(topicEvent.address, vote1, { from: USER1 });
+            assert.equal((await token.allowance(USER1, topicEvent.address)).toString(), vote1.toString());
+            await decentralizedOracle.vote(0, vote1, { from: USER1 });
+            assert.equal((await decentralizedOracle.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+
+            let vote2 = Utils.getBigNumberWithDecimals(17, BOT_DECIMALS);
+            await token.approve(topicEvent.address, vote2, { from: USER2 });
+            assert.equal((await token.allowance(USER2, topicEvent.address)).toString(), vote2.toString());
+            await decentralizedOracle.vote(2, vote2, { from: USER2 });
+            assert.equal((await decentralizedOracle.getVoteBalances({ from: USER2 }))[2].toString(), vote2.toString());
+        });
+    });
+
+    describe('getTotalVotes()', async function() {
+        it('returns the total votes', async function() {
+            let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+            assert.isBelow(await getBlockNumber(), arbitrationEndBlock);
+
+            let vote1 = Utils.getBigNumberWithDecimals(10, BOT_DECIMALS);
+            await token.approve(topicEvent.address, vote1, { from: USER1 });
+            assert.equal((await token.allowance(USER1, topicEvent.address)).toString(), vote1.toString());
+            await decentralizedOracle.vote(0, vote1, { from: USER1 });
+
+            let vote2 = Utils.getBigNumberWithDecimals(17, BOT_DECIMALS);
+            await token.approve(topicEvent.address, vote2, { from: USER2 });
+            assert.equal((await token.allowance(USER2, topicEvent.address)).toString(), vote2.toString());
+            await decentralizedOracle.vote(0, vote2, { from: USER2 });
+
+            let totalVotes = vote1.add(vote2);
+            assert.equal((await decentralizedOracle.getTotalVotes())[0].toString(), totalVotes.toString());
+        });
+    });
 });
