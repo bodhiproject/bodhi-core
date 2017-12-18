@@ -1,11 +1,18 @@
 language: node_js
-node_js:
-  - "8.9.1"
 
-os: 
-  - linux
-  - osx
-osx_image: xcode9.2
+node_js:
+  - "8"
+
+env:
+  - CXX=g++-4.8
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
 
 install:
   - npm install -g truffle@^4.0.1
