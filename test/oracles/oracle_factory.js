@@ -31,6 +31,16 @@ contract('OracleFactory', function(accounts) {
     _consensusThreshold: CONSENSUS_THRESHOLD
   };
 
+  const DORACLE_PARAMS = {
+    _eventAddress: "0x1111111111111111111111111111111111111111",
+    _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
+    _eventResultNames: ["first", "second", "third"],
+    _numOfResults: 3,
+    _lastResultIndex: 2,
+    _arbitrationEndBlock: 200,
+    _consensusThreshold: CONSENSUS_THRESHOLD
+  };
+
   let addressManager;
   let oracleFactory;
   let oracle;
@@ -60,7 +70,7 @@ contract('OracleFactory', function(accounts) {
   describe('createCentralizedOracle()', async function() {
     it('initializes all the values', async function() {
       let tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
-      centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
+      let centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       assert.equal(await centralizedOracle.owner.call(), USER1);
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
@@ -79,7 +89,7 @@ contract('OracleFactory', function(accounts) {
 
     it('throws if the CentralizedOracle has already been created', async function() {
       let tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
-      centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
+      let centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       try {
         await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
@@ -90,40 +100,34 @@ contract('OracleFactory', function(accounts) {
     });
   });
 
-  describe('createOracle', async function() {
-      it('initializes all the values of the new DecentralizedOracle', async function() {
-          assert.equal(await oracle.owner.call(), oracleCreator, 'owner does not match');
-          assert.equal(await oracle.getEventName(), testParams._eventName.join(''), 'eventName does not match');
-          assert.equal(web3.toUtf8(await oracle.getEventResultName(0)), testParams._eventResultNames[0], 
-              'eventResultName 0 does not match.');
-          assert.equal(web3.toUtf8(await oracle.getEventResultName(1)), testParams._eventResultNames[1], 
-              'eventResultName 1 does not match.');
-          assert.equal(web3.toUtf8(await oracle.getEventResultName(2)), testParams._eventResultNames[2], 
-              'eventResultName 2 does not match.');
-          assert.equal(await oracle.eventBettingEndBlock.call(), testParams._eventBettingEndBlock,
-              'eventBettingEndBlock does not match');
-          assert.equal(await oracle.decisionEndBlock.call(), testParams._decisionEndBlock,
-              'decisionEndBlock does not match');
-          assert.equal(await oracle.arbitrationOptionEndBlock.call(), testParams._arbitrationOptionEndBlock,
-              'arbitrationOptionEndBlock does not match');
-      });
+  describe('createDecentralizedOracle()', async function() {
+    it('initializes all the values', async function() {
+      let tx = await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      let decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
 
-      it('sets the baseReward', async function() {
-          let balance = await web3.eth.getBalance(oracle.address);
-          assert.equal(balance.toString(), baseReward.toString(), 'baseReward does not match');
-      });
+      assert.equal(await decentralizedOracle.eventAddress.call(), DORACLE_PARAMS._eventAddress);
+      assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(0)), DORACLE_PARAMS._eventName[0]);
+      assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(1)), DORACLE_PARAMS._eventName[1]);
+      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(0)), DORACLE_PARAMS._eventResultNames[0]);
+      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(1)), DORACLE_PARAMS._eventResultNames[1]);
+      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(2)), DORACLE_PARAMS._eventResultNames[2]);
+      assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), DORACLE_PARAMS._numOfResults);
+      assert.equal(await decentralizedOracle.lastResultIndex.call(), DORACLE_PARAMS._lastResultIndex);
+      assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 
+        DORACLE_PARAMS._arbitrationEndBlock);
+    });
 
-      it('does not allow recreating the same DecentralizedOracle twice', async function() {
-          let oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
-          assert.isTrue(oracleExists, 'DecentralizedOracle should already exist');
+    it('throws if the DecentralizedOracle has already been created', async function() {
+      let tx = await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      let decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
 
-          try {
-              await oracleFactory.createOracle(...Object.values(testParams), 
-                  { from: oracleCreator, value: baseReward});
-          } catch(e) {
-              assert.match(e.message, /invalid opcode/);
-          }
-      });
+      try {
+        await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+        assert.fail();
+      } catch(e) {
+        assertInvalidOpcode(e);
+      }
+    });
   });
 
   describe('doesOracleExist', async function() {
