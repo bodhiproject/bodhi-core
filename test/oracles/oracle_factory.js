@@ -1,5 +1,6 @@
 const AddressManager = artifacts.require("./storage/AddressManager.sol");
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
+const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol');
 const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
@@ -7,53 +8,42 @@ const assert = require('chai').assert;
 const web3 = global.web3;
 
 contract('OracleFactory', function(accounts) {
-    // These should match the decimals in the DecentralizedOracle contract.
-    const nativeDecimals = 18;
-    const botDecimals = 8;
+    const BLOCK_MANAGER = new BlockHeightManager(web3);
 
-    const blockHeightManager = new BlockHeightManager(web3);
-    const oracleFactoryCreator = accounts[0];
-    const oracleCreator = accounts[1];
+    const NATIVE_DECIMALS = 8;
+    const BOT_DECIMALS = 8;
 
-    const testParams = {
+    const ADMIN = accounts[0];
+    const ORACLE = accounts[1];
+    const USER1 = accounts[2];
+
+    const CENTRALIZED_ORACLE_PARAMS = {
         _eventName: ["Who will be the next president i", "n the 2020 election?"],
         _eventResultNames: ['first', 'second', 'third'],
         _eventBettingEndBlock: 100,
         _decisionEndBlock: 120,
         _arbitrationOptionEndBlock: 140
     };
-    const baseReward = Utils.getBigNumberWithDecimals(10, nativeDecimals);
-    const validVotingBlock = testParams._eventBettingEndBlock;
 
     let addressManager;
     let oracleFactory;
     let oracle;
 
-    beforeEach(blockHeightManager.snapshot);
-    afterEach(blockHeightManager.revert);
+    beforeEach(BLOCK_MANAGER.snapshot);
+    afterEach(BLOCK_MANAGER.revert);
 
     beforeEach(async function() {
-        addressManager = await AddressManager.deployed({ from: oracleFactoryCreator });
+        addressManager = await AddressManager.deployed({ from: ADMIN });
 
-        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: oracleFactoryCreator });
-        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: oracleFactoryCreator });
+        oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
         assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
-
-        let transaction = await oracleFactory.createOracle(...Object.values(testParams), 
-            { from: oracleCreator, value: baseReward });
-        oracle = await DecentralizedOracle.at(transaction.logs[0].args._oracleAddress);
     });
 
-    describe('constructor', async function() {
-        it('should store the OracleFactory address in AddressManager', async function() {
-            let index = await addressManager.getLastOracleFactoryIndex();
-            assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address, 
-                'OracleFactory address does not match');
-        });
-
+    describe.only('constructor', async function() {
         it('throws if the AddressManager address is invalid', async function() {
             try {
-                await OracleFactory.new(0, { from: oracleFactoryCreator });
+                await OracleFactory.new(0, { from: ADMIN });
                 assert.fail();
             } catch(e) {
                 assert.match(e.message, /invalid opcode/);
