@@ -130,14 +130,58 @@ contract('OracleFactory', function(accounts) {
     });
   });
 
-  describe('doesOracleExist', async function() {
-      it('returns true if the DecentralizedOracle exists', async function() {
-          var oracleExists = await oracleFactory.doesOracleExist(...Object.values(testParams));
-          assert.isTrue(oracleExists, 'DecentralizedOracle 1 should already exist');
+  describe('doesCentralizedOracleExist()', async function() {
+    it('returns true if the CentralizedOracle exists', async function() {
+      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
 
-          var oracleExists = await oracleFactory.doesOracleExist(['oracle 2'], ['first', 'second', 'third'], 100, 120, 
-              140);
-          assert.isFalse(oracleExists, 'DecentralizedOracle 2 should not exist');
-      });
+      await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
+      assert.isTrue(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
+    });
+
+    it('returns false if the CentralizedOracle does not exist', async function() {
+      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
+
+      await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
+      assert.isTrue(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
+
+      const params = {
+        _oracle: ORACLE,
+        _eventAddress: "0x1111111111111111111111111111111111111111",
+        _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
+        _eventResultNames: ["first", "second"],
+        _numOfResults: 3,
+        _bettingEndBlock: 100,
+        _resultSettingEndBlock: 110,
+        _consensusThreshold: CONSENSUS_THRESHOLD
+      };
+      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(params)));
+    });
+  });
+
+  describe('doesDecentralizedOracleExist()', async function() {
+    it('returns true if the DecentralizedOracle exists', async function() {
+      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
+
+      await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      assert.isTrue(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
+    });
+
+    it('returns false if the DecentralizedOracle does not exist', async function() {
+      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
+
+      await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      assert.isTrue(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
+
+      const params = {
+        _eventAddress: "0x1111111111111111111111111111111111111111",
+        _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
+        _eventResultNames: ["first", "second"],
+        _numOfResults: 3,
+        _lastResultIndex: 2,
+        _arbitrationEndBlock: 200,
+        _consensusThreshold: CONSENSUS_THRESHOLD
+      };
+      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(params)));
+    });
   });
 });
