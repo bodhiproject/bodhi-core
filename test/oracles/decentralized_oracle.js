@@ -340,7 +340,7 @@ contract('DecentralizedOracle', function(accounts) {
                 assertInvalidOpcode(e);
             }
         });
-
+        
         it('throws if the voting on the lastResultIndex', async function() {
             let lastResultIndex = (await decentralizedOracle.lastResultIndex.call()).toNumber();
             
@@ -357,6 +357,50 @@ contract('DecentralizedOracle', function(accounts) {
         });
     });
 
-    describe("finalizeResult()", async function() {
+    describe('finalizeResult()', async function() {
+        describe('in valid block range', async function() {
+            beforeEach(async function() {
+                let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+                await blockHeightManager.mineTo(arbitrationEndBlock);
+                assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
+            });
+
+            it('finalizes the result', async function() {
+                assert.isFalse(await decentralizedOracle.finished.call());
+                assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 
+                    (await decentralizedOracle.invalidResultIndex.call()).toNumber());
+
+                await decentralizedOracle.finalizeResult();
+                assert.isTrue(await decentralizedOracle.finished.call());
+                assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), CENTRALIZED_ORACLE_RESULT);
+            });
+
+            it('throws if the Oracle is finished', async function() {
+                await decentralizedOracle.finalizeResult();
+                assert.isTrue(await decentralizedOracle.finished.call());
+                assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), CENTRALIZED_ORACLE_RESULT);
+
+                try {
+                    await decentralizedOracle.finalizeResult();
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
+
+        describe('in invalid block range', async function() {
+            it('throws if the block is below the arbitrationEndBlock', async function() {
+                let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
+                assert.isBelow(await getBlockNumber(), arbitrationEndBlock);
+
+                try {
+                    await decentralizedOracle.finalizeResult();
+                    assert.fail();
+                } catch(e) {
+                    assertInvalidOpcode(e);
+                }
+            });
+        });
     });
 });

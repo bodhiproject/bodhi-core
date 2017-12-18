@@ -9,7 +9,7 @@ const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
 const web3 = global.web3;
 
 contract('OracleFactory', function(accounts) {
-  const BLOCK_MANAGER = new BlockHeightManager(web3);
+  const blockHeightManager = new BlockHeightManager(web3);
 
   const NATIVE_DECIMALS = 8;
   const BOT_DECIMALS = 8;
@@ -45,8 +45,8 @@ contract('OracleFactory', function(accounts) {
   let oracleFactory;
   let oracle;
 
-  beforeEach(BLOCK_MANAGER.snapshot);
-  afterEach(BLOCK_MANAGER.revert);
+  beforeEach(blockHeightManager.snapshot);
+  afterEach(blockHeightManager.revert);
 
   beforeEach(async function() {
     addressManager = await AddressManager.deployed({ from: ADMIN });
