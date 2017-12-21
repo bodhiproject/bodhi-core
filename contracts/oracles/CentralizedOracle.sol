@@ -17,8 +17,10 @@ contract CentralizedOracle is Oracle {
     * @param _eventName The name of the Event.
     * @param _eventResultNames The result options of the Event.
     * @param _numOfResults The number of result options.
+    * @param _bettingStartBlock The block when betting will start.
     * @param _bettingEndBlock The block when betting will end.
-    * @param _resultSettingEndBlock The last block the Centralized Oracle can set the result.
+    * @param _resultSettingStartBlock The first block the CentralizedOracle can set the result.
+    * @param _resultSettingEndBlock The last block the CentralizedOracle can set the result.
     * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
     function CentralizedOracle(

@@ -83,8 +83,10 @@ contract TopicEvent is ITopicEvent, Ownable {
     * @param _centralizedOracle The address of the CentralizedOracle that will decide the result.
     * @param _name The question or statement prediction broken down by multiple bytes32.
     * @param _resultNames The possible results.
+    * @param _bettingStartBlock The block when betting will start.
     * @param _bettingEndBlock The block when betting will end.
-    * @param _resultSettingEndBlock The last block the Centralized Oracle can set the result.
+    * @param _resultSettingStartBlock The first block the CentralizedOracle can set the result.
+    * @param _resultSettingEndBlock The last block the CentralizedOracle can set the result.
     * @param _addressManager The address of the AddressManager.
     */
     function TopicEvent(
@@ -92,7 +94,9 @@ contract TopicEvent is ITopicEvent, Ownable {
         address _centralizedOracle,
         bytes32[10] _name,
         bytes32[10] _resultNames,
+        uint256 _bettingStartBlock,
         uint256 _bettingEndBlock,
+        uint256 _resultSettingStartBlock,
         uint256 _resultSettingEndBlock,
         address _addressManager)
         Ownable(_owner)
@@ -103,8 +107,10 @@ contract TopicEvent is ITopicEvent, Ownable {
         require(!_name[0].isEmpty());
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
-        require(_bettingEndBlock > block.number);
-        require(_resultSettingEndBlock > _bettingEndBlock);
+        require(_bettingStartBlock > block.number);
+        require(_bettingEndBlock > _bettingStartBlock);
+        require(_resultSettingStartBlock >= _bettingEndBlock);
+        require(_resultSettingEndBlock > _resultSettingStartBlock);
 
         owner = _owner;
         name = _name;
@@ -125,7 +131,8 @@ contract TopicEvent is ITopicEvent, Ownable {
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
 
-        createCentralizedOracle(_centralizedOracle, _bettingEndBlock, _resultSettingEndBlock);
+        createCentralizedOracle(_centralizedOracle, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock,
+            _resultSettingEndBlock);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -417,15 +424,17 @@ contract TopicEvent is ITopicEvent, Ownable {
 
     function createCentralizedOracle(
         address _centralizedOracle, 
+        uint256 _bettingStartBlock,
         uint256 _bettingEndBlock, 
+        uint256 _resultSettingStartBlock,
         uint256 _resultSettingEndBlock)
         private
     {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(_centralizedOracle, address(this), 
-            name, resultNames, numOfResults, _bettingEndBlock, _resultSettingEndBlock, 
-            addressManager.startingOracleThreshold());
+            name, resultNames, numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
+            _resultSettingEndBlock, addressManager.startingOracleThreshold());
         
         assert(newOracle != address(0));
         oracles.push(Oracle({
