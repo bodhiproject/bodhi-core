@@ -352,8 +352,8 @@ contract('CentralizedOracle', function(accounts) {
 
         describe('in valid block', async function() {
             beforeEach(async function() {
-                await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-                assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+                await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+                assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
                 assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
             });
 
@@ -427,7 +427,7 @@ contract('CentralizedOracle', function(accounts) {
 
         describe('in invalid block', async function() {
             it('throws if block is below the bettingEndBlock', async function() {
-                assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+                assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
 
                 try {
                     await centralizedOracle.setResult(0, { from: ORACLE });
