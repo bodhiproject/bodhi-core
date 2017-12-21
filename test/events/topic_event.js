@@ -187,7 +187,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(9)), "ten");
         });
 
-        it('should only set the first 10 resultNames', async function() {
+        it.only('should only set the first 10 resultNames', async function() {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
             testTopic = await TopicEvent.new(owner, testTopicParams._oracle, testTopicParams._name, resultNames, 
@@ -208,6 +208,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.resultNames.call(10);
                 assert.fail();
             } catch(e) {
+                console.log(e);
                 assertInvalidOpcode(e);
             }
         });

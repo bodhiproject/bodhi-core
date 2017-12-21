@@ -4,7 +4,7 @@ const TopicEvent = artifacts.require("./events/TopicEvent.sol");
 const OracleFactory = artifacts.require("./oracles/OracleFactory.sol");
 const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
-const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 const web3 = global.web3;
 const assert = require('chai').assert;
@@ -55,7 +55,7 @@ contract('EventFactory', function(accounts) {
                 await EventFactory.new(0, { from: eventFactoryCreator });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -89,7 +89,7 @@ contract('EventFactory', function(accounts) {
             try {
                 await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
