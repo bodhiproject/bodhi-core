@@ -1,6 +1,7 @@
 const BasicTokenMock = artifacts.require('./mocks/BasicTokenMock.sol');
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assert = require('chai').assert;
+const SolAssert = require('../helpers/sol_assert');
 const web3 = global.web3;
 
 contract('BasicToken', function(accounts) {
@@ -64,7 +65,7 @@ contract('BasicToken', function(accounts) {
             try {
                 await instance.transfer(0, 1000, { from: owner });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -73,13 +74,13 @@ contract('BasicToken', function(accounts) {
             try {
                 await instance.transfer(acct1, tokenParams._initialBalance + 1, { from: owner });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
 
             try {
                 await instance.transfer(acct3, 1, { from: acct2 });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });

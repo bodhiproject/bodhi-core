@@ -1,6 +1,7 @@
 const StandardTokenMock = artifacts.require('./mocks/StandardTokenMock.sol');
 const BlockHeightManager = require('../helpers/block_height_manager');
 const assert = require('chai').assert;
+const SolAssert = require('../helpers/sol_assert');
 const web3 = global.web3;
 
 contract('StandardToken', function(accounts) {
@@ -76,7 +77,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.transferFrom(owner, 0, 1000, { from: acct1 });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -89,7 +90,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.transferFrom(owner, acct1, acct1Allowance, { from: acct1 });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -102,7 +103,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.transferFrom(owner, acct1, acct1Allowance + 1, { from: acct1 });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -129,7 +130,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.approve(acct1, 123, { from: owner });
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });
