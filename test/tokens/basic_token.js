@@ -74,13 +74,13 @@ contract('BasicToken', function(accounts) {
             try {
                 await instance.transfer(acct1, tokenParams._initialBalance + 1, { from: owner });
             } catch(e) {
-                SolAssert.assertRevert(e);
+                SolAssert.assertInvalidOpcode(e);
             }
 
             try {
                 await instance.transfer(acct3, 1, { from: acct2 });
             } catch(e) {
-                SolAssert.assertRevert(e);
+                SolAssert.assertInvalidOpcode(e);
             }
         });
     });

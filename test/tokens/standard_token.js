@@ -90,7 +90,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.transferFrom(owner, acct1, acct1Allowance, { from: acct1 });
             } catch(e) {
-                SolAssert.assertRevert(e);
+                SolAssert.assertInvalidOpcode(e);
             }
         });
 
@@ -103,7 +103,7 @@ contract('StandardToken', function(accounts) {
             try {
                 await instance.transferFrom(owner, acct1, acct1Allowance + 1, { from: acct1 });
             } catch(e) {
-                SolAssert.assertRevert(e);
+                SolAssert.assertInvalidOpcode(e);
             }
         });
     });
