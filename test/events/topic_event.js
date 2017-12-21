@@ -9,7 +9,7 @@ const TopicEvent = artifacts.require("./TopicEvent.sol");
 const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
-const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -187,7 +187,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal(web3.toUtf8(await testTopic.resultNames.call(9)), "ten");
         });
 
-        it.only('should only set the first 10 resultNames', async function() {
+        it('should only set the first 10 resultNames', async function() {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
             testTopic = await TopicEvent.new(owner, testTopicParams._oracle, testTopicParams._name, resultNames, 
@@ -208,8 +208,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.resultNames.call(10);
                 assert.fail();
             } catch(e) {
-                console.log(e);
-                assertInvalidOpcode(e);
+                SolAssert.assertInvalidOpcode(e);
             }
         });
 
@@ -219,7 +218,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -229,7 +228,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -240,7 +239,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._resultSettingEndBlock, 0);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -250,7 +249,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -260,7 +259,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -269,7 +268,7 @@ contract('TopicEvent', function(accounts) {
                     addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -277,7 +276,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -291,7 +290,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -300,7 +299,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._resultSettingEndBlock, addressManager.address);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -310,7 +309,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._resultNames, testTopicParams._bettingEndBlock, testTopicParams._bettingEndBlock);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -319,7 +318,7 @@ contract('TopicEvent', function(accounts) {
                     testTopicParams._bettingEndBlock - 1);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -334,7 +333,7 @@ contract('TopicEvent', function(accounts) {
                 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -362,7 +361,7 @@ contract('TopicEvent', function(accounts) {
                 await centralizedOracle.bet(3, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -373,7 +372,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.bet(better1, 0, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -384,7 +383,7 @@ contract('TopicEvent', function(accounts) {
                 await centralizedOracle.bet(0, { from: better1, value: 0 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -408,7 +407,7 @@ contract('TopicEvent', function(accounts) {
                     assert.equal((await testTopic.oracles(1))[0], 0);
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertInvalidOpcode(e);
                 }
 
                 let finalResultIndex = 1;
@@ -438,14 +437,14 @@ contract('TopicEvent', function(accounts) {
                     assert.equal((await testTopic.oracles.call(1))[0], 0);
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertInvalidOpcode(e);
                 }
 
                 try {
                     await centralizedOracle.setResult(3, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
 
@@ -458,7 +457,7 @@ contract('TopicEvent', function(accounts) {
                     await testTopic.centralizedOracleSetResult(oracle, 2, startingOracleThreshold, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
 
@@ -482,7 +481,7 @@ contract('TopicEvent', function(accounts) {
                     await centralizedOracle.setResult(2, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
 
@@ -495,7 +494,7 @@ contract('TopicEvent', function(accounts) {
                     await centralizedOracle.setResult(1, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
         });
@@ -511,7 +510,7 @@ contract('TopicEvent', function(accounts) {
                     await centralizedOracle.setResult(1, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
 
@@ -526,7 +525,7 @@ contract('TopicEvent', function(accounts) {
                     await centralizedOracle.setResult(1, { from: oracle });
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
         });
@@ -562,7 +561,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.oracles.call(1))[0], 0);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertInvalidOpcode(e);
             }
 
             await centralizedOracle.invalidateOracle();
@@ -588,7 +587,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.oracles.call(2))[0], 0);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertInvalidOpcode(e);
             }
 
             await decentralizedOracle.invalidateOracle();
@@ -606,7 +605,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.invalidateOracle(startingOracleThreshold, { from: better1 })
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -615,7 +614,7 @@ contract('TopicEvent', function(accounts) {
                 await centralizedOracle.invalidateOracle();
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -677,7 +676,7 @@ contract('TopicEvent', function(accounts) {
                 await decentralizedOracle.vote(3, 1, { from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -693,7 +692,7 @@ contract('TopicEvent', function(accounts) {
                 await decentralizedOracle.vote(2, 1, { from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -702,7 +701,7 @@ contract('TopicEvent', function(accounts) {
                 await decentralizedOracle.vote(0, 0, { from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -714,7 +713,7 @@ contract('TopicEvent', function(accounts) {
                 await decentralizedOracle.vote(0, vote, { from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -767,7 +766,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.oracles.call(2);
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertInvalidOpcode(e);
             }
 
             // Winning vote
@@ -816,7 +815,7 @@ contract('TopicEvent', function(accounts) {
                 await votingOracle2.vote(0, winningVote, { from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -902,7 +901,7 @@ contract('TopicEvent', function(accounts) {
                 await votingOracle2.finalizeResult({ from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
             
             assert.isFalse(await votingOracle2.finished.call());
@@ -917,7 +916,7 @@ contract('TopicEvent', function(accounts) {
                 await decentralizedOracle.finalizeResult({ from: better2 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -1212,7 +1211,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: oracle });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -1239,7 +1238,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: better3 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             // Loser withdraw
@@ -1250,7 +1249,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.withdrawWinnings({ from: better1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -1328,7 +1327,7 @@ contract('TopicEvent', function(accounts) {
                 await testTopic.getFinalResult();
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -1422,7 +1421,7 @@ contract('TopicEvent', function(accounts) {
                         await testTopic.calculateQtumContributorWinnings({ from: better3 });
                         assert.fail();
                     } catch(e) {
-                        assertInvalidOpcode(e);
+                        SolAssert.assertRevert(e);
                     }
                 });
             });
@@ -1482,7 +1481,7 @@ contract('TopicEvent', function(accounts) {
                         await testTopic.calculateBotContributorWinnings({ from: better3 });
                         assert.fail();
                     } catch(e) {
-                        assertInvalidOpcode(e);
+                        SolAssert.assertRevert(e);
                     }
                 });
             });
