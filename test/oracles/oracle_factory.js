@@ -5,7 +5,7 @@ const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol
 const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
 const assert = require('chai').assert;
-const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const SolAssert = require('../helpers/sol_assert');
 const web3 = global.web3;
 
 contract('OracleFactory', function(accounts) {
@@ -58,12 +58,12 @@ contract('OracleFactory', function(accounts) {
 
   describe('constructor', async function() {
     it('throws if the AddressManager address is invalid', async function() {
-        try {
-            await OracleFactory.new(0, { from: ADMIN });
-            assert.fail();
-        } catch(e) {
-            assert.match(e.message, /invalid opcode/);
-        }
+      try {
+        await OracleFactory.new(0, { from: ADMIN });
+        assert.fail();
+      } catch(e) {
+        SolAssert.assertRevert(e);
+      }
     });
   });
 
@@ -95,7 +95,7 @@ contract('OracleFactory', function(accounts) {
         await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
         assert.fail();
       } catch(e) {
-        assertInvalidOpcode(e);
+        SolAssert.assertRevert(e);
       }
     });
   });
@@ -125,7 +125,7 @@ contract('OracleFactory', function(accounts) {
         await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
         assert.fail();
       } catch(e) {
-        assertInvalidOpcode(e);
+        SolAssert.assertRevert(e);
       }
     });
   });
