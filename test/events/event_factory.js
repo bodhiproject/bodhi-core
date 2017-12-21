@@ -90,7 +90,8 @@ contract('EventFactory', function(accounts) {
 
         it('does not allow recreating the same topic twice', async function() {
             assert.isTrue(await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock));
+                testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
+                testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock));
             try {
                 await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
             } catch(e) {
