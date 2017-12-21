@@ -441,6 +441,10 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('getBetBalances()', async function() {
         it('returns the bet balances', async function() {
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
+            assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+
             let betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
             await centralizedOracle.bet(0, { from: USER1, value: betAmount });
             assert.equal((await centralizedOracle.getBetBalances({ from: USER1 }))[0].toString(), 
@@ -458,6 +462,10 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('getTotalBets()', async function() {
         it('returns the total bets', async function() {
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
+            assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+
             let betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
             await centralizedOracle.bet(0, { from: USER1, value: betAmount });
             assert.equal((await centralizedOracle.getTotalBets())[0].toString(), betAmount.toString());
@@ -474,8 +482,8 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('getVoteBalances()', async function() {
         it('returns the vote balances', async function() {
-            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
             assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
 
             let startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
@@ -492,8 +500,8 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('getTotalVotes()', async function() {
         it('returns the total votes', async function() {
-            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
             assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
 
             let startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
