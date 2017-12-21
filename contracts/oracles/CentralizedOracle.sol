@@ -44,7 +44,6 @@ contract CentralizedOracle is Oracle {
         require(!_eventResultNames[0].isEmpty());
         require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
-        require(_bettingStartBlock > block.number);
         require(_bettingEndBlock > _bettingStartBlock);
         require(_resultSettingStartBlock >= _bettingEndBlock);
         require(_resultSettingEndBlock > _resultSettingStartBlock);

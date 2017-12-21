@@ -107,7 +107,6 @@ contract TopicEvent is ITopicEvent, Ownable {
         require(!_name[0].isEmpty());
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
-        require(_bettingStartBlock > block.number);
         require(_bettingEndBlock > _bettingStartBlock);
         require(_resultSettingStartBlock >= _bettingEndBlock);
         require(_resultSettingEndBlock > _resultSettingStartBlock);
