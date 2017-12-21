@@ -75,6 +75,7 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
+        require(block.number >= bettingStartBlock);
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
@@ -95,7 +96,7 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
-        require(block.number >= bettingEndBlock);
+        require(block.number >= resultSettingStartBlock);
         if (block.number < resultSettingEndBlock) {
             require(msg.sender == oracle);
         }
