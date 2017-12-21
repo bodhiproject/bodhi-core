@@ -305,6 +305,26 @@ contract('CentralizedOracle', function(accounts) {
             }
         });
 
+        it('throws if the oracle is finished', async function() {
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock); 
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+            assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+
+            await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
+            assert.equal((await token.allowance(ORACLE, topicEvent.address)).toString(), 
+                startingOracleThreshold.toString());
+
+            await centralizedOracle.setResult(0, { from: ORACLE });
+            assert.isTrue(await centralizedOracle.finished.call());
+
+            try {
+                await centralizedOracle.bet(1, { from: USER1, value: 1 });
+                assert.fail();
+            } catch(e) {
+                SolAssert.assertRevert(e);
+            }
+        });
+
         it('throws if current block is < bettingStartBlock', async function() {
             assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
             
