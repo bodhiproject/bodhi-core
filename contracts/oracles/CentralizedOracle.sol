@@ -4,7 +4,9 @@ import "./Oracle.sol";
 
 contract CentralizedOracle is Oracle {
     address public oracle;
+    uint256 public bettingStartBlock;
     uint256 public bettingEndBlock;
+    uint256 public resultSettingStartBlock;
     uint256 public resultSettingEndBlock;
 
     /*
@@ -26,7 +28,9 @@ contract CentralizedOracle is Oracle {
         bytes32[10] _eventName,
         bytes32[10] _eventResultNames,
         uint8 _numOfResults,
+        uint256 _bettingStartBlock,
         uint256 _bettingEndBlock,
+        uint256 _resultSettingStartBlock,
         uint256 _resultSettingEndBlock,
         uint256 _consensusThreshold)
         Ownable(_owner)
@@ -38,8 +42,10 @@ contract CentralizedOracle is Oracle {
         require(!_eventResultNames[0].isEmpty());
         require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
-        require(_bettingEndBlock > block.number);
-        require(_resultSettingEndBlock > _bettingEndBlock);
+        require(_bettingStartBlock > block.number);
+        require(_bettingEndBlock > _bettingStartBlock);
+        require(_resultSettingStartBlock >= _bettingEndBlock);
+        require(_resultSettingEndBlock > _resultSettingStartBlock);
         require(_consensusThreshold > 0);
 
         oracle = _oracle;
@@ -47,7 +53,9 @@ contract CentralizedOracle is Oracle {
         eventName = _eventName;
         eventResultNames = _eventResultNames;
         numOfResults = _numOfResults;
+        bettingStartBlock = _bettingStartBlock;
         bettingEndBlock = _bettingEndBlock;
+        resultSettingStartBlock = _resultSettingStartBlock;
         resultSettingEndBlock = _resultSettingEndBlock;
         consensusThreshold = _consensusThreshold;
     }
