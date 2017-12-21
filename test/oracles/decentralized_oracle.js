@@ -10,7 +10,7 @@ const CentralizedOracle = artifacts.require("./oracles/CentralizedOracle.sol");
 const DecentralizedOracle = artifacts.require("./oracles/DecentralizedOracle.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
-const assertInvalidOpcode = require('../helpers/assert_invalid_opcode');
+const SolAssert = require('../helpers/sol_assert');
 
 contract('DecentralizedOracle', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
@@ -150,7 +150,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -160,7 +160,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -168,7 +168,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -178,7 +178,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -186,7 +186,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
 
             try {
@@ -194,7 +194,7 @@ contract('DecentralizedOracle', function(accounts) {
                     numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -205,7 +205,7 @@ contract('DecentralizedOracle', function(accounts) {
                     { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -219,7 +219,7 @@ contract('DecentralizedOracle', function(accounts) {
                     consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -230,7 +230,7 @@ contract('DecentralizedOracle', function(accounts) {
                     { from: ADMIN });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -288,7 +288,7 @@ contract('DecentralizedOracle', function(accounts) {
                 await decentralizedOracle.vote(CENTRALIZED_ORACLE_RESULT, vote1, { from: USER1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -309,7 +309,7 @@ contract('DecentralizedOracle', function(accounts) {
                 await decentralizedOracle.vote(0, vote1, { from: USER1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -320,7 +320,7 @@ contract('DecentralizedOracle', function(accounts) {
                 await decentralizedOracle.vote(CENTRALIZED_ORACLE_RESULT, 0, { from: USER1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
 
@@ -337,7 +337,7 @@ contract('DecentralizedOracle', function(accounts) {
                 await decentralizedOracle.vote(0, vote1, { from: USER1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
         
@@ -352,7 +352,7 @@ contract('DecentralizedOracle', function(accounts) {
                 await decentralizedOracle.vote(lastResultIndex, vote1, { from: USER1 });
                 assert.fail();
             } catch(e) {
-                assertInvalidOpcode(e);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -384,7 +384,7 @@ contract('DecentralizedOracle', function(accounts) {
                     await decentralizedOracle.finalizeResult();
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
         });
@@ -398,7 +398,7 @@ contract('DecentralizedOracle', function(accounts) {
                     await decentralizedOracle.finalizeResult();
                     assert.fail();
                 } catch(e) {
-                    assertInvalidOpcode(e);
+                    SolAssert.assertRevert(e);
                 }
             });
         });
