@@ -281,6 +281,8 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('bet()', async function() {
         it('allows betting', async function() {
+            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock); 
+            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
             assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
 
             let betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
@@ -303,7 +305,18 @@ contract('CentralizedOracle', function(accounts) {
             }
         });
 
-        it('throws if the block is at the bettingEndBlock', async function() {
+        it('throws if current block is < bettingStartBlock', async function() {
+            assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
+            
+            try {
+                await centralizedOracle.bet(0, { from: USER1, value: 1 });
+                assert.fail();
+            } catch(e) {
+                SolAssert.assertRevert(e);
+            }
+        });
+
+        it('throws if current block is >= bettingEndBlock', async function() {
             await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
             assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
             
