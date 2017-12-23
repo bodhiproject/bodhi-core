@@ -20,9 +20,9 @@ contract Oracle is Ownable {
 
     bool public finished;
     uint8 public numOfResults;
-    uint8 internal resultIndex;
-    bytes32[10] internal eventName;
-    bytes32[10] internal eventResultNames;
+    uint8 public resultIndex = invalidResultIndex;
+    bytes32[10] public eventName;
+    bytes32[10] public eventResultNames;
     address public eventAddress;
     uint256 public consensusThreshold;
     ResultBalance[10] internal resultBalances;
@@ -41,36 +41,6 @@ contract Oracle is Ownable {
     modifier isNotFinished() {
         require(!finished);
         _;
-    }
-
-    modifier isFinished() {
-        require(finished);
-        _;
-    }
-
-    /*
-    * @notice Gets the Event name as a string.
-    * @return The name of the Event.
-    */
-    function getEventName() 
-        public 
-        view 
-        returns (string) 
-    {
-        return ByteUtils.toString(eventName);
-    }
-
-    /*
-    * @notice Gets the Event result names as an array of strings.
-    * @return An array of result name strings.
-    */
-    function getEventResultName(uint8 _eventResultIndex) 
-        public 
-        view 
-        validResultIndex(_eventResultIndex)
-        returns (string) 
-    {
-        return ByteUtils.toString(eventResultNames[_eventResultIndex]);
     }
 
     /*
@@ -135,18 +105,5 @@ contract Oracle is Ownable {
             totalVotes[i] = resultBalances[i].totalVotes;
         }
         return totalVotes;
-    }
-
-    /*
-    * @notice Gets the Oracle result index, name, and flag indicating if the result is final.
-    * @return The result index, name, and finalized bool.
-    */
-    function getResult()
-        public 
-        view 
-        isFinished()
-        returns (uint8, string, bool) 
-    {
-        return (resultIndex, ByteUtils.toString(eventResultNames[resultIndex]), finished);
     }
 }
