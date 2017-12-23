@@ -51,7 +51,7 @@ contract DecentralizedOracle is Oracle {
     * @param _eventResultIndex The Event result which is being voted on.
     * @param _botAmount The amount of BOT used to vote.
     */
-    function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
+    function vote(uint8 _eventResultIndex, uint256 _botAmount) 
         external 
         validResultIndex(_eventResultIndex) 
         isNotFinished()
@@ -80,12 +80,12 @@ contract DecentralizedOracle is Oracle {
     */
     function finalizeResult() 
         external 
-        validResultIndex(lastResultIndex)
         isNotFinished()
     {
         require(block.number >= arbitrationEndBlock);
 
         finished = true;
+        resultIndex = lastResultIndex;
 
         ITopicEvent(eventAddress).finalizeResult();
     }
