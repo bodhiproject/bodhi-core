@@ -65,6 +65,7 @@ contract CentralizedOracle is Oracle {
         external 
         payable
         validResultIndex(_resultIndex)
+        isNotFinished()
     {
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
@@ -72,7 +73,7 @@ contract CentralizedOracle is Oracle {
         resultBalances[_resultIndex].totalBets = resultBalances[_resultIndex].totalBets.add(msg.value);
         resultBalances[_resultIndex].bets[msg.sender] = resultBalances[_resultIndex].bets[msg.sender].add(msg.value);
 
-        ITopicEvent(eventAddress).bet.value(msg.value)(msg.sender, _resultIndex);
+        ITopicEvent(eventAddress).betFromOracle.value(msg.value)(msg.sender, _resultIndex);
         OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
     }
 
@@ -86,9 +87,10 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
-        require(msg.sender == oracle);
         require(block.number >= bettingEndBlock);
-        require(block.number < resultSettingEndBlock);
+        if (block.number < resultSettingEndBlock) {
+            require(msg.sender == oracle);
+        }
 
         finished = true;
         resultIndex = _resultIndex;
@@ -99,22 +101,5 @@ contract CentralizedOracle is Oracle {
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
         OracleResultSet(address(this), _resultIndex);
-    }
-
-    /* 
-    * @notice Allows anyone to invalidate the CentralizedOracle if they did not set the result in time. 
-    * @dev It will start a new DecentralizedOracle in the Event and set an invalid result index.
-    */
-    function invalidateOracle() 
-        external 
-        isNotFinished()
-    {
-        require(block.number >= resultSettingEndBlock);
-
-        finished = true;
-        resultIndex = invalidResultIndex;
-
-        ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
-        OracleInvalidated(address(this));
     }
 }
