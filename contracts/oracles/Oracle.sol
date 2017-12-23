@@ -31,7 +31,6 @@ contract Oracle is Ownable {
     event OracleResultVoted(address indexed _oracleAddress, address indexed _participant, uint8 _resultIndex, 
         uint256 _votedAmount);
     event OracleResultSet(address indexed _oracleAddress, uint8 _resultIndex);
-    event OracleInvalidated(address indexed _oracleAddress);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -48,8 +47,6 @@ contract Oracle is Ownable {
         require(finished);
         _;
     }
-
-    function invalidateOracle() external;
 
     /*
     * @notice Gets the Event name as a string.

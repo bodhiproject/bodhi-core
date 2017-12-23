@@ -72,20 +72,6 @@ contract DecentralizedOracle is Oracle {
         }
     }
 
-    function invalidateOracle() 
-        external
-        isNotFinished() 
-    {
-        require(lastResultIndex == invalidResultIndex);
-        require(block.number >= arbitrationEndBlock);
-
-        finished = true;
-        resultIndex = invalidResultIndex;
-
-        ITopicEvent(eventAddress).invalidateOracle(consensusThreshold);
-        OracleInvalidated(address(this));
-    }
-
     /*
     * @notice This can be called by anyone if this VotingOracle did not meet the consensus threshold and has reached 
     *   the arbitration end block. This finishes the Event and allows winners to withdraw their winnings from the Event 
@@ -94,8 +80,8 @@ contract DecentralizedOracle is Oracle {
     */
     function finalizeResult() 
         external 
-        isNotFinished()
         validResultIndex(lastResultIndex)
+        isNotFinished()
     {
         require(block.number >= arbitrationEndBlock);
 
