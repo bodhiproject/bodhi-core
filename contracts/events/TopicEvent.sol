@@ -134,7 +134,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /*
-    * @notice Allows betting on a result using QTUM tokens.
+    * @dev CentralizedOracle contract can call this method to bet.
     * @param _better The address that is placing the bet.
     * @param _resultIndex The index of result to bet on.
     */
@@ -153,10 +153,10 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /* 
-    * @dev The CentralizedOracle should call setResult() from the CentralizedOracle contract. 
+    * @dev CentralizedOracle contract can call this method to set the result.
     * @param _oracle The address of the CentralizedOracle.
     * @param _resultIndex The index of the result to set.
-    * @param _consensusThreshold The BOT threshold that the CentralizedOracle has to contribute for validating the result.
+    * @param _consensusThreshold The BOT threshold that the CentralizedOracle has to contribute to validate the result.
     */
     function centralizedOracleSetResult(
         address _oracle, 
@@ -180,15 +180,14 @@ contract TopicEvent is ITopicEvent, Ownable {
         totalBotValue = totalBotValue.add(_consensusThreshold);
 
         token.transferFrom(_oracle, address(this), _consensusThreshold);
-        createVotingOracle(_consensusThreshold);
+        createDecentralizedOracle(_consensusThreshold);
     }
 
     /*
-    * @dev VotingOracles will call this to vote on a Result on behalf of a participant. Participants must BOT approve()
-    *   with the amount before voting. We are storing the voted amounts here to have a centralized contract to withdraw
-    *   winnings.
-    * @param _resultIndex The index of Result to vote on.
-    * @param _sender The address of the person voting on a Result.
+    * @dev DecentralizedOracle contract can call this method to vote for a user. Voter must BOT approve() with the 
+    *   amount to TopicEvent address before voting.
+    * @param _resultIndex The index of result to vote on.
+    * @param _sender The address of the person voting on a result.
     * @param _amount The BOT amount used to vote.
     * @return Flag indicating a successful transfer.
     */
@@ -216,8 +215,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /* 
-    * @dev VotingOracle should call this to set the result. Should be allowed when the Oracle passes the consensus 
-    *   threshold.
+    * @dev DecentralizedOracle contract can call this to set the result after vote passes consensus threshold.
     * @param _resultIndex The index of the result to set.
     * @param _currentConsensusThreshold The current consensus threshold for the Oracle.
     */
@@ -226,30 +224,27 @@ contract TopicEvent is ITopicEvent, Ownable {
         validResultIndex(_resultIndex)
         returns (bool)
     {
-        bool isValidVotingOracle = false;
+        bool isValidOracle = false;
         uint8 oracleIndex;
         for (uint8 i = 1; i < oracles.length; i++) {
             if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
-                isValidVotingOracle = true;
+                isValidOracle = true;
                 oracleIndex = i;
                 break;
             }
         }
-        require(isValidVotingOracle);
+        require(isValidOracle);
 
         oracles[oracleIndex].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
         finalResultIndex = _resultIndex;
 
-        return createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
+        return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
 
     /*
-    * @notice This can be called by anyone from the last VotingOracle if it did not meet the consensus threshold 
-    *   and will set Status: Collection to allow winners to withdraw winnings from this Event.
-    * @dev This should be called by last VotingOracle contract. Validation of being able to finalize will be in the 
-    *   VotingOracle contract.
+    * @dev The last DecentralizedOracle contract can call this method to change status to Collection.
     * @return Flag to indicate success of finalizing the result.
     */
     function decentralizedOracleFinalizeResult() 
@@ -358,8 +353,8 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /*
-    * @notice Gets the final result index, name, and flag indicating if the result is final.
-    * @return The result index, name, and finalized bool.
+    * @notice Gets the final result index and flag indicating if the result is final.
+    * @return The result index and finalized bool.
     */
     function getFinalResult() 
         public 
@@ -370,7 +365,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /* 
-    * @dev Calculates the QTUM tokens won based on the sender's QTUM token contributions.
+    * @notice Calculates the QTUM tokens won based on the sender's QTUM token contributions.
     * @return The amount of QTUM tokens won.
     */
     function calculateQtumContributorWinnings() 
@@ -393,7 +388,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /*
-    * @dev Calculates the QTUM and BOT tokens won based on the sender's BOT contributions.
+    * @notice Calculates the QTUM and BOT tokens won based on the sender's BOT contributions.
     * @return The amount of QTUM and BOT tokens won.
     */
     function calculateBotContributorWinnings()
@@ -439,11 +434,7 @@ contract TopicEvent is ITopicEvent, Ownable {
             }));
     }
 
-    /*
-    * @dev Creates a VotingOracle for this Event.
-    * @return Flag indicating successful creation of VotingOracle.
-    */
-    function createVotingOracle(uint256 _consensusThreshold) 
+    function createDecentralizedOracle(uint256 _consensusThreshold) 
         private 
         returns (bool)
     {
