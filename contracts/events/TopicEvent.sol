@@ -32,8 +32,8 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     struct Oracle {
-        bool didSetResult;
         address oracleAddress;
+        bool didSetResult;
     }
 
     uint8 public constant invalidResultIndex = 255;
@@ -42,7 +42,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     uint8 private finalResultIndex;
     uint8 public numOfResults;
     Status public status = Status.Betting;
-    bytes32[10] private name;
+    bytes32[10] public name;
     bytes32[10] public resultNames;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
@@ -294,31 +294,6 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /*
-    * @notice Gets the Oracle's address and flag indicating if it set it's result.
-    * @param _oracleIndex The index of the Oracle in the array.
-    * @return The Oracle address and boolean indicating if it set it's result.
-    */
-    function getOracle(uint8 _oracleIndex)
-        public 
-        view 
-        returns (address, bool)
-    {
-        return (oracles[_oracleIndex].oracleAddress, oracles[_oracleIndex].didSetResult);
-    }
-
-    /*
-    * @notice Gets the Event name as a string.
-    * @return The name of the Event.
-    */
-    function getEventName() 
-        public 
-        view 
-        returns (string) 
-    {
-        return ByteUtils.toString(name);
-    }
-
-    /*
     * @notice Gets the bet balances of the sender for all the results.
     * @return An array of all the bet balances of the sender.
     */
@@ -389,10 +364,9 @@ contract TopicEvent is ITopicEvent, Ownable {
     function getFinalResult() 
         public 
         view
-        resultIsSet()
-        returns (uint8, string, bool) 
+        returns (uint8, bool) 
     {
-        return (finalResultIndex, ByteUtils.toString(resultNames[finalResultIndex]), status == Status.Collection);
+        return (finalResultIndex, status == Status.Collection);
     }
 
     /* 
