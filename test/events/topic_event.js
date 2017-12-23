@@ -338,7 +338,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe("bet()", async function() {
+    describe("betFromOracle()", async function() {
         it("allows users to bet", async function() {
             let initialBalance = web3.eth.getBalance(testTopic.address).toNumber();
             let betAmount = Utils.getBigNumberWithDecimals(1, nativeDecimals);
@@ -369,7 +369,7 @@ contract('TopicEvent', function(accounts) {
             assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
 
             try {
-                await testTopic.bet(better1, 0, { from: better1, value: 1 });
+                await testTopic.betFromOracle(better1, 0, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -389,173 +389,48 @@ contract('TopicEvent', function(accounts) {
     });
 
     describe('centralizedOracleSetResult()', async function() {
-        describe('in valid block range', async function() {
-            beforeEach(async function() {
-                await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-                assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
-                assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
-
-                assert.isFalse(await testTopic.resultSet.call());
-            });
-
-            it('sets the result and creates a new CentralizedOracle', async function() {
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
-                    startingOracleThreshold.toString());
-
-                try {
-                    assert.equal((await testTopic.oracles(1))[0], 0);
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertInvalidOpcode(e);
-                }
-
-                let finalResultIndex = 1;
-                await centralizedOracle.setResult(finalResultIndex, { from: oracle });
-
-                assert.isTrue((await testTopic.oracles.call(0))[1]);
-                assert.isTrue(await testTopic.resultSet.call());
-                assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
-                let finalResult = await testTopic.getFinalResult();
-                assert.equal(finalResult[0], finalResultIndex);
-                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
-                assert.isFalse(finalResult[2]);
-                assert.equal((await testTopic.totalBotValue.call()).toString(), startingOracleThreshold.toString());
-
-                assert.equal((await token.balanceOf(testTopic.address)).toString(), startingOracleThreshold.toString());
-                let decentralizedOracle = await testTopic.oracles.call(1);
-                assert.notEqual(decentralizedOracle[0], 0);
-                assert.isFalse(decentralizedOracle[1]);
-            });
-
-            it('throws on an invalid result index', async function() {
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
-                    startingOracleThreshold.toString());
-
-                try {
-                    assert.equal((await testTopic.oracles.call(1))[0], 0);
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertInvalidOpcode(e);
-                }
-
-                try {
-                    await centralizedOracle.setResult(3, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-
-            it('throws if sender is not the CentralizedOracle', async function() {
-                await token.approve(testTopic.address, startingOracleThreshold, { from: better1 });
-                assert.equal((await token.allowance(better1, testTopic.address)).toString(), 
-                    startingOracleThreshold.toString());
-
-                try {
-                    await testTopic.centralizedOracleSetResult(oracle, 2, startingOracleThreshold, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-
-            it('throws if CentralizedOracle already set the result', async function() {
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-
-                let finalResultIndex = 1;
-                await centralizedOracle.setResult(finalResultIndex, { from: oracle });
-
-                assert.isTrue((await testTopic.oracles.call(0))[1]);
-                assert.isTrue(await testTopic.resultSet.call());
-                assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
-                let finalResult = await testTopic.getFinalResult();
-                assert.equal(finalResult[0], finalResultIndex);
-                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
-                assert.isFalse(finalResult[2]);
-
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-
-                try {
-                    await centralizedOracle.setResult(2, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-
-            it('throws if allowance is less than consensusThreshold', async function() {
-                let amount = Utils.getBigNumberWithDecimals(99, botDecimals);
-                await token.approve(testTopic.address, amount, { from: oracle });
-                assert.equal((await token.allowance(oracle, testTopic.address)).toString(), amount.toString());
-
-                try {
-                    await centralizedOracle.setResult(1, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-        });
-
-        describe('in invalid block range', async function() {
-            it('throws if the block is below bettingEndBlock', async function() {
-                assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
-                assert.isFalse(await testTopic.resultSet.call());
-
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-
-                try {
-                    await centralizedOracle.setResult(1, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-
-            it('throws if the block is above or equal to resultSettingEndBlock', async function() {
-                await blockHeightManager.mineTo(testTopicParams._resultSettingEndBlock);
-                assert.equal(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
-                assert.isFalse(await testTopic.resultSet.call());
-
-                await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
-
-                try {
-                    await centralizedOracle.setResult(1, { from: oracle });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-        });
-    });
-
-    describe('invalidateOracle()', async function() {
         beforeEach(async function() {
-            assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock);
-
-            let bet1 = Utils.getBigNumberWithDecimals(20, botDecimals);
-            await centralizedOracle.bet(2, { from: better1, value: bet1 });
-            assert.equal((await testTopic.getBetBalances({ from: better1 }))[2].toString(), 
-                bet1.toString());
-
-            let bet2 = Utils.getBigNumberWithDecimals(30, botDecimals);
-            await centralizedOracle.bet(0, { from: better2, value: bet2 });
-            assert.equal((await testTopic.getBetBalances({ from: better2 }))[0].toString(), bet2.toString());
-
-            let bet3 = Utils.getBigNumberWithDecimals(11, botDecimals);
-            await centralizedOracle.bet(2, { from: better3, value: bet3 });
-            assert.equal((await testTopic.getBetBalances({ from: better3 }))[2].toString(), 
-                bet3.toString());
-
             await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
             assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
 
             assert.isFalse(await testTopic.resultSet.call());
+        });
 
-            await blockHeightManager.mineTo(testTopicParams._resultSettingEndBlock);
-            assert.equal(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
+        it('sets the result and creates a new CentralizedOracle', async function() {
+            await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
+                startingOracleThreshold.toString());
+
+            try {
+                assert.equal((await testTopic.oracles(1))[0], 0);
+                assert.fail();
+            } catch(e) {
+                SolAssert.assertInvalidOpcode(e);
+            }
+
+            let finalResultIndex = 1;
+            await centralizedOracle.setResult(finalResultIndex, { from: oracle });
+
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
+            assert.isTrue(await testTopic.resultSet.call());
+            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
+            let finalResult = await testTopic.getFinalResult();
+            assert.equal(finalResult[0], finalResultIndex);
+            assert.isFalse(finalResult[1]);
+
+            assert.equal((await testTopic.totalBotValue.call()).toString(), startingOracleThreshold.toString());
+            assert.equal((await token.balanceOf(testTopic.address)).toString(), startingOracleThreshold.toString());
+
+            let decentralizedOracle = await testTopic.oracles.call(1);
+            assert.notEqual(decentralizedOracle[0], 0);
+            assert.isFalse(decentralizedOracle[1]);
+        });
+
+        it('throws on an invalid result index', async function() {
+            await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
+            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), 
+                startingOracleThreshold.toString());
 
             try {
                 assert.equal((await testTopic.oracles.call(1))[0], 0);
@@ -564,54 +439,57 @@ contract('TopicEvent', function(accounts) {
                 SolAssert.assertInvalidOpcode(e);
             }
 
-            await centralizedOracle.invalidateOracle();
-
-            let oracleArray = await testTopic.oracles.call(1);
-            assert.notEqual(oracleArray[0], 0);
-            assert.isFalse(oracleArray[1]);
-            decentralizedOracle = await DecentralizedOracle.at(oracleArray[0]);
-        });
-
-        it('sets the values and creates a new DecentralizedOracle when invalidating a CentralizedOracle', 
-            async function() {
-            assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isFalse(await testTopic.resultSet.call());
-            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);            
-        });
-
-        it('sets the values and creates a new DecentralizedOracle when invalidating a DecentralizedOracle', 
-            async function() {
-            await blockHeightManager.mineTo(await decentralizedOracle.arbitrationEndBlock.call());
-
             try {
-                assert.equal((await testTopic.oracles.call(2))[0], 0);
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertInvalidOpcode(e);
-            }
-
-            await decentralizedOracle.invalidateOracle();
-            assert.isTrue((await testTopic.oracles.call(1))[1]);
-            assert.isFalse(await testTopic.resultSet.call());
-            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
-
-            let oracleArray = await testTopic.oracles.call(2);
-            assert.notEqual(oracleArray[0], 0);
-            assert.isFalse(oracleArray[1]);
-        });
-
-        it('throws if receiving from an address that is not an Oracle contract', async function() {
-            try {
-                await testTopic.invalidateOracle(startingOracleThreshold, { from: better1 })
+                await centralizedOracle.setResult(3, { from: oracle });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
             }
         });
 
-        it('throws if the Oracle result is already set', async function() {
+        it('throws if sender is not the CentralizedOracle', async function() {
+            await token.approve(testTopic.address, startingOracleThreshold, { from: better1 });
+            assert.equal((await token.allowance(better1, testTopic.address)).toString(), 
+                startingOracleThreshold.toString());
+
             try {
-                await centralizedOracle.invalidateOracle();
+                await testTopic.centralizedOracleSetResult(oracle, 2, startingOracleThreshold, { from: oracle });
+                assert.fail();
+            } catch(e) {
+                SolAssert.assertRevert(e);
+            }
+        });
+
+        it('throws if CentralizedOracle already set the result', async function() {
+            await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
+
+            let finalResultIndex = 1;
+            await centralizedOracle.setResult(finalResultIndex, { from: oracle });
+
+            assert.isTrue((await testTopic.oracles.call(0))[1]);
+            assert.isTrue(await testTopic.resultSet.call());
+            assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
+            let finalResult = await testTopic.getFinalResult();
+            assert.equal(finalResult[0], finalResultIndex);
+            assert.isFalse(finalResult[1]);
+
+            await token.approve(testTopic.address, startingOracleThreshold, { from: oracle });
+
+            try {
+                await centralizedOracle.setResult(2, { from: oracle });
+                assert.fail();
+            } catch(e) {
+                SolAssert.assertRevert(e);
+            }
+        });
+
+        it('throws if allowance is < consensusThreshold', async function() {
+            let amount = Utils.getBigNumberWithDecimals(99, botDecimals);
+            await token.approve(testTopic.address, amount, { from: oracle });
+            assert.equal((await token.allowance(oracle, testTopic.address)).toString(), amount.toString());
+
+            try {
+                await centralizedOracle.setResult(1, { from: oracle });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -638,8 +516,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], firstResultIndex);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[firstResultIndex]);
-            assert.isFalse(finalResult[2]);
+            assert.isFalse(finalResult[1]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
         });
@@ -718,7 +595,7 @@ contract('TopicEvent', function(accounts) {
         });
     });
 
-    describe('votingOracleSetResult()', async function() {
+    describe('decentralizedOracleSetResult()', async function() {
         let centralizedOracleResultIndex = 1;
         let votingOracle1ResultIndex = 2;
         let votingOracle2;
@@ -741,8 +618,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResultIndex);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResultIndex);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResultIndex]);
-            assert.isFalse(finalResult[2]);
+            assert.isFalse(finalResult[1]);
 
             // DecentralizedOracle voting
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -840,8 +716,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
-            assert.isFalse(finalResult[2]);
+            assert.isFalse(finalResult[1]);
 
             // DecentralizedOracle voting under consensusThreshold
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
@@ -885,8 +760,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
-            assert.isTrue(finalResult[2]);
+            assert.isTrue(finalResult[1]);
         });
 
         it('throws if an invalid DecentralizedOracle tries to finalize the result', async function() {
@@ -973,8 +847,7 @@ contract('TopicEvent', function(accounts) {
             assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
-            assert.isFalse(finalResult[2]);
+            assert.isFalse(finalResult[1]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
         });
@@ -1009,8 +882,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
-            assert.isTrue(finalResult[2]);
+            assert.isTrue(finalResult[1]);
 
             // Winners withdraw
             // better3
@@ -1136,8 +1008,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], dOracle2Result);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[dOracle2Result]);
-            assert.isTrue(finalResult[2]);
+            assert.isTrue(finalResult[1]);
 
             let expectedQtumValue = bet1.add(bet2).add(bet3).add(bet4);
             assert.equal((await testTopic.totalQtumValue.call()).toString(), expectedQtumValue.toString());
@@ -1227,8 +1098,7 @@ contract('TopicEvent', function(accounts) {
 
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[cOracleResult]);
-            assert.isTrue(finalResult[2]);
+            assert.isTrue(finalResult[1]);
 
             // Winner withdraw
             await testTopic.withdrawWinnings({ from: better3 });
@@ -1307,8 +1177,7 @@ contract('TopicEvent', function(accounts) {
 
             var finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
-            assert.isFalse(finalResult[2]);
+            assert.isFalse(finalResult[1]);
 
             decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
             await blockHeightManager.mineTo(await decentralizedOracle.arbitrationEndBlock.call());
@@ -1316,19 +1185,7 @@ contract('TopicEvent', function(accounts) {
 
             finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
-            assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[finalResultIndex]);
-            assert.isTrue(finalResult[2]);
-        });
-
-        it("throws if trying to get the final result before it is set", async function() {
-            assert.isFalse(await testTopic.resultSet.call());
-
-            try {
-                await testTopic.getFinalResult();
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
+            assert.isTrue(finalResult[1]);
         });
     });
 
@@ -1378,8 +1235,7 @@ contract('TopicEvent', function(accounts) {
                 assert.equal((await testTopic.status.call()).toNumber(), statusOracleVoting);
                 let finalResult = await testTopic.getFinalResult();
                 assert.equal(finalResult[0], centralizedOracleResult);
-                assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
-                assert.isFalse(finalResult[2]);
+                assert.isFalse(finalResult[1]);
 
                 decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
             });
@@ -1396,8 +1252,7 @@ contract('TopicEvent', function(accounts) {
                     assert.equal((await testTopic.status.call()).toNumber(), statusCollection);
                     let finalResult = await testTopic.getFinalResult();
                     assert.equal(finalResult[0], centralizedOracleResult);
-                    assert.equal(web3.toUtf8(finalResult[1]), testTopicParams._resultNames[centralizedOracleResult]);
-                    assert.isTrue(finalResult[2]);
+                    assert.isTrue(finalResult[1]);
 
                     // Withdrawing: winning result 2 = better3, better4
                     let losingBlockingTokens = bet1.add(bet2).mul(90).div(100);

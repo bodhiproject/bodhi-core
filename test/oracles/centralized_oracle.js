@@ -322,6 +322,24 @@ contract('CentralizedOracle', function(accounts) {
                     startingOracleThreshold.toString());
             });
 
+            it('allows anyone to set the result if current block >= resultSettingEndBlock', async function() {
+                await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+                assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+
+                await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
+                assert.equal((await token.allowance(USER1, topicEvent.address)).toString(), 
+                    startingOracleThreshold.toString());
+
+                let resultIndex = 2;
+                await centralizedOracle.setResult(resultIndex, { from: USER1 });
+                assert.isTrue(await centralizedOracle.finished.call());
+                assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
+                assert.equal((await centralizedOracle.getTotalVotes())[resultIndex].toString(), 
+                    startingOracleThreshold.toString());
+                assert.equal((await centralizedOracle.getVoteBalances({ from: USER1 }))[resultIndex].toString(), 
+                    startingOracleThreshold.toString());
+            });
+
             it('throws if resultIndex is invalid', async function() {
                 try {
                     await centralizedOracle.setResult(3, { from: ORACLE });
@@ -347,7 +365,7 @@ contract('CentralizedOracle', function(accounts) {
                 }
             });
 
-            it('throws if the sender is not the oracle', async function() {
+            it('throws if the sender is not the oracle and < resultSettingEndBlock', async function() {
                 await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
                 assert.equal((await token.allowance(USER1, topicEvent.address)).toString(), 
                     startingOracleThreshold.toString());
@@ -364,18 +382,6 @@ contract('CentralizedOracle', function(accounts) {
         describe('in invalid block', async function() {
             it('throws if block is below the bettingEndBlock', async function() {
                 assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
-
-                try {
-                    await centralizedOracle.setResult(0, { from: ORACLE });
-                    assert.fail();
-                } catch(e) {
-                    SolAssert.assertRevert(e);
-                }
-            });
-
-            it('throws if block is at the resultSettingEndBlock', async function() {
-                await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingEndBlock);
-                assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
 
                 try {
                     await centralizedOracle.setResult(0, { from: ORACLE });
