@@ -87,7 +87,7 @@ contract DecentralizedOracle is Oracle {
         finished = true;
         resultIndex = lastResultIndex;
 
-        ITopicEvent(eventAddress).finalizeResult();
+        ITopicEvent(eventAddress).decentralizedOracleFinalizeResult();
     }
 
     /*
@@ -107,7 +107,7 @@ contract DecentralizedOracle is Oracle {
             }
         }
 
-        ITopicEvent(eventAddress).votingOracleSetResult(resultIndex, winningVoteBalance);
+        ITopicEvent(eventAddress).decentralizedOracleSetResult(resultIndex, winningVoteBalance);
         OracleResultSet(address(this), resultIndex);
     }
 }

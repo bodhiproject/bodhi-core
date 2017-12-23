@@ -221,7 +221,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     * @param _resultIndex The index of the result to set.
     * @param _currentConsensusThreshold The current consensus threshold for the Oracle.
     */
-    function votingOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
+    function decentralizedOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
         external 
         validResultIndex(_resultIndex)
         returns (bool)
@@ -252,7 +252,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     *   VotingOracle contract.
     * @return Flag to indicate success of finalizing the result.
     */
-    function finalizeResult() 
+    function decentralizedOracleFinalizeResult() 
         external 
         returns (bool)
     {
