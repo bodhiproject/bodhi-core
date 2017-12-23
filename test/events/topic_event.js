@@ -420,8 +420,8 @@ contract('TopicEvent', function(accounts) {
 
     describe('centralizedOracleSetResult()', async function() {
         beforeEach(async function() {
-            await blockHeightManager.mineTo(testTopicParams._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), testTopicParams._bettingEndBlock);
+            await blockHeightManager.mineTo(testTopicParams._resultSettingStartBlock);
+            assert.isAtLeast(await getBlockNumber(), testTopicParams._resultSettingStartBlock);
             assert.isBelow(await getBlockNumber(), testTopicParams._resultSettingEndBlock);
 
             assert.isFalse(await testTopic.resultSet.call());
