@@ -51,7 +51,7 @@ contract DecentralizedOracle is Oracle {
     * @param _eventResultIndex The Event result which is being voted on.
     * @param _botAmount The amount of BOT used to vote.
     */
-    function vote(uint8 _eventResultIndex, uint256 _botAmount) 
+    function voteResult(uint8 _eventResultIndex, uint256 _botAmount) 
         external 
         validResultIndex(_eventResultIndex) 
         isNotFinished()
