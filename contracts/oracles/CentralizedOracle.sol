@@ -73,7 +73,7 @@ contract CentralizedOracle is Oracle {
         resultBalances[_resultIndex].totalBets = resultBalances[_resultIndex].totalBets.add(msg.value);
         resultBalances[_resultIndex].bets[msg.sender] = resultBalances[_resultIndex].bets[msg.sender].add(msg.value);
 
-        ITopicEvent(eventAddress).bet.value(msg.value)(msg.sender, _resultIndex);
+        ITopicEvent(eventAddress).betFromOracle.value(msg.value)(msg.sender, _resultIndex);
         OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
     }
 

@@ -138,7 +138,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     * @param _better The address that is placing the bet.
     * @param _resultIndex The index of result to bet on.
     */
-    function bet(address _better, uint8 _resultIndex) 
+    function betFromOracle(address _better, uint8 _resultIndex) 
         external 
         payable
         validAddress(_better)
@@ -243,31 +243,6 @@ contract TopicEvent is ITopicEvent, Ownable {
         finalResultIndex = _resultIndex;
 
         return createVotingOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
-    }
-
-    /* 
-    * @notice Allows anyone to invalidate an Oracle if the result was not set. It creates a new DecentralizedOracle.
-    * @dev invalidateOracle() should be called from the Oracle contract to execute this.
-    */
-    function invalidateOracle(uint256 _consensusThreshold) 
-        external 
-    {
-        bool isValidOracle = false;
-        uint8 oracleIndex;
-        for (uint8 i = 0; i < oracles.length; i++) {
-            if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
-                isValidOracle = true;
-                oracleIndex = i;
-                break;
-            }
-        }
-        require(isValidOracle);
-
-        oracles[oracleIndex].didSetResult = true;
-        status = Status.OracleVoting;
-        finalResultIndex = invalidResultIndex;
-
-        createVotingOracle(_consensusThreshold);
     }
 
     /*
