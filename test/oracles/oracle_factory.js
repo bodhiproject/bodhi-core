@@ -26,8 +26,10 @@ contract('OracleFactory', function(accounts) {
     _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
     _eventResultNames: ["first", "second", "third"],
     _numOfResults: 3,
-    _bettingEndBlock: 100,
-    _resultSettingEndBlock: 110,
+    _bettingStartBlock: 40,
+    _bettingEndBlock: 60,
+    _resultSettingStartBlock: 70,
+    _resultSettingEndBlock: 90,
     _consensusThreshold: CONSENSUS_THRESHOLD
   };
 
@@ -81,7 +83,9 @@ contract('OracleFactory', function(accounts) {
       assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(1)), CORACLE_PARAMS._eventResultNames[1]);
       assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(2)), CORACLE_PARAMS._eventResultNames[2]);
       assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), CORACLE_PARAMS._numOfResults);
+      assert.equal(await centralizedOracle.bettingStartBlock.call(), CORACLE_PARAMS._bettingStartBlock);
       assert.equal(await centralizedOracle.bettingEndBlock.call(), CORACLE_PARAMS._bettingEndBlock);
+      assert.equal(await centralizedOracle.resultSettingStartBlock.call(), CORACLE_PARAMS._resultSettingStartBlock);
       assert.equal(await centralizedOracle.resultSettingEndBlock.call(), CORACLE_PARAMS._resultSettingEndBlock);
       assert.equal((await centralizedOracle.consensusThreshold.call()).toString(), 
         CORACLE_PARAMS._consensusThreshold.toString());
@@ -127,61 +131,6 @@ contract('OracleFactory', function(accounts) {
       } catch(e) {
         SolAssert.assertRevert(e);
       }
-    });
-  });
-
-  describe('doesCentralizedOracleExist()', async function() {
-    it('returns true if the CentralizedOracle exists', async function() {
-      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
-
-      await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
-      assert.isTrue(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
-    });
-
-    it('returns false if the CentralizedOracle does not exist', async function() {
-      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
-
-      await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
-      assert.isTrue(await oracleFactory.doesCentralizedOracleExist(...Object.values(CORACLE_PARAMS)));
-
-      const params = {
-        _oracle: ORACLE,
-        _eventAddress: "0x1111111111111111111111111111111111111111",
-        _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
-        _eventResultNames: ["first", "second"],
-        _numOfResults: 3,
-        _bettingEndBlock: 100,
-        _resultSettingEndBlock: 110,
-        _consensusThreshold: CONSENSUS_THRESHOLD
-      };
-      assert.isFalse(await oracleFactory.doesCentralizedOracleExist(...Object.values(params)));
-    });
-  });
-
-  describe('doesDecentralizedOracleExist()', async function() {
-    it('returns true if the DecentralizedOracle exists', async function() {
-      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
-
-      await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
-      assert.isTrue(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
-    });
-
-    it('returns false if the DecentralizedOracle does not exist', async function() {
-      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
-
-      await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
-      assert.isTrue(await oracleFactory.doesDecentralizedOracleExist(...Object.values(DORACLE_PARAMS)));
-
-      const params = {
-        _eventAddress: "0x1111111111111111111111111111111111111111",
-        _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
-        _eventResultNames: ["first", "second"],
-        _numOfResults: 3,
-        _lastResultIndex: 2,
-        _arbitrationEndBlock: 200,
-        _consensusThreshold: CONSENSUS_THRESHOLD
-      };
-      assert.isFalse(await oracleFactory.doesDecentralizedOracleExist(...Object.values(params)));
     });
   });
 });

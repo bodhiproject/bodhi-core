@@ -30,8 +30,10 @@ contract('DecentralizedOracle', function(accounts) {
         _oracle: ORACLE,
         _name: ["Who will be the next president i", "n the 2020 election?"],
         _resultNames: ["Trump", "The Rock", "Hilary"],
-        _bettingEndBlock: 100,
-        _resultSettingEndBlock: 120
+        _bettingStartBlock: 40,
+        _bettingEndBlock: 60,
+        _resultSettingStartBlock: 70,
+        _resultSettingEndBlock: 90
     };
     
     let token;
@@ -88,6 +90,10 @@ contract('DecentralizedOracle', function(accounts) {
         centralizedOracle = CentralizedOracle.at((await topicEvent.oracles.call(0))[0]);
 
         // Betting
+        await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
+        assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
+        assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+
         let bet1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
         await centralizedOracle.bet(CENTRALIZED_ORACLE_RESULT, { from: USER1, value: bet1 });
         assert.equal((await topicEvent.getBetBalances({ from: USER1 }))[CENTRALIZED_ORACLE_RESULT].toString(), 
@@ -103,8 +109,8 @@ contract('DecentralizedOracle', function(accounts) {
         assert.equal((await topicEvent.getBetBalances({ from: USER3 }))[0].toString(), bet3.toString());
 
         // CentralizedOracle set result
-        await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-        assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+        await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+        assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
         assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
 
         assert.isFalse(await centralizedOracle.finished.call());

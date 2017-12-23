@@ -15,8 +15,10 @@ contract('EventFactory', function(accounts) {
         _oracle: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
-        _bettingEndBlock: 100,
-        _resultSettingEndBlock: 110
+        _bettingStartBlock: 40,
+        _bettingEndBlock: 60,
+        _resultSettingStartBlock: 70,
+        _resultSettingEndBlock: 90
     };
 
     let addressManager;
@@ -60,7 +62,7 @@ contract('EventFactory', function(accounts) {
         });
     });
 
-    describe('TopicEvent:', async function() {
+    describe('TopicEvent', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator);
             assert.equal(web3.toUtf8(await topic.name.call(0)), testTopicParams._name[0]);
@@ -77,7 +79,10 @@ contract('EventFactory', function(accounts) {
             assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(1)), testTopicParams._resultNames[1]);
             assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal(await centralizedOracle.numOfResults.call(), 3);
+            assert.equal(await centralizedOracle.bettingStartBlock.call(), testTopicParams._bettingStartBlock);
             assert.equal(await centralizedOracle.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
+            assert.equal(await centralizedOracle.resultSettingStartBlock.call(), 
+                testTopicParams._resultSettingStartBlock);
             assert.equal(await centralizedOracle.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
             assert.equal((await centralizedOracle.consensusThreshold.call()).toString(), 
                 (await addressManager.startingOracleThreshold.call()).toString());
@@ -85,7 +90,8 @@ contract('EventFactory', function(accounts) {
 
         it('does not allow recreating the same topic twice', async function() {
             assert.isTrue(await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingEndBlock, testTopicParams._resultSettingEndBlock));
+                testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
+                testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock));
             try {
                 await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
             } catch(e) {
