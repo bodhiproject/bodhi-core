@@ -86,9 +86,10 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
-        require(msg.sender == oracle);
         require(block.number >= bettingEndBlock);
-        require(block.number < resultSettingEndBlock);
+        if (block.number < resultSettingEndBlock) {
+            require(msg.sender == oracle);
+        }
 
         finished = true;
         resultIndex = _resultIndex;
