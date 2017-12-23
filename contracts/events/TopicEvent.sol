@@ -14,9 +14,9 @@ contract TopicEvent is ITopicEvent, Ownable {
 
     /*
     * @notice Status types
-    *   Betting: Bets with QTUM tokens are allowed during this phase.
-    *   Arbitration: Voting takes place in the VotingOracles during this phase.
-    *   Collection: Winners can collect their won tokens during this phase.
+    *   Betting: Bet with QTUM during this phase.
+    *   Arbitration: Vote with BOT during this phase.
+    *   Collection: Winners collect their winnings during this phase.
     */
     enum Status {
         Betting,
@@ -39,7 +39,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     uint8 public constant invalidResultIndex = 255;
 
     bool public resultSet;
-    uint8 private finalResultIndex;
+    uint8 private finalResultIndex = invalidResultIndex;
     uint8 public numOfResults;
     Status public status = Status.Betting;
     bytes32[10] public name;
