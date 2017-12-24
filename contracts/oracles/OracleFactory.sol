@@ -6,31 +6,18 @@ import "./DecentralizedOracle.sol";
 import "../storage/IAddressManager.sol";
 
 contract OracleFactory is IOracleFactory {
+    uint16 public version;
     address private addressManager;
     mapping(bytes32 => address) public oracles;
 
     // Events
-    event CentralizedOracleCreated(
-        address indexed _contractAddress, 
-        address indexed _oracle, 
-        address indexed _eventAddress, 
-        bytes32[10] _name, 
-        bytes32[10] _resultNames, 
-        uint8 _numOfResults,
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock, 
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock, 
-        uint256 _consensusThreshold);
-    event DecentralizedOracleCreated(
-        address indexed _contractAddress, 
-        address indexed _eventAddress,
-        bytes32[10] _name,
-        bytes32[10] _resultNames, 
-        uint8 _numOfResults, 
-        uint8 _lastResultIndex, 
-        uint256 _arbitrationEndBlock, 
-        uint256 _consensusThreshold);
+    event CentralizedOracleCreated(address indexed _contractAddress, address indexed _oracle, 
+        address indexed _eventAddress, bytes32[10] _name, bytes32[10] _resultNames, uint8 _numOfResults,
+        uint256 _bettingStartBlock, uint256 _bettingEndBlock, uint256 _resultSettingStartBlock,
+        uint256 _resultSettingEndBlock, uint256 _consensusThreshold);
+    event DecentralizedOracleCreated(uint16 indexed _version, address indexed _contractAddress, 
+        address indexed _eventAddress, bytes32[10] _name, bytes32[10] _resultNames, uint8 _numOfResults, 
+        uint8 _lastResultIndex, uint256 _arbitrationEndBlock, uint256 _consensusThreshold);
 
     /*
     * @notice Creates new OracleFactory contract.
@@ -39,6 +26,8 @@ contract OracleFactory is IOracleFactory {
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
         addressManager = _addressManager;
+
+        version = IAddressManager(addressManager).getLastOracleFactoryIndex() + 1;
     }
 
     function createCentralizedOracle(

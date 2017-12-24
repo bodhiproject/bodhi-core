@@ -41,10 +41,11 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
         validAddress(_contractAddress)
     {
-        eventFactoryAddresses[currentEventFactoryIndex] = _contractAddress;
+        uint16 index = currentEventFactoryIndex;
+        eventFactoryAddresses[index] = _contractAddress;
         currentEventFactoryIndex++;
 
-        EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
+        EventFactoryAddressAdded(index, _contractAddress);
     }
 
     /// @dev Allows the owner to set the address of an OracleFactory contract.
@@ -54,23 +55,24 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
         validAddress(_contractAddress) 
     {
-        oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
+        uint16 index = currentOracleFactoryIndex;
+        oracleFactoryAddresses[index] = _contractAddress;
         currentOracleFactoryIndex++;
 
-        OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
+        OracleFactoryAddressAdded(index, _contractAddress);
     }
 
     /*
     * @dev Sets the arbitrationBlockLength that DecentralizedOracles will use.
-    * @param _newArbitrationBlockLength The new block length of an arbitration period.
+    * @param _newBlockLength The new block length of an arbitration period.
     */
-    function setArbitrationBlockLength(uint16 _newArbitrationBlockLength) 
+    function setArbitrationBlockLength(uint16 _newBlockLength) 
         public
         onlyOwner()
     {   
-        require(_newArbitrationBlockLength > 0);
+        require(_newBlockLength > 0);
 
-        arbitrationBlockLength = _newArbitrationBlockLength;
+        arbitrationBlockLength = _newBlockLength;
     }
 
     /*
