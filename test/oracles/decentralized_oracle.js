@@ -132,6 +132,7 @@ contract('DecentralizedOracle', function(accounts) {
         let consensusThreshold = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
         it("inits the DecentralizedOracle with the correct values", async function() {
+            assert.equal(await decentralizedOracle.version.call(), 0);
             assert.equal(await decentralizedOracle.eventAddress.call(), topicEvent.address);
             assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(0)), TOPIC_EVENT_PARAMS._name[0]);
             assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(1)), TOPIC_EVENT_PARAMS._name[1]);

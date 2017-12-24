@@ -89,6 +89,7 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('constructor', async function() {
         it('initializes all the values', async function() {
+            assert.equal(await centralizedOracle.version.call(), 0);
             assert.equal(await centralizedOracle.owner.call(), topicEvent.address);
             assert.equal(await centralizedOracle.oracle.call(), ORACLE);
             assert.equal(await centralizedOracle.eventAddress.call(), topicEvent.address);
