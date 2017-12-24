@@ -25,9 +25,9 @@ contract OracleFactory is IOracleFactory {
     */
     function OracleFactory(address _addressManager) public {
         require(_addressManager != address(0));
-        addressManager = _addressManager;
 
-        version = IAddressManager(addressManager).getLastOracleFactoryIndex() + 1;
+        addressManager = _addressManager;
+        version = IAddressManager(addressManager).currentOracleFactoryIndex();
     }
 
     function createCentralizedOracle(
@@ -81,8 +81,8 @@ contract OracleFactory is IOracleFactory {
             _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         oracles[oracleHash] = address(oracle);
 
-        DecentralizedOracleCreated(address(oracle), _eventAddress, _eventName, _eventResultNames, _numOfResults, 
-            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+        DecentralizedOracleCreated(version, address(oracle), _eventAddress, _eventName, _eventResultNames,
+             _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
 
         return address(oracle);
     }

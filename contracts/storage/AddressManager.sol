@@ -7,8 +7,8 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
 
     uint16 public arbitrationBlockLength = 100; // Amount of blocks for a VotingOracle arbitration.
-    uint16 private currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
-    uint16 private currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
+    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
     uint256 public startingOracleThreshold = 100 * (10**botDecimals);
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals);
     mapping(uint16 => address) private eventFactoryAddresses;
