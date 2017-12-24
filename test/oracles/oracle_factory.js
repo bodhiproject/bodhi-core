@@ -78,6 +78,7 @@ contract('OracleFactory', function(accounts) {
       let tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
       let centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
+      assert.equal(await centralizedOracle.version.call(), 0);
       assert.equal(await centralizedOracle.owner.call(), USER1);
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
       assert.equal(await centralizedOracle.eventAddress.call(), CORACLE_PARAMS._eventAddress);
