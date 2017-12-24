@@ -41,6 +41,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     bool public resultSet;
     uint8 private finalResultIndex = invalidResultIndex;
     uint8 public numOfResults;
+    uint16 public version;
     Status public status = Status.Betting;
     bytes32[10] public name;
     bytes32[10] public resultNames;
@@ -53,8 +54,9 @@ contract TopicEvent is ITopicEvent, Ownable {
     mapping(address => bool) public didWithdraw;
 
     // Events
-    event FinalResultSet(address indexed _eventAddress, uint8 _finalResultIndex);
-    event WinningsWithdrawn(address indexed _winner, uint256 _qtumTokenWon, uint256 _botTokenWon);
+    event FinalResultSet(uint16 indexed _version, address indexed _eventAddress, uint8 _finalResultIndex);
+    event WinningsWithdrawn(uint16 indexed _version, address indexed _winner, uint256 _qtumTokenWon, 
+        uint256 _botTokenWon);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {
@@ -79,6 +81,7 @@ contract TopicEvent is ITopicEvent, Ownable {
 
     /*
     * @notice Creates new TopicEvent contract.
+    * @param _version The contract version.
     * @param _owner The address of the owner.
     * @param _centralizedOracle The address of the CentralizedOracle that will decide the result.
     * @param _name The question or statement prediction broken down by multiple bytes32.
@@ -90,6 +93,7 @@ contract TopicEvent is ITopicEvent, Ownable {
     * @param _addressManager The address of the AddressManager.
     */
     function TopicEvent(
+        uint16 _version,
         address _owner,
         address _centralizedOracle,
         bytes32[10] _name,
@@ -111,6 +115,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         require(_resultSettingStartBlock >= _bettingEndBlock);
         require(_resultSettingEndBlock > _resultSettingStartBlock);
 
+        version = _version;
         owner = _owner;
         name = _name;
         resultNames = _resultNames;
@@ -262,7 +267,7 @@ contract TopicEvent is ITopicEvent, Ownable {
 
         status = Status.Collection;
  
-        FinalResultSet(address(this), finalResultIndex);
+        FinalResultSet(version, address(this), finalResultIndex);
 
         return true;
     }
@@ -291,7 +296,7 @@ contract TopicEvent is ITopicEvent, Ownable {
             token.transfer(msg.sender, botWon);
         }
 
-        WinningsWithdrawn(msg.sender, qtumWon, botWon);
+        WinningsWithdrawn(version, msg.sender, qtumWon, botWon);
     }
 
     /*

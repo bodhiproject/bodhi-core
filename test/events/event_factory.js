@@ -47,6 +47,10 @@ contract('EventFactory', function(accounts) {
     });
 
     describe('constructor', async function() {
+        it('sets all the values', async function() {
+            assert.equal(await eventFactory.version.call(), 0);
+        });
+
         it('should store the EventFactory address in AddressManager', async function() {
             let index = await addressManager.getLastEventFactoryIndex();
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address);

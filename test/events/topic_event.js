@@ -121,7 +121,7 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames,
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, name, testTopicParams._resultNames,
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -145,7 +145,7 @@ contract('TopicEvent', function(accounts) {
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
                 'abcdefghijklmnopqrstuvwxyzabcdef'];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -164,7 +164,7 @@ contract('TopicEvent', function(accounts) {
 
         it('should allow a space as the last character of a name array item', async function() {
             let name = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -175,7 +175,7 @@ contract('TopicEvent', function(accounts) {
         it('should allow a space as the first character if the next character is not empty in a name array item', 
             async function() {
             let name = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, name, testTopicParams._resultNames, 
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -185,7 +185,7 @@ contract('TopicEvent', function(accounts) {
 
         it('can handle using all 10 resultNames', async function() {
             let results = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "ten"];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, testTopicParams._name, results, 
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, testTopicParams._name, results, 
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -205,7 +205,7 @@ contract('TopicEvent', function(accounts) {
         it('should only set the first 10 resultNames', async function() {
             let resultNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
                 "ten", "eleven"];
-            testTopic = await TopicEvent.new(owner, testTopicParams._oracle, testTopicParams._name, resultNames, 
+            testTopic = await TopicEvent.new(0, owner, testTopicParams._oracle, testTopicParams._name, resultNames, 
                 testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                 testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                 addressManager.address);
@@ -231,7 +231,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if owner address is invalid', async function() {
             try {
-                await TopicEvent.new(0, testTopicParams._oracle, testTopicParams._name, testTopicParams._resultNames, 
+                await TopicEvent.new(0, 0, testTopicParams._oracle, testTopicParams._name, testTopicParams._resultNames, 
                     testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -243,7 +243,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if oracle address is invalid', async function() {
             try {
-                await TopicEvent.new(owner, 0, testTopicParams._name, testTopicParams._resultNames, 
+                await TopicEvent.new(0, owner, 0, testTopicParams._name, testTopicParams._resultNames, 
                     testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -255,7 +255,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if AddressManager address is invalid', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     testTopicParams._resultNames, testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock,  0);
                 assert.fail();
@@ -266,7 +266,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if name is empty', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, [], testTopicParams._resultNames, 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, [], testTopicParams._resultNames, 
                     testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -278,7 +278,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if resultNames 0 or 1 are empty', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, [], 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, [], 
                     testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -288,7 +288,7 @@ contract('TopicEvent', function(accounts) {
             }
 
             try {
-                await TopicEvent.new(testTopicParams._owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                await TopicEvent.new(0, testTopicParams._owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     ["first"], testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock,  
                     addressManager.address);
@@ -298,7 +298,7 @@ contract('TopicEvent', function(accounts) {
             }
 
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, ["", "second"], 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, ["", "second"], 
                     testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -310,7 +310,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if bettingEndBlock is <= bettingStartBlock', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     testTopicParams._resultNames, testTopicParams._bettingStartBlock, testTopicParams._bettingStartBlock,
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock, 
                     addressManager.address);
@@ -322,7 +322,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if resultSettingStartBlock is < bettingEndBlock', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     testTopicParams._resultNames, testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock,
                     testTopicParams._bettingEndBlock - 1, testTopicParams._resultSettingEndBlock);
                 assert.fail();
@@ -333,7 +333,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if resultSettingEndBlock is <= resultSettingStartBlock', async function() {
             try {
-                await TopicEvent.new(owner, testTopicParams._centralizedOracle, testTopicParams._name, 
+                await TopicEvent.new(0, owner, testTopicParams._centralizedOracle, testTopicParams._name, 
                     testTopicParams._resultNames, testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock,
                     testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingStartBlock);
                 assert.fail();
@@ -591,7 +591,7 @@ contract('TopicEvent', function(accounts) {
             let numOfResults = await testTopic.numOfResults.call();
             let lastResultIndex = 1;
             let arbitrationEndBlock = await getBlockNumber() + 100;
-            decentralizedOracle = await DecentralizedOracle.new(owner, testTopic.address, testTopicParams._name, 
+            decentralizedOracle = await DecentralizedOracle.new(0, owner, testTopic.address, testTopicParams._name, 
                 testTopicParams._resultNames, numOfResults, lastResultIndex, arbitrationEndBlock, 
                 startingOracleThreshold, { from: owner });
 
@@ -708,7 +708,7 @@ contract('TopicEvent', function(accounts) {
             let arbitrationEndBlock = await getBlockNumber() + 100;
             let threshold = (await decentralizedOracle.consensusThreshold.call())
                 .add(Utils.getBigNumberWithDecimals(10, botDecimals));
-            votingOracle2 = await DecentralizedOracle.new(owner, testTopic.address, testTopicParams._name, 
+            votingOracle2 = await DecentralizedOracle.new(0, owner, testTopic.address, testTopicParams._name, 
                 testTopicParams._resultNames, numOfResults, votingOracle1ResultIndex, arbitrationEndBlock, threshold, 
                 { from: owner });
             assert.notEqual((await testTopic.oracles.call(2))[0], votingOracle2.address);
@@ -797,7 +797,7 @@ contract('TopicEvent', function(accounts) {
             let numOfResults = await testTopic.numOfResults.call();
             let arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).add(100);
             let threshold = (await decentralizedOracle.consensusThreshold.call()).add(10);
-            let votingOracle2 = await DecentralizedOracle.new(owner, testTopic.address, testTopicParams._name, 
+            let votingOracle2 = await DecentralizedOracle.new(0, owner, testTopic.address, testTopicParams._name, 
                 testTopicParams._resultNames, numOfResults, centralizedOracleResult, arbitrationEndBlock, threshold, 
                 { from: owner });
 
