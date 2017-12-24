@@ -21,6 +21,7 @@ contract Oracle is Ownable {
     bool public finished;
     uint8 public numOfResults;
     uint8 public resultIndex = invalidResultIndex;
+    uint16 public version;
     bytes32[10] public eventName;
     bytes32[10] public eventResultNames;
     address public eventAddress;
@@ -28,9 +29,9 @@ contract Oracle is Ownable {
     ResultBalance[10] internal resultBalances;
 
     // Events
-    event OracleResultVoted(address indexed _oracleAddress, address indexed _participant, uint8 _resultIndex, 
-        uint256 _votedAmount);
-    event OracleResultSet(address indexed _oracleAddress, uint8 _resultIndex);
+    event OracleResultVoted(uint16 indexed _version, address indexed _oracleAddress, address indexed _participant, 
+        uint8 _resultIndex, uint256 _votedAmount);
+    event OracleResultSet(uint16 indexed _version, address indexed _oracleAddress, uint8 _resultIndex);
 
     // Modifiers
     modifier validResultIndex(uint8 _resultIndex) {

@@ -11,6 +11,7 @@ contract CentralizedOracle is Oracle {
 
     /*
     * @notice Creates new CentralizedOracle contract.
+    * @param _version The contract version.
     * @param _owner The address of the owner.
     * @param _oracle The address of the CentralizedOracle that will ultimately decide the result.
     * @param _eventAddress The address of the Event.
@@ -24,6 +25,7 @@ contract CentralizedOracle is Oracle {
     * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
     function CentralizedOracle(
+        uint16 _version,
         address _owner,
         address _oracle,
         address _eventAddress,
@@ -49,6 +51,7 @@ contract CentralizedOracle is Oracle {
         require(_resultSettingEndBlock > _resultSettingStartBlock);
         require(_consensusThreshold > 0);
 
+        version = _version;
         oracle = _oracle;
         eventAddress = _eventAddress;
         eventName = _eventName;
@@ -84,7 +87,7 @@ contract CentralizedOracle is Oracle {
         resultBalances[_resultIndex].bets[msg.sender] = resultBalances[_resultIndex].bets[msg.sender].add(msg.value);
 
         ITopicEvent(eventAddress).betFromOracle.value(msg.value)(msg.sender, _resultIndex);
-        OracleResultVoted(address(this), msg.sender, _resultIndex, msg.value);
+        OracleResultVoted(version, address(this), msg.sender, _resultIndex, msg.value);
     }
 
     /* 
@@ -110,6 +113,6 @@ contract CentralizedOracle is Oracle {
             .add(consensusThreshold);
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
-        OracleResultSet(address(this), _resultIndex);
+        OracleResultSet(version, address(this), _resultIndex);
     }
 }

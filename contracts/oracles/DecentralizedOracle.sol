@@ -8,6 +8,7 @@ contract DecentralizedOracle is Oracle {
 
     /*
     * @notice Creates new DecentralizedOracle contract.
+    * @param _version The contract version.
     * @param _owner The address of the owner.
     * @param _eventAddress The address of the Event.
     * @param _eventName The name of the Event.
@@ -18,6 +19,7 @@ contract DecentralizedOracle is Oracle {
     * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
     */
     function DecentralizedOracle(
+        uint16 _version,
         address _owner,
         address _eventAddress,
         bytes32[10] _eventName,
@@ -37,6 +39,7 @@ contract DecentralizedOracle is Oracle {
         require(_arbitrationEndBlock > block.number);
         require(_consensusThreshold > 0);
 
+        version = _version;
         eventAddress = _eventAddress;
         eventName = _eventName;
         eventResultNames = _eventResultNames;
@@ -65,7 +68,7 @@ contract DecentralizedOracle is Oracle {
             .add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
-        OracleResultVoted(address(this), msg.sender, _eventResultIndex, _botAmount);
+        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, _botAmount);
 
         if (resultBalances[_eventResultIndex].totalVotes >= consensusThreshold) {
             setResult();
@@ -108,6 +111,6 @@ contract DecentralizedOracle is Oracle {
         }
 
         ITopicEvent(eventAddress).decentralizedOracleSetResult(resultIndex, winningVoteBalance);
-        OracleResultSet(address(this), resultIndex);
+        OracleResultSet(version, address(this), resultIndex);
     }
 }
