@@ -52,13 +52,17 @@ contract('OracleFactory', function(accounts) {
 
   beforeEach(async function() {
     addressManager = await AddressManager.deployed({ from: ADMIN });
-
     oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
+
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
   });
 
   describe('constructor', async function() {
+    it('sets the values', async function() {
+      assert.equal(await oracleFactory.version.call(), 0);
+    });
+
     it('throws if the AddressManager address is invalid', async function() {
       try {
         await OracleFactory.new(0, { from: ADMIN });
