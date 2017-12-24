@@ -56,6 +56,13 @@ contract('EventFactory', function(accounts) {
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address);
         });
 
+        it('saves the correct version number', async function() {
+            eventFactory = await EventFactory.new(addressManager.address, { from: eventFactoryCreator });
+            await addressManager.setEventFactoryAddress(eventFactory.address, { from: eventFactoryCreator });
+            assert.equal(await addressManager.getEventFactoryAddress(1), eventFactory.address);
+            assert.equal(await eventFactory.version.call(), 1);
+        });
+
         it('throws if the AddressManager address is invalid', async function() {
             try {
                 await EventFactory.new(0, { from: eventFactoryCreator });

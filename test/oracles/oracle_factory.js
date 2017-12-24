@@ -63,6 +63,18 @@ contract('OracleFactory', function(accounts) {
       assert.equal(await oracleFactory.version.call(), 0);
     });
 
+    it('stores the OracleFactory address in AddressManager', async function() {
+        let index = await addressManager.getLastOracleFactoryIndex();
+        assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address);
+    });
+
+    it('saves the correct version number', async function() {
+        oracleFactory = await OracleFactory.new(addressManager.address, { from: ADMIN });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
+        assert.equal(await addressManager.getOracleFactoryAddress(1), oracleFactory.address);
+        assert.equal(await oracleFactory.version.call(), 1);
+    });
+
     it('throws if the AddressManager address is invalid', async function() {
       try {
         await OracleFactory.new(0, { from: ADMIN });
