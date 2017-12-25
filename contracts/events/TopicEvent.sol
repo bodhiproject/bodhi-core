@@ -44,10 +44,10 @@ contract TopicEvent is ITopicEvent, Ownable {
     uint16 public version;
     Status public status = Status.Betting;
     bytes32[10] public name;
-    bytes32[10] public resultNames;
+    bytes32[11] public resultNames;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
-    ResultBalance[10] private balances;
+    ResultBalance[11] private balances;
     IAddressManager private addressManager;
     ERC20 private token;
     Oracle[] public oracles;
@@ -126,8 +126,13 @@ contract TopicEvent is ITopicEvent, Ownable {
         name = _name;
         resultNames = _resultNames;
 
+        resultNames[0] = "Invalid";
         for (uint i = 0; i < _resultNames.length; i++) {
-            if (!_resultNames[i].isEmpty()) {
+            resultNames[i + 1] = _resultNames[i];
+        }
+
+        for (uint i = 0; i < resultNames.length; i++) {
+            if (!resultNames[i].isEmpty()) {
                 balances[i] = ResultBalance({
                     totalBets: 0,
                     totalVotes: 0
