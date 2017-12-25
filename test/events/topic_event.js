@@ -383,7 +383,7 @@ contract('TopicEvent', function(accounts) {
             assert.isBelow(await getBlockNumber(), testTopicParams._bettingEndBlock); 
 
             try {
-                await centralizedOracle.bet(3, { from: better1, value: 1 });
+                await centralizedOracle.bet(4, { from: better1, value: 1 });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -469,7 +469,7 @@ contract('TopicEvent', function(accounts) {
             }
 
             try {
-                await centralizedOracle.setResult(3, { from: oracle });
+                await centralizedOracle.setResult(4, { from: oracle });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);

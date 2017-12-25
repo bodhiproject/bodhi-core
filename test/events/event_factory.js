@@ -11,6 +11,7 @@ const assert = require('chai').assert;
 
 contract('EventFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
+    const RESULT_INVALID = "Invalid";
     const testTopicParams = {
         _oracle: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
@@ -78,10 +79,11 @@ contract('EventFactory', function(accounts) {
             assert.equal(await topic.owner.call(), topicCreator);
             assert.equal(web3.toUtf8(await topic.name.call(0)), testTopicParams._name[0]);
             assert.equal(web3.toUtf8(await topic.name.call(1)), testTopicParams._name[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[2]);
-            assert.equal((await topic.numOfResults.call()).toNumber(), 3);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(0)), RESULT_INVALID);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await topic.resultNames.call(3)), testTopicParams._resultNames[2]);
+            assert.equal((await topic.numOfResults.call()).toNumber(), 4);
 
             let centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
             assert.equal(await centralizedOracle.numOfResults.call(), 3);
