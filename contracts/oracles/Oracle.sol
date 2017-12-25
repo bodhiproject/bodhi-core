@@ -24,7 +24,7 @@ contract Oracle is Ownable {
     uint16 public version;
     address public eventAddress;
     uint256 public consensusThreshold;
-    ResultBalance[10] internal resultBalances;
+    ResultBalance[11] internal resultBalances;
 
     // Events
     event OracleResultVoted(

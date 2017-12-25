@@ -124,19 +124,12 @@ contract TopicEvent is ITopicEvent, Ownable {
         version = _version;
         owner = _owner;
         name = _name;
-        resultNames = _resultNames;
 
         resultNames[0] = "Invalid";
+        numOfResults++;
         for (uint i = 0; i < _resultNames.length; i++) {
-            resultNames[i + 1] = _resultNames[i];
-        }
-
-        for (uint i = 0; i < resultNames.length; i++) {
-            if (!resultNames[i].isEmpty()) {
-                balances[i] = ResultBalance({
-                    totalBets: 0,
-                    totalVotes: 0
-                    });
+            if (!_resultNames[i].isEmpty()) {
+                resultNames[i + 1] = _resultNames[i];
                 numOfResults++;
             } else {
                 break;
