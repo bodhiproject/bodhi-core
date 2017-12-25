@@ -25,6 +25,7 @@ contract('DecentralizedOracle', function(accounts) {
     const USER4 = accounts[5];
     const USER5 = accounts[6];
     const USER6 = accounts[7];
+    const RESULT_INVALID = "Invalid";
     const CENTRALIZED_ORACLE_RESULT = 1;
     const TOPIC_EVENT_PARAMS = {
         _oracle: ORACLE,
@@ -135,7 +136,7 @@ contract('DecentralizedOracle', function(accounts) {
         it("inits the DecentralizedOracle with the correct values", async function() {
             assert.equal(await decentralizedOracle.version.call(), 0);
             assert.equal(await decentralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), 3);
+            assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), 4);
             assert.equal(await decentralizedOracle.lastResultIndex.call(), CENTRALIZED_ORACLE_RESULT);
             assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 
                 (await getBlockNumber()) + arbitrationBlockLength);
