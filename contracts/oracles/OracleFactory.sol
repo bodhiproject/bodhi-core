@@ -60,22 +60,22 @@ contract OracleFactory is IOracleFactory {
         public
         returns (address)
     {
-        bytes32 oracleHash = getCentralizedOracleHash(_oracle, _eventAddress, _eventName, _eventResultNames, 
+        bytes32 hash = getCentralizedOracleHash(_oracle, _eventAddress, _eventName, _eventResultNames, 
             _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, 
             _consensusThreshold);
         // CentralizedOracle should not exist yet
-        require(oracles[oracleHash] == address(0));
+        require(oracles[hash] == address(0));
 
-        CentralizedOracle oracleContract = new CentralizedOracle(version, msg.sender, _oracle, _eventAddress, 
+        CentralizedOracle cOracle = new CentralizedOracle(version, msg.sender, _oracle, _eventAddress, 
             _eventName, _eventResultNames, _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
             _resultSettingEndBlock, _consensusThreshold);
-        oracles[oracleHash] = address(oracleContract);
+        oracles[hash] = address(cOracle);
 
-        CentralizedOracleCreated(version, address(oracleContract), _eventAddress, _oracle, _eventName, _eventResultNames, 
+        CentralizedOracleCreated(version, address(cOracle), _eventAddress, _oracle, _eventName, _eventResultNames, 
             _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, 
             _consensusThreshold);
 
-        return address(oracleContract);
+        return address(cOracle);
     }
 
     function createDecentralizedOracle(
@@ -89,19 +89,19 @@ contract OracleFactory is IOracleFactory {
         public
         returns (address)
     {
-        bytes32 oracleHash = getDecentralizedOracleHash(_eventAddress, _eventName, _eventResultNames, _numOfResults, 
+        bytes32 hash = getDecentralizedOracleHash(_eventAddress, _eventName, _eventResultNames, _numOfResults, 
             _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
         // DecentralizedOracle should not exist yet
-        require(oracles[oracleHash] == address(0));
+        require(oracles[hash] == address(0));
 
-        DecentralizedOracle oracle = new DecentralizedOracle(version, msg.sender, _eventAddress, _eventName, 
+        DecentralizedOracle dOracle = new DecentralizedOracle(version, msg.sender, _eventAddress, _eventName, 
             _eventResultNames, _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
-        oracles[oracleHash] = address(oracle);
+        oracles[hash] = address(dOracle);
 
-        DecentralizedOracleCreated(version, address(oracle), _eventAddress, _eventName, _eventResultNames,
+        DecentralizedOracleCreated(version, address(dOracle), _eventAddress, _eventName, _eventResultNames,
              _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
 
-        return address(oracle);
+        return address(dOracle);
     }
 
     function getCentralizedOracleHash(
