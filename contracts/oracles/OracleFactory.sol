@@ -12,6 +12,7 @@ contract OracleFactory is IOracleFactory {
 
     // Events
     event CentralizedOracleCreated(
+        uint16 indexed _version, 
         address indexed _contractAddress, 
         address indexed _oracle, 
         address indexed _eventAddress, 
@@ -70,8 +71,9 @@ contract OracleFactory is IOracleFactory {
             _resultSettingEndBlock, _consensusThreshold);
         oracles[oracleHash] = address(oracle);
 
-        CentralizedOracleCreated(address(oracle), _oracle, _eventAddress, _eventName, _eventResultNames, _numOfResults, 
-            _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, _consensusThreshold);
+        CentralizedOracleCreated(version, address(oracle), _oracle, _eventAddress, _eventName, _eventResultNames, 
+            _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, 
+            _consensusThreshold);
 
         return address(oracle);
     }

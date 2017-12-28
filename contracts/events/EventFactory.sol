@@ -11,6 +11,7 @@ contract EventFactory {
 
     // Events
     event TopicCreated(
+        uint16 indexed _version,
         address indexed _topicAddress, 
         address indexed _creator, 
         address indexed _oracle,
@@ -44,7 +45,7 @@ contract EventFactory {
             _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
 
-        TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames);
+        TopicCreated(version, address(topic), msg.sender, _oracle, _name, _resultNames);
 
         return topic;
     }
