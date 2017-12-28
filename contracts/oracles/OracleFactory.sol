@@ -14,8 +14,8 @@ contract OracleFactory is IOracleFactory {
     event CentralizedOracleCreated(
         uint16 indexed _version, 
         address indexed _contractAddress, 
-        address indexed _oracle, 
         address indexed _eventAddress, 
+        address _oracle,
         bytes32[10] _name, 
         bytes32[10] _resultNames, 
         uint8 _numOfResults,
@@ -66,16 +66,16 @@ contract OracleFactory is IOracleFactory {
         // CentralizedOracle should not exist yet
         require(oracles[oracleHash] == address(0));
 
-        CentralizedOracle oracle = new CentralizedOracle(version, msg.sender, _oracle, _eventAddress, _eventName, 
-            _eventResultNames, _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
+        CentralizedOracle oracleContract = new CentralizedOracle(version, msg.sender, _oracle, _eventAddress, 
+            _eventName, _eventResultNames, _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
             _resultSettingEndBlock, _consensusThreshold);
-        oracles[oracleHash] = address(oracle);
+        oracles[oracleHash] = address(oracleContract);
 
-        CentralizedOracleCreated(version, address(oracle), _oracle, _eventAddress, _eventName, _eventResultNames, 
+        CentralizedOracleCreated(version, address(oracleContract), _eventAddress, _oracle, _eventName, _eventResultNames, 
             _numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, 
             _consensusThreshold);
 
-        return address(oracle);
+        return address(oracleContract);
     }
 
     function createDecentralizedOracle(
