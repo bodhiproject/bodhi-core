@@ -10,8 +10,12 @@ contract EventFactory {
     mapping(bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _topicAddress, address indexed _creator, address indexed _oracle,
-        bytes32[10] _name, bytes32[10] _resultNames);
+    event TopicCreated(
+        address indexed _topicAddress, 
+        address indexed _creator, 
+        address indexed _oracle,
+        bytes32[10] _name, 
+        bytes32[10] _resultNames);
 
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
