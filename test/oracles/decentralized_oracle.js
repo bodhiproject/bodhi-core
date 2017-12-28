@@ -216,7 +216,7 @@ contract('DecentralizedOracle', function(accounts) {
 
             assert.isFalse(await decentralizedOracle.finished.call());
             assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 
-                (await decentralizedOracle.invalidResultIndex.call()).toNumber());
+                (await decentralizedOracle.INVALID_RESULT_INDEX.call()).toNumber());
 
             let consensusThreshold = await decentralizedOracle.consensusThreshold.call();
             await token.approve(topicEvent.address, consensusThreshold, { from: USER1 });
@@ -322,7 +322,7 @@ contract('DecentralizedOracle', function(accounts) {
             it('finalizes the result', async function() {
                 assert.isFalse(await decentralizedOracle.finished.call());
                 assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 
-                    (await decentralizedOracle.invalidResultIndex.call()).toNumber());
+                    (await decentralizedOracle.INVALID_RESULT_INDEX.call()).toNumber());
 
                 await decentralizedOracle.finalizeResult();
                 assert.isTrue(await decentralizedOracle.finished.call());

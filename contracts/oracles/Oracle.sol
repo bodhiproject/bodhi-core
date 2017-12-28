@@ -11,9 +11,7 @@ contract Oracle is BaseContract, Ownable {
     using SafeMath for uint256;
 
     bool public finished;
-    uint8 public numOfResults;
     uint8 public resultIndex = INVALID_RESULT_INDEX;
-    uint16 public version;
     address public eventAddress;
     uint256 public consensusThreshold;
     ResultBalance[11] internal resultBalances;

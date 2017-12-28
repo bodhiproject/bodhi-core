@@ -77,16 +77,16 @@ contract('EventFactory', function(accounts) {
     describe('TopicEvent', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator);
-            assert.equal(web3.toUtf8(await topic.name.call(0)), testTopicParams._name[0]);
-            assert.equal(web3.toUtf8(await topic.name.call(1)), testTopicParams._name[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(0)), RESULT_INVALID);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(3)), testTopicParams._resultNames[2]);
+            assert.equal(web3.toUtf8(await topic.eventName.call(0)), testTopicParams._name[0]);
+            assert.equal(web3.toUtf8(await topic.eventName.call(1)), testTopicParams._name[1]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(0)), RESULT_INVALID);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(1)), testTopicParams._resultNames[0]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(2)), testTopicParams._resultNames[1]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(3)), testTopicParams._resultNames[2]);
             assert.equal((await topic.numOfResults.call()).toNumber(), 4);
 
             let centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
-            assert.equal(await centralizedOracle.numOfResults.call(), 3);
+            assert.equal(await centralizedOracle.numOfResults.call(), 4);
             assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
             assert.equal(await centralizedOracle.bettingStartBlock.call(), testTopicParams._bettingStartBlock);
             assert.equal(await centralizedOracle.bettingEndBlock.call(), testTopicParams._bettingEndBlock);

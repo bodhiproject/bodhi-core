@@ -32,11 +32,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
     bool public resultSet;
     uint8 private finalResultIndex = INVALID_RESULT_INDEX;
-    uint8 public numOfResults;
-    uint16 public version;
     Status public status = Status.Betting;
-    bytes32[10] public name;
-    bytes32[11] public resultNames;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
     ResultBalance[11] private balances;
@@ -115,13 +111,13 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
         version = _version;
         owner = _owner;
-        name = _name;
+        eventName = _name;
 
-        resultNames[0] = "Invalid";
+        eventResults[0] = "Invalid";
         numOfResults++;
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
-                resultNames[i + 1] = _resultNames[i];
+                eventResults[i + 1] = _resultNames[i];
                 numOfResults++;
             } else {
                 break;
