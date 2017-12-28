@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 
 import "./ITopicEvent.sol";
+import "../BaseContract.sol";
 import "../storage/IAddressManager.sol";
 import "../oracles/IOracleFactory.sol";
 import "../tokens/ERC20.sol";
@@ -8,7 +9,7 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 
-contract TopicEvent is ITopicEvent, Ownable {
+contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -24,22 +25,13 @@ contract TopicEvent is ITopicEvent, Ownable {
         Collection
     }
 
-    struct ResultBalance {
-        uint256 totalBets;
-        uint256 totalVotes;
-        mapping(address => uint256) bets;
-        mapping(address => uint256) votes;
-    }
-
     struct Oracle {
         address oracleAddress;
         bool didSetResult;
     }
 
-    uint8 public constant invalidResultIndex = 255;
-
     bool public resultSet;
-    uint8 private finalResultIndex = invalidResultIndex;
+    uint8 private finalResultIndex = INVALID_RESULT_INDEX;
     uint8 public numOfResults;
     uint16 public version;
     Status public status = Status.Betting;

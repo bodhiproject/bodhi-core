@@ -1,26 +1,18 @@
 pragma solidity ^0.4.18;
 
+import "../BaseContract.sol";
 import "../events/ITopicEvent.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 
-contract Oracle is Ownable {
+contract Oracle is BaseContract, Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
-    struct ResultBalance {
-        uint256 totalBets;
-        uint256 totalVotes;
-        mapping(address => uint256) bets;
-        mapping(address => uint256) votes;
-    }
-
-    uint8 public constant invalidResultIndex = 255;
-
     bool public finished;
     uint8 public numOfResults;
-    uint8 public resultIndex = invalidResultIndex;
+    uint8 public resultIndex = INVALID_RESULT_INDEX;
     uint16 public version;
     address public eventAddress;
     uint256 public consensusThreshold;
