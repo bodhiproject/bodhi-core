@@ -2,6 +2,7 @@ const web3 = global.web3;
 const assert = require('chai').assert;
 const AdddressManager = artifacts.require("./AddressManager.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
+const SolAssert = require('../helpers/sol_assert');
 
 contract("AdddressManager", function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
@@ -50,7 +51,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setBodhiTokenAddress(tokenAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
 
             assert.equal(await instance.bodhiTokenAddress.call(), 0);
@@ -63,7 +64,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setBodhiTokenAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -103,7 +104,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setEventFactoryAddress(eventAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
 
             assert.equal(await instance.getEventFactoryAddress(0), 0);
@@ -116,7 +117,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setEventFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });
@@ -156,7 +157,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setOracleFactoryAddress(oracleAddress1, { from: accounts[1] });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
 
             assert.equal(await instance.getOracleFactoryAddress(0), 0);
@@ -169,7 +170,7 @@ contract("AdddressManager", function(accounts) {
                 await instance.setOracleFactoryAddress(0, { from: owner });
                 assert.fail();
             } catch(e) {
-                assert.match(e.message, /invalid opcode/);
+                SolAssert.assertRevert(e);
             }
         });
     });

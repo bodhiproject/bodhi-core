@@ -4,7 +4,9 @@ import "./Oracle.sol";
 
 contract CentralizedOracle is Oracle {
     address public oracle;
+    uint256 public bettingStartBlock;
     uint256 public bettingEndBlock;
+    uint256 public resultSettingStartBlock;
     uint256 public resultSettingEndBlock;
 
     /*
@@ -15,8 +17,10 @@ contract CentralizedOracle is Oracle {
     * @param _eventName The name of the Event.
     * @param _eventResultNames The result options of the Event.
     * @param _numOfResults The number of result options.
+    * @param _bettingStartBlock The block when betting will start.
     * @param _bettingEndBlock The block when betting will end.
-    * @param _resultSettingEndBlock The last block the Centralized Oracle can set the result.
+    * @param _resultSettingStartBlock The first block the CentralizedOracle can set the result.
+    * @param _resultSettingEndBlock The last block the CentralizedOracle can set the result.
     * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
     function CentralizedOracle(
@@ -26,7 +30,9 @@ contract CentralizedOracle is Oracle {
         bytes32[10] _eventName,
         bytes32[10] _eventResultNames,
         uint8 _numOfResults,
+        uint256 _bettingStartBlock,
         uint256 _bettingEndBlock,
+        uint256 _resultSettingStartBlock,
         uint256 _resultSettingEndBlock,
         uint256 _consensusThreshold)
         Ownable(_owner)
@@ -38,8 +44,9 @@ contract CentralizedOracle is Oracle {
         require(!_eventResultNames[0].isEmpty());
         require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
-        require(_bettingEndBlock > block.number);
-        require(_resultSettingEndBlock > _bettingEndBlock);
+        require(_bettingEndBlock > _bettingStartBlock);
+        require(_resultSettingStartBlock >= _bettingEndBlock);
+        require(_resultSettingEndBlock > _resultSettingStartBlock);
         require(_consensusThreshold > 0);
 
         oracle = _oracle;
@@ -47,7 +54,9 @@ contract CentralizedOracle is Oracle {
         eventName = _eventName;
         eventResultNames = _eventResultNames;
         numOfResults = _numOfResults;
+        bettingStartBlock = _bettingStartBlock;
         bettingEndBlock = _bettingEndBlock;
+        resultSettingStartBlock = _resultSettingStartBlock;
         resultSettingEndBlock = _resultSettingEndBlock;
         consensusThreshold = _consensusThreshold;
     }
@@ -67,6 +76,7 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
+        require(block.number >= bettingStartBlock);
         require(block.number < bettingEndBlock);
         require(msg.value > 0);
 
@@ -87,7 +97,7 @@ contract CentralizedOracle is Oracle {
         validResultIndex(_resultIndex)
         isNotFinished()
     {
-        require(block.number >= bettingEndBlock);
+        require(block.number >= resultSettingStartBlock);
         if (block.number < resultSettingEndBlock) {
             require(msg.sender == oracle);
         }

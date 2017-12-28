@@ -7,7 +7,9 @@ contract IOracleFactory {
         bytes32[10] _eventName, 
         bytes32[10] _eventResultNames, 
         uint8 _numOfResults, 
+        uint256 _bettingStartBlock,
         uint256 _bettingEndBlock, 
+        uint256 _resultSettingStartBlock,
         uint256 _resultSettingEndBlock,
         uint256 _consensusThreshold) 
         public returns (address);

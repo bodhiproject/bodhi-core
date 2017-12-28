@@ -2,11 +2,11 @@ const BodhiToken = artifacts.require("./tokens/BodhiToken.sol");
 const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
 const assert = require('chai').assert;
+const SolAssert = require('../helpers/sol_assert');
 const bluebird = require('bluebird');
 
 contract('BodhiToken', function(accounts) {
   const blockHeightManager = new BlockHeightManager(web3);
-  const regexInvalidOpcode = /invalid opcode/;
   const owner = accounts[0];
 
   let token;
@@ -48,14 +48,14 @@ contract('BodhiToken', function(accounts) {
         await token.mintByOwner(accounts[1], 1, { from: accounts[1] });
         assert.fail();
       } catch(e) {
-        assert.match(e.toString(), regexInvalidOpcode);
+        SolAssert.assertRevert(e);
       }
 
       try {
         await token.mintByOwner(accounts[2], 1, { from: accounts[2] });
         assert.fail();
       } catch(e) {
-        assert.match(e.toString(), regexInvalidOpcode);
+        SolAssert.assertRevert(e);
       }
 
       totalSupply = await token.totalSupply.call();
@@ -76,7 +76,7 @@ contract('BodhiToken', function(accounts) {
         await token.mintByOwner(owner, 1, { from: owner });
         assert.fail();
       } catch(e) {
-        assert.match(e.toString(), regexInvalidOpcode);
+        SolAssert.assertRevert(e);
       }
 
       totalSupply = await token.totalSupply.call();
