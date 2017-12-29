@@ -5,16 +5,22 @@ import "./TopicEvent.sol";
 
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
+    uint16 public version;
     address private addressManager;
     mapping(bytes32 => TopicEvent) public topics;
 
     // Events
-    event TopicCreated(address indexed _topicAddress, address indexed _creator, address indexed _oracle,
-        bytes32[10] _name, bytes32[10] _resultNames);
+    event TopicCreated(
+        uint16 indexed _version,
+        address indexed _topicAddress, 
+        bytes32[10] _name, 
+        bytes32[10] _resultNames);
 
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
+
         addressManager = _addressManager;
+        version = IAddressManager(addressManager).currentEventFactoryIndex();
     }
     
     function createTopic(
@@ -33,11 +39,11 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        TopicEvent topic = new TopicEvent(msg.sender, _oracle, _name, _resultNames, _bettingStartBlock, _bettingEndBlock, 
-            _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
+        TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, _resultNames, _bettingStartBlock, 
+            _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
 
-        TopicCreated(address(topic), msg.sender, _oracle, _name, _resultNames);
+        TopicCreated(version, address(topic), _name, _resultNames);
 
         return topic;
     }

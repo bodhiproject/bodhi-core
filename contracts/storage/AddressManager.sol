@@ -7,8 +7,8 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
 
     uint16 public arbitrationBlockLength = 100; // Amount of blocks for a VotingOracle arbitration.
-    uint16 private currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
-    uint16 private currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
+    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
     uint256 public startingOracleThreshold = 100 * (10**botDecimals);
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals);
     mapping(uint16 => address) private eventFactoryAddresses;
@@ -41,10 +41,11 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
         validAddress(_contractAddress)
     {
-        eventFactoryAddresses[currentEventFactoryIndex] = _contractAddress;
+        uint16 index = currentEventFactoryIndex;
+        eventFactoryAddresses[index] = _contractAddress;
         currentEventFactoryIndex++;
 
-        EventFactoryAddressAdded(currentEventFactoryIndex, _contractAddress);
+        EventFactoryAddressAdded(index, _contractAddress);
     }
 
     /// @dev Allows the owner to set the address of an OracleFactory contract.
@@ -54,23 +55,24 @@ contract AddressManager is IAddressManager, Ownable {
         onlyOwner()
         validAddress(_contractAddress) 
     {
-        oracleFactoryAddresses[currentOracleFactoryIndex] = _contractAddress;
+        uint16 index = currentOracleFactoryIndex;
+        oracleFactoryAddresses[index] = _contractAddress;
         currentOracleFactoryIndex++;
 
-        OracleFactoryAddressAdded(currentOracleFactoryIndex, _contractAddress);
+        OracleFactoryAddressAdded(index, _contractAddress);
     }
 
     /*
     * @dev Sets the arbitrationBlockLength that DecentralizedOracles will use.
-    * @param _newArbitrationBlockLength The new block length of an arbitration period.
+    * @param _newBlockLength The new block length of an arbitration period.
     */
-    function setArbitrationBlockLength(uint16 _newArbitrationBlockLength) 
+    function setArbitrationBlockLength(uint16 _newBlockLength) 
         public
         onlyOwner()
     {   
-        require(_newArbitrationBlockLength > 0);
+        require(_newBlockLength > 0);
 
-        arbitrationBlockLength = _newArbitrationBlockLength;
+        arbitrationBlockLength = _newBlockLength;
     }
 
     /*

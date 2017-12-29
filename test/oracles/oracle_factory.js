@@ -18,14 +18,13 @@ contract('OracleFactory', function(accounts) {
   const ORACLE = accounts[1];
   const USER1 = accounts[2];
 
+  const VERSION = 0;
   const CONSENSUS_THRESHOLD = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
   const CORACLE_PARAMS = {
-    _oracle: ORACLE,
     _eventAddress: "0x1111111111111111111111111111111111111111",
-    _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
-    _eventResultNames: ["first", "second", "third"],
     _numOfResults: 3,
+    _oracle: ORACLE,
     _bettingStartBlock: 40,
     _bettingEndBlock: 60,
     _resultSettingStartBlock: 70,
@@ -35,8 +34,6 @@ contract('OracleFactory', function(accounts) {
 
   const DORACLE_PARAMS = {
     _eventAddress: "0x1111111111111111111111111111111111111111",
-    _eventName: ["Will Apple stock reach $300 by t", "he end of 2017?"],
-    _eventResultNames: ["first", "second", "third"],
     _numOfResults: 3,
     _lastResultIndex: 2,
     _arbitrationEndBlock: 200,
@@ -52,13 +49,29 @@ contract('OracleFactory', function(accounts) {
 
   beforeEach(async function() {
     addressManager = await AddressManager.deployed({ from: ADMIN });
-
     oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
+
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
   });
 
   describe('constructor', async function() {
+    it('sets the values', async function() {
+      assert.equal(await oracleFactory.version.call(), 0);
+    });
+
+    it('stores the OracleFactory address in AddressManager', async function() {
+        let index = await addressManager.getLastOracleFactoryIndex();
+        assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address);
+    });
+
+    it('saves the correct version number', async function() {
+        oracleFactory = await OracleFactory.new(addressManager.address, { from: ADMIN });
+        await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
+        assert.equal(await addressManager.getOracleFactoryAddress(1), oracleFactory.address);
+        assert.equal(await oracleFactory.version.call(), 1);
+    });
+
     it('throws if the AddressManager address is invalid', async function() {
       try {
         await OracleFactory.new(0, { from: ADMIN });
@@ -74,15 +87,11 @@ contract('OracleFactory', function(accounts) {
       let tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
       let centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
+      assert.equal(await centralizedOracle.version.call(), 0);
       assert.equal(await centralizedOracle.owner.call(), USER1);
-      assert.equal(await centralizedOracle.oracle.call(), ORACLE);
       assert.equal(await centralizedOracle.eventAddress.call(), CORACLE_PARAMS._eventAddress);
-      assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(0)), CORACLE_PARAMS._eventName[0]);
-      assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(1)), CORACLE_PARAMS._eventName[1]);
-      assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(0)), CORACLE_PARAMS._eventResultNames[0]);
-      assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(1)), CORACLE_PARAMS._eventResultNames[1]);
-      assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(2)), CORACLE_PARAMS._eventResultNames[2]);
       assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), CORACLE_PARAMS._numOfResults);
+      assert.equal(await centralizedOracle.oracle.call(), ORACLE);
       assert.equal(await centralizedOracle.bettingStartBlock.call(), CORACLE_PARAMS._bettingStartBlock);
       assert.equal(await centralizedOracle.bettingEndBlock.call(), CORACLE_PARAMS._bettingEndBlock);
       assert.equal(await centralizedOracle.resultSettingStartBlock.call(), CORACLE_PARAMS._resultSettingStartBlock);
@@ -110,11 +119,6 @@ contract('OracleFactory', function(accounts) {
       let decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       assert.equal(await decentralizedOracle.eventAddress.call(), DORACLE_PARAMS._eventAddress);
-      assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(0)), DORACLE_PARAMS._eventName[0]);
-      assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(1)), DORACLE_PARAMS._eventName[1]);
-      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(0)), DORACLE_PARAMS._eventResultNames[0]);
-      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(1)), DORACLE_PARAMS._eventResultNames[1]);
-      assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(2)), DORACLE_PARAMS._eventResultNames[2]);
       assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), DORACLE_PARAMS._numOfResults);
       assert.equal(await decentralizedOracle.lastResultIndex.call(), DORACLE_PARAMS._lastResultIndex);
       assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 

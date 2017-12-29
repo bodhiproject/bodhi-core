@@ -47,9 +47,20 @@ contract('EventFactory', function(accounts) {
     });
 
     describe('constructor', async function() {
+        it('sets all the values', async function() {
+            assert.equal(await eventFactory.version.call(), 0);
+        });
+
         it('should store the EventFactory address in AddressManager', async function() {
             let index = await addressManager.getLastEventFactoryIndex();
             assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address);
+        });
+
+        it('saves the correct version number', async function() {
+            eventFactory = await EventFactory.new(addressManager.address, { from: eventFactoryCreator });
+            await addressManager.setEventFactoryAddress(eventFactory.address, { from: eventFactoryCreator });
+            assert.equal(await addressManager.getEventFactoryAddress(1), eventFactory.address);
+            assert.equal(await eventFactory.version.call(), 1);
         });
 
         it('throws if the AddressManager address is invalid', async function() {
@@ -73,12 +84,8 @@ contract('EventFactory', function(accounts) {
             assert.equal((await topic.numOfResults.call()).toNumber(), 3);
 
             let centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(0)), testTopicParams._name[0]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(1)), testTopicParams._name[1]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(2)), testTopicParams._resultNames[2]);
             assert.equal(await centralizedOracle.numOfResults.call(), 3);
+            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
             assert.equal(await centralizedOracle.bettingStartBlock.call(), testTopicParams._bettingStartBlock);
             assert.equal(await centralizedOracle.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
             assert.equal(await centralizedOracle.resultSettingStartBlock.call(), 

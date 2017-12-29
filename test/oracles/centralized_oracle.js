@@ -38,6 +38,8 @@ contract('CentralizedOracle', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
+    const NUM_OF_RESULTS = 3; // must match the TOPIC_EVENT_PARAMS num of results
+    const VERSION = 0;
 
     let addressManager;
     let token;
@@ -89,18 +91,11 @@ contract('CentralizedOracle', function(accounts) {
 
     describe('constructor', async function() {
         it('initializes all the values', async function() {
+            assert.equal(await centralizedOracle.version.call(), 0);
             assert.equal(await centralizedOracle.owner.call(), topicEvent.address);
-            assert.equal(await centralizedOracle.oracle.call(), ORACLE);
             assert.equal(await centralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(0)), TOPIC_EVENT_PARAMS._name[0]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventName.call(1)), TOPIC_EVENT_PARAMS._name[1]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(0)), 
-                TOPIC_EVENT_PARAMS._resultNames[0]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(1)), 
-                TOPIC_EVENT_PARAMS._resultNames[1]);
-            assert.equal(web3.toUtf8(await centralizedOracle.eventResultNames.call(2)), 
-                TOPIC_EVENT_PARAMS._resultNames[2]);
             assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), 3);
+            assert.equal(await centralizedOracle.oracle.call(), ORACLE);
             assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_EVENT_PARAMS._bettingStartBlock);
             assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_EVENT_PARAMS._bettingEndBlock);
             assert.equal(await centralizedOracle.resultSettingStartBlock.call(), 
@@ -113,10 +108,9 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if owner is invalid', async function() {
             try {
-                await CentralizedOracle.new(0, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, 0, topicEvent.address, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
                     startingOracleThreshold);
                 assert.fail();
             } catch(e) {
@@ -126,11 +120,11 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if oracle is invalid', async function() {
             try {
-                await CentralizedOracle.new(topicEvent.address, 0, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, 0,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,  
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
                     startingOracleThreshold);
+                assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
             }
@@ -138,56 +132,10 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if eventAddress is invalid', async function() {
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, 0, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, 0, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
                     startingOracleThreshold);
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-        });
-
-        it('throws if eventName is empty', async function() {
-            try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, [], 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
-                    TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
-                    startingOracleThreshold);
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-        });
-
-        it('throws if eventResultNames 0 or 1 are empty', async function() {
-            try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    [], await topicEvent.numOfResults.call(), TOPIC_EVENT_PARAMS._bettingStartBlock, 
-                    TOPIC_EVENT_PARAMS._bettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, startingOracleThreshold);
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-
-            try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    ['first'], await topicEvent.numOfResults.call(), TOPIC_EVENT_PARAMS._bettingStartBlock, 
-                    TOPIC_EVENT_PARAMS._bettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, startingOracleThreshold);
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-
-            try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    ['', 'second'], await topicEvent.numOfResults.call(), TOPIC_EVENT_PARAMS._bettingStartBlock, 
-                    TOPIC_EVENT_PARAMS._bettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock,  startingOracleThreshold);
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -196,10 +144,10 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if numOfResults is 0', async function() {
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, 0, TOPIC_EVENT_PARAMS._bettingStartBlock, 
-                    TOPIC_EVENT_PARAMS._bettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, startingOracleThreshold);
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, 0, ORACLE,
+                    TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
+                    startingOracleThreshold);
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -207,14 +155,10 @@ contract('CentralizedOracle', function(accounts) {
         });
 
         it('throws if bettingEndBlock is <= bettingStartBlock', async function() {
-            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
-
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingStartBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
                     startingOracleThreshold);
                 assert.fail();
             } catch(e) {
@@ -223,12 +167,8 @@ contract('CentralizedOracle', function(accounts) {
         });
 
         it('throws if resultSettingStartBlock is < bettingEndBlock', async function() {
-            await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-            assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
-
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
                     TOPIC_EVENT_PARAMS._bettingEndBlock - 1, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
                     startingOracleThreshold);
@@ -240,10 +180,9 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if resultSettingEndBlock is <= resultSettingStartBlock', async function() {
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
-                    TOPIC_EVENT_PARAMS._resultSettingEndBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 
+                    TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingStartBlock, 
                     startingOracleThreshold);
                 assert.fail();
             } catch(e) {
@@ -253,8 +192,7 @@ contract('CentralizedOracle', function(accounts) {
 
         it('throws if consensusThreshold == 0', async function() {
             try {
-                await CentralizedOracle.new(topicEvent.address, ORACLE, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, await topicEvent.numOfResults.call(), 
+                await CentralizedOracle.new(VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
                     TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock, 
                     TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 0);
                 assert.fail();

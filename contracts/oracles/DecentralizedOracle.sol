@@ -8,20 +8,18 @@ contract DecentralizedOracle is Oracle {
 
     /*
     * @notice Creates new DecentralizedOracle contract.
+    * @param _version The contract version.
     * @param _owner The address of the owner.
     * @param _eventAddress The address of the Event.
-    * @param _eventName The name of the Event.
-    * @param _eventResultNames The result options of the Event.
     * @param _numOfResults The number of result options.
     * @param _lastResultIndex The last result index set by the DecentralizedOracle.
     * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
     * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
     */
     function DecentralizedOracle(
+        uint16 _version,
         address _owner,
         address _eventAddress,
-        bytes32[10] _eventName,
-        bytes32[10] _eventResultNames,
         uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
@@ -30,16 +28,12 @@ contract DecentralizedOracle is Oracle {
         public
         validAddress(_eventAddress)
     {
-        require(!_eventName[0].isEmpty());
-        require(!_eventResultNames[0].isEmpty());
-        require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
         require(_arbitrationEndBlock > block.number);
         require(_consensusThreshold > 0);
 
+        version = _version;
         eventAddress = _eventAddress;
-        eventName = _eventName;
-        eventResultNames = _eventResultNames;
         numOfResults = _numOfResults;
         lastResultIndex = _lastResultIndex;
         arbitrationEndBlock = _arbitrationEndBlock;
@@ -65,7 +59,7 @@ contract DecentralizedOracle is Oracle {
             .add(_botAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
-        OracleResultVoted(address(this), msg.sender, _eventResultIndex, _botAmount);
+        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, _botAmount);
 
         if (resultBalances[_eventResultIndex].totalVotes >= consensusThreshold) {
             setResult();
@@ -108,6 +102,6 @@ contract DecentralizedOracle is Oracle {
         }
 
         ITopicEvent(eventAddress).decentralizedOracleSetResult(resultIndex, winningVoteBalance);
-        OracleResultSet(address(this), resultIndex);
+        OracleResultSet(version, address(this), resultIndex);
     }
 }
