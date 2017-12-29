@@ -37,7 +37,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
-    ResultBalance[11] private balances;
     IAddressManager private addressManager;
     ERC20 private token;
     Oracle[] public oracles;

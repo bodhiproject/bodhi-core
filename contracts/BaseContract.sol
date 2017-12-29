@@ -12,4 +12,5 @@ contract BaseContract {
 
     uint8 public numOfResults;
     uint16 public version;
+    ResultBalance[11] internal balances;
 }

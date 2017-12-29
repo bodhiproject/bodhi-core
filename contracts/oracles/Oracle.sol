@@ -14,7 +14,6 @@ contract Oracle is BaseContract, Ownable {
     uint8 public resultIndex = INVALID_RESULT_INDEX;
     address public eventAddress;
     uint256 public consensusThreshold;
-    ResultBalance[11] internal resultBalances;
 
     // Events
     event OracleResultVoted(
@@ -50,7 +49,7 @@ contract Oracle is BaseContract, Ownable {
     {
         uint256[10] memory betBalances;
         for (uint8 i = 0; i < numOfResults; i++) {
-            betBalances[i] = resultBalances[i].bets[msg.sender];
+            betBalances[i] = balances[i].bets[msg.sender];
         }
         return betBalances;
     }
@@ -66,7 +65,7 @@ contract Oracle is BaseContract, Ownable {
     {
         uint256[10] memory voteBalances;
         for (uint8 i = 0; i < numOfResults; i++) {
-            voteBalances[i] = resultBalances[i].votes[msg.sender];
+            voteBalances[i] = balances[i].votes[msg.sender];
         }
         return voteBalances;
     }
@@ -82,7 +81,7 @@ contract Oracle is BaseContract, Ownable {
     {
         uint256[10] memory totalBets;
         for (uint8 i = 0; i < numOfResults; i++) {
-            totalBets[i] = resultBalances[i].totalBets;
+            totalBets[i] = balances[i].totalBets;
         }
         return totalBets;
     }
@@ -98,7 +97,7 @@ contract Oracle is BaseContract, Ownable {
     {
         uint256[10] memory totalVotes;
         for (uint8 i = 0; i < numOfResults; i++) {
-            totalVotes[i] = resultBalances[i].totalVotes;
+            totalVotes[i] = balances[i].totalVotes;
         }
         return totalVotes;
     }
