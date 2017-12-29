@@ -35,6 +35,7 @@ contract('DecentralizedOracle', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
+    const VERSION = 0;
     
     let token;
     let addressManager;
@@ -134,14 +135,6 @@ contract('DecentralizedOracle', function(accounts) {
         it("inits the DecentralizedOracle with the correct values", async function() {
             assert.equal(await decentralizedOracle.version.call(), 0);
             assert.equal(await decentralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(0)), TOPIC_EVENT_PARAMS._name[0]);
-            assert.equal(web3.toUtf8(await decentralizedOracle.eventName.call(1)), TOPIC_EVENT_PARAMS._name[1]);
-            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(0)), 
-                TOPIC_EVENT_PARAMS._resultNames[0]);
-            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(1)), 
-                TOPIC_EVENT_PARAMS._resultNames[1]);
-            assert.equal(web3.toUtf8(await decentralizedOracle.eventResultNames.call(2)), 
-                TOPIC_EVENT_PARAMS._resultNames[2]);
             assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), 3);
             assert.equal(await decentralizedOracle.lastResultIndex.call(), CENTRALIZED_ORACLE_RESULT);
             assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 
@@ -153,52 +146,8 @@ contract('DecentralizedOracle', function(accounts) {
 
         it('throws if eventAddress is invalid', async function() {
             try {
-                await DecentralizedOracle.new(ADMIN, 0, TOPIC_EVENT_PARAMS._name, TOPIC_EVENT_PARAMS._resultNames, 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-        });
-
-        it("throws if eventName is empty", async function() {
-            try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, [], TOPIC_EVENT_PARAMS._resultNames, 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-
-            try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, [''], TOPIC_EVENT_PARAMS._resultNames, 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-        });
-
-        it("throws if the eventResultNames 0 or 1 are empty", async function() {
-            try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, [], 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-
-            try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, ['first'], 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
-                assert.fail();
-            } catch(e) {
-                SolAssert.assertRevert(e);
-            }
-
-            try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, ['', 'second'], 
-                    numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
+                await DecentralizedOracle.new(VERSION, ADMIN, 0, numOfResults, CENTRALIZED_ORACLE_RESULT, 
+                    arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -207,9 +156,8 @@ contract('DecentralizedOracle', function(accounts) {
 
         it('throws if numOfResults is 0', async function() {
             try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, 0, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, 
-                    { from: ADMIN });
+                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, 0, CENTRALIZED_ORACLE_RESULT, 
+                    arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -221,9 +169,8 @@ contract('DecentralizedOracle', function(accounts) {
             assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
 
             try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, 
-                    consensusThreshold, { from: ADMIN });
+                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, topicEvent.address, 
+                    CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -232,9 +179,8 @@ contract('DecentralizedOracle', function(accounts) {
 
         it('throws if consensusThreshold is 0', async function() {
             try {
-                await DecentralizedOracle.new(ADMIN, topicEvent.address, TOPIC_EVENT_PARAMS._name, 
-                    TOPIC_EVENT_PARAMS._resultNames, numOfResults, CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, 0, 
-                    { from: ADMIN });
+                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, topicEvent.address, 
+                    CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, 0, { from: ADMIN });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
