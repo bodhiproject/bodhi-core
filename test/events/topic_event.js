@@ -22,6 +22,7 @@ contract('TopicEvent', function(accounts) {
     const STATUS_VOTING = 1;
     const STATUS_COLLECTION = 2;
     const RESULT_INVALID = 'Invalid';
+    const CORACLE_THRESHOLD = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
     const ADMIN = accounts[0];
     const OWNER = accounts[1];
@@ -31,7 +32,6 @@ contract('TopicEvent', function(accounts) {
     const USER3 = accounts[5];
     const USER4 = accounts[6];
     const USER5 = accounts[7];
-    const CORACLE_THRESHOLD = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
     const TOPIC_PARAMS = {
         _oracle: ORACLE,
@@ -42,6 +42,7 @@ contract('TopicEvent', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
+    const INVALID_RESULT_INDEX = 4;
 
     let token;
     let addressManager;
@@ -404,7 +405,7 @@ contract('TopicEvent', function(accounts) {
             assert.isBelow(await getBlockNumber(), TOPIC_PARAMS._bettingEndBlock); 
 
             try {
-                await centralizedOracle.bet(4, { from: USER1, value: 1 });
+                await centralizedOracle.bet(INVALID_RESULT_INDEX, { from: USER1, value: 1 });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -489,7 +490,7 @@ contract('TopicEvent', function(accounts) {
             }
 
             try {
-                await centralizedOracle.setResult(4, { from: ORACLE });
+                await centralizedOracle.setResult(INVALID_RESULT_INDEX, { from: ORACLE });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
@@ -597,7 +598,7 @@ contract('TopicEvent', function(accounts) {
 
         it('throws if voting on an invalid result index', async function() {
             try {
-                await decentralizedOracle.voteResult(3, 1, { from: USER1 });
+                await decentralizedOracle.voteResult(INVALID_RESULT_INDEX, 1, { from: USER1 });
                 assert.fail();
             } catch(e) {
                 SolAssert.assertRevert(e);
