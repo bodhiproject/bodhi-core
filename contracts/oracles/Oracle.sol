@@ -27,11 +27,6 @@ contract Oracle is BaseContract, Ownable {
         uint8 _resultIndex);
 
     // Modifiers
-    modifier validResultIndex(uint8 _resultIndex) {
-        require (_resultIndex <= numOfResults - 1);
-        _;
-    }
-
     modifier isNotFinished() {
         require(!finished);
         _;

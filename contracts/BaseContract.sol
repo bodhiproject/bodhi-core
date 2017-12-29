@@ -14,4 +14,9 @@ contract BaseContract {
     uint8 public resultIndex = INVALID_RESULT_INDEX;
     uint16 public version;
     ResultBalance[11] internal balances;
+
+    modifier validResultIndex(uint8 _resultIndex) {
+        require (_resultIndex <= numOfResults - 1);
+        _;
+    }
 }

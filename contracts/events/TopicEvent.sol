@@ -53,11 +53,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         uint256 _botTokenWon);
 
     // Modifiers
-    modifier validResultIndex(uint8 _resultIndex) {
-        require (_resultIndex <= numOfResults - 1);
-        _;
-    }
-
     modifier fromCentralizedOracle() {
         require(msg.sender == oracles[0].oracleAddress);
         _;
