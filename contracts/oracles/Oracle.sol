@@ -4,10 +4,8 @@ import "../BaseContract.sol";
 import "../events/ITopicEvent.sol";
 import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
-import "../libs/ByteUtils.sol";
 
 contract Oracle is BaseContract, Ownable {
-    using ByteUtils for bytes32;
     using SafeMath for uint256;
 
     bool public finished;
