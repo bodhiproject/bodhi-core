@@ -13,11 +13,9 @@ contract CentralizedOracle is Oracle {
     * @notice Creates new CentralizedOracle contract.
     * @param _version The contract version.
     * @param _owner The address of the owner.
-    * @param _oracle The address of the CentralizedOracle that will ultimately decide the result.
     * @param _eventAddress The address of the Event.
-    * @param _eventName The name of the Event.
-    * @param _eventResultNames The result options of the Event.
     * @param _numOfResults The number of result options.
+    * @param _oracle The address of the CentralizedOracle that will ultimately decide the result.
     * @param _bettingStartBlock The block when betting will start.
     * @param _bettingEndBlock The block when betting will end.
     * @param _resultSettingStartBlock The first block the CentralizedOracle can set the result.
@@ -27,11 +25,9 @@ contract CentralizedOracle is Oracle {
     function CentralizedOracle(
         uint16 _version,
         address _owner,
-        address _oracle,
         address _eventAddress,
-        bytes32[10] _eventName,
-        bytes32[10] _eventResultNames,
         uint8 _numOfResults,
+        address _oracle,
         uint256 _bettingStartBlock,
         uint256 _bettingEndBlock,
         uint256 _resultSettingStartBlock,
@@ -42,9 +38,6 @@ contract CentralizedOracle is Oracle {
         validAddress(_oracle)
         validAddress(_eventAddress)
     {
-        require(!_eventName[0].isEmpty());
-        require(!_eventResultNames[0].isEmpty());
-        require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
         require(_bettingEndBlock > _bettingStartBlock);
         require(_resultSettingStartBlock >= _bettingEndBlock);
@@ -52,11 +45,9 @@ contract CentralizedOracle is Oracle {
         require(_consensusThreshold > 0);
 
         version = _version;
-        oracle = _oracle;
         eventAddress = _eventAddress;
-        eventName = _eventName;
-        eventResultNames = _eventResultNames;
         numOfResults = _numOfResults;
+        oracle = _oracle;
         bettingStartBlock = _bettingStartBlock;
         bettingEndBlock = _bettingEndBlock;
         resultSettingStartBlock = _resultSettingStartBlock;

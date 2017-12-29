@@ -11,8 +11,6 @@ contract DecentralizedOracle is Oracle {
     * @param _version The contract version.
     * @param _owner The address of the owner.
     * @param _eventAddress The address of the Event.
-    * @param _eventName The name of the Event.
-    * @param _eventResultNames The result options of the Event.
     * @param _numOfResults The number of result options.
     * @param _lastResultIndex The last result index set by the DecentralizedOracle.
     * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
@@ -22,8 +20,6 @@ contract DecentralizedOracle is Oracle {
         uint16 _version,
         address _owner,
         address _eventAddress,
-        bytes32[10] _eventName,
-        bytes32[10] _eventResultNames,
         uint8 _numOfResults,
         uint8 _lastResultIndex,
         uint256 _arbitrationEndBlock,
@@ -32,17 +28,12 @@ contract DecentralizedOracle is Oracle {
         public
         validAddress(_eventAddress)
     {
-        require(!_eventName[0].isEmpty());
-        require(!_eventResultNames[0].isEmpty());
-        require(!_eventResultNames[1].isEmpty());
         require(_numOfResults > 0);
         require(_arbitrationEndBlock > block.number);
         require(_consensusThreshold > 0);
 
         version = _version;
         eventAddress = _eventAddress;
-        eventName = _eventName;
-        eventResultNames = _eventResultNames;
         numOfResults = _numOfResults;
         lastResultIndex = _lastResultIndex;
         arbitrationEndBlock = _arbitrationEndBlock;

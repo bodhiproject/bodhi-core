@@ -442,8 +442,8 @@ contract TopicEvent is ITopicEvent, Ownable {
     {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
-        address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(_centralizedOracle, address(this), 
-            name, resultNames, numOfResults, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
+        address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(address(this), 
+            numOfResults, _centralizedOracle, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
             _resultSettingEndBlock, addressManager.startingOracleThreshold());
         
         assert(newOracle != address(0));
@@ -460,8 +460,8 @@ contract TopicEvent is ITopicEvent, Ownable {
         uint16 index = addressManager.getLastOracleFactoryIndex();
         address oracleFactory = addressManager.getOracleFactoryAddress(index);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
-        address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), name, resultNames, 
-            numOfResults, finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
+        address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
+            finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({

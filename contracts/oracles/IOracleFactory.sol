@@ -2,11 +2,9 @@ pragma solidity ^0.4.18;
 
 contract IOracleFactory {
     function createCentralizedOracle(
-        address _oracle, 
         address _eventAddress, 
-        bytes32[10] _eventName, 
-        bytes32[10] _eventResultNames, 
         uint8 _numOfResults, 
+        address _oracle, 
         uint256 _bettingStartBlock,
         uint256 _bettingEndBlock, 
         uint256 _resultSettingStartBlock,
@@ -16,8 +14,6 @@ contract IOracleFactory {
 
     function createDecentralizedOracle(
         address _eventAddress, 
-        bytes32[10] _eventName, 
-        bytes32[10] _eventResultNames, 
         uint8 _numOfResults, 
         uint8 _lastResultIndex, 
         uint256 _arbitrationEndBlock, 

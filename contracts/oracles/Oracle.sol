@@ -22,8 +22,6 @@ contract Oracle is Ownable {
     uint8 public numOfResults;
     uint8 public resultIndex = invalidResultIndex;
     uint16 public version;
-    bytes32[10] public eventName;
-    bytes32[10] public eventResultNames;
     address public eventAddress;
     uint256 public consensusThreshold;
     ResultBalance[10] internal resultBalances;
