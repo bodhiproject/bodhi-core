@@ -31,7 +31,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     }
 
     bool public resultSet;
-    uint8 private finalResultIndex = INVALID_RESULT_INDEX;
     Status public status = Status.Betting;
     bytes32[10] public eventName;
     bytes32[11] public eventResults;
@@ -177,7 +176,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         oracles[0].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
+        resultIndex = _resultIndex;
 
         balances[_resultIndex].totalVotes = balances[_resultIndex].totalVotes.add(_consensusThreshold);
         balances[_resultIndex].votes[_oracle] = balances[_resultIndex].votes[_oracle].add(_consensusThreshold);
@@ -242,7 +241,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         oracles[oracleIndex].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
+        resultIndex = _resultIndex;
 
         return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
@@ -260,7 +259,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
         status = Status.Collection;
  
-        FinalResultSet(version, address(this), finalResultIndex);
+        FinalResultSet(version, address(this), resultIndex);
 
         return true;
     }
@@ -365,7 +364,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         view
         returns (uint8, bool) 
     {
-        return (finalResultIndex, status == Status.Collection);
+        return (resultIndex, status == Status.Collection);
     }
 
     /* 
@@ -378,11 +377,11 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         inCollectionStatus()
         returns (uint256)  
     {
-        uint256 senderContribution = balances[finalResultIndex].bets[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalBets;
+        uint256 senderContribution = balances[resultIndex].bets[msg.sender];
+        uint256 winnersTotal = balances[resultIndex].totalBets;
         uint256 losersTotalMinusCut = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
+            if (i != resultIndex) {
                 losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBets);
             }
         }
@@ -402,11 +401,11 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         returns (uint256, uint256) 
     {
         // Calculate BOT won
-        uint256 senderContribution = balances[finalResultIndex].votes[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalVotes;
+        uint256 senderContribution = balances[resultIndex].votes[msg.sender];
+        uint256 winnersTotal = balances[resultIndex].totalVotes;
         uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
+            if (i != resultIndex) {
                 losersTotal = losersTotal.add(balances[i].totalVotes);
             }
         }
@@ -446,7 +445,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         address oracleFactory = addressManager.getOracleFactoryAddress(version);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
         address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
-            finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
+            resultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({

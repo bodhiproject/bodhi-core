@@ -11,6 +11,7 @@ contract BaseContract {
     uint8 public constant INVALID_RESULT_INDEX = 255;
 
     uint8 public numOfResults;
+    uint8 public resultIndex = INVALID_RESULT_INDEX;
     uint16 public version;
     ResultBalance[11] internal balances;
 }
