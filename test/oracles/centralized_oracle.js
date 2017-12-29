@@ -38,7 +38,7 @@ contract('CentralizedOracle', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
-    const NUM_OF_RESULTS = 3;
+    const NUM_OF_RESULTS = 3; // must match the TOPIC_EVENT_PARAMS num of results
     const VERSION = 0;
 
     let addressManager;
