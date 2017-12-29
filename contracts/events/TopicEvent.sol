@@ -33,6 +33,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     bool public resultSet;
     uint8 private finalResultIndex = INVALID_RESULT_INDEX;
     Status public status = Status.Betting;
+    bytes32[10] public eventName;
+    bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
     ResultBalance[11] private balances;

@@ -12,6 +12,4 @@ contract BaseContract {
 
     uint8 public numOfResults;
     uint16 public version;
-    bytes32[10] public eventName;
-    bytes32[11] public eventResults;
 }
