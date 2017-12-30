@@ -39,7 +39,7 @@ contract('CentralizedOracle', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
-    const NUM_OF_RESULTS = 3; // must match the TOPIC_EVENT_PARAMS num of results
+    const NUM_OF_RESULTS = 4; // TOPIC_EVENT_PARAMS._resultNames + invalid default result
     const VERSION = 0;
 
     let addressManager;
@@ -95,7 +95,7 @@ contract('CentralizedOracle', function(accounts) {
             assert.equal(await centralizedOracle.version.call(), 0);
             assert.equal(await centralizedOracle.owner.call(), topicEvent.address);
             assert.equal(await centralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), 4);
+            assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
             assert.equal(await centralizedOracle.oracle.call(), ORACLE);
             assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_EVENT_PARAMS._bettingStartBlock);
             assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_EVENT_PARAMS._bettingEndBlock);

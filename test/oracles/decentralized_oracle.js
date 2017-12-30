@@ -36,6 +36,7 @@ contract('DecentralizedOracle', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
+    const NUM_OF_RESULTS = 4; // TOPIC_EVENT_PARAMS._resultNames + invalid default result
     const VERSION = 0;
     
     let token;
@@ -129,14 +130,13 @@ contract('DecentralizedOracle', function(accounts) {
     });
 
     describe("constructor", async function() {
-        let numOfResults = 3;
         let arbitrationEndBlock = 220;
         let consensusThreshold = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
         it("inits the DecentralizedOracle with the correct values", async function() {
             assert.equal(await decentralizedOracle.version.call(), 0);
             assert.equal(await decentralizedOracle.eventAddress.call(), topicEvent.address);
-            assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), 4);
+            assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
             assert.equal(await decentralizedOracle.lastResultIndex.call(), CENTRALIZED_ORACLE_RESULT);
             assert.equal((await decentralizedOracle.arbitrationEndBlock.call()).toNumber(), 
                 (await getBlockNumber()) + arbitrationBlockLength);
@@ -147,7 +147,7 @@ contract('DecentralizedOracle', function(accounts) {
 
         it('throws if eventAddress is invalid', async function() {
             try {
-                await DecentralizedOracle.new(VERSION, ADMIN, 0, numOfResults, CENTRALIZED_ORACLE_RESULT, 
+                await DecentralizedOracle.new(VERSION, ADMIN, 0, NUM_OF_RESULTS, CENTRALIZED_ORACLE_RESULT, 
                     arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
@@ -170,7 +170,7 @@ contract('DecentralizedOracle', function(accounts) {
             assert.isAtLeast(await getBlockNumber(), arbitrationEndBlock);
 
             try {
-                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, topicEvent.address, 
+                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, NUM_OF_RESULTS, 
                     CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, consensusThreshold, { from: ADMIN });
                 assert.fail();
             } catch(e) {
@@ -180,7 +180,7 @@ contract('DecentralizedOracle', function(accounts) {
 
         it('throws if consensusThreshold is 0', async function() {
             try {
-                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, topicEvent.address, 
+                await DecentralizedOracle.new(VERSION, ADMIN, topicEvent.address, NUM_OF_RESULTS, 
                     CENTRALIZED_ORACLE_RESULT, arbitrationEndBlock, 0, { from: ADMIN });
                 assert.fail();
             } catch(e) {
