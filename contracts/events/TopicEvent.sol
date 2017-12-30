@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 
 import "./ITopicEvent.sol";
+import "../BaseContract.sol";
 import "../storage/IAddressManager.sol";
 import "../oracles/IOracleFactory.sol";
 import "../tokens/ERC20.sol";
@@ -8,7 +9,7 @@ import "../libs/Ownable.sol";
 import "../libs/SafeMath.sol";
 import "../libs/ByteUtils.sol";
 
-contract TopicEvent is ITopicEvent, Ownable {
+contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     using ByteUtils for bytes32;
     using SafeMath for uint256;
 
@@ -24,30 +25,17 @@ contract TopicEvent is ITopicEvent, Ownable {
         Collection
     }
 
-    struct ResultBalance {
-        uint256 totalBets;
-        uint256 totalVotes;
-        mapping(address => uint256) bets;
-        mapping(address => uint256) votes;
-    }
-
     struct Oracle {
         address oracleAddress;
         bool didSetResult;
     }
 
-    uint8 public constant invalidResultIndex = 255;
-
     bool public resultSet;
-    uint8 private finalResultIndex = invalidResultIndex;
-    uint8 public numOfResults;
-    uint16 public version;
     Status public status = Status.Betting;
-    bytes32[10] public name;
-    bytes32[10] public resultNames;
+    bytes32[10] public eventName;
+    bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
-    ResultBalance[10] private balances;
     IAddressManager private addressManager;
     ERC20 private token;
     Oracle[] public oracles;
@@ -65,11 +53,6 @@ contract TopicEvent is ITopicEvent, Ownable {
         uint256 _botTokenWon);
 
     // Modifiers
-    modifier validResultIndex(uint8 _resultIndex) {
-        require (_resultIndex <= numOfResults - 1);
-        _;
-    }
-
     modifier fromCentralizedOracle() {
         require(msg.sender == oracles[0].oracleAddress);
         _;
@@ -123,15 +106,13 @@ contract TopicEvent is ITopicEvent, Ownable {
 
         version = _version;
         owner = _owner;
-        name = _name;
-        resultNames = _resultNames;
+        eventName = _name;
 
+        eventResults[0] = "Invalid";
+        numOfResults++;
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
-                balances[i] = ResultBalance({
-                    totalBets: 0,
-                    totalVotes: 0
-                    });
+                eventResults[i + 1] = _resultNames[i];
                 numOfResults++;
             } else {
                 break;
@@ -190,7 +171,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         oracles[0].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
+        resultIndex = _resultIndex;
 
         balances[_resultIndex].totalVotes = balances[_resultIndex].totalVotes.add(_consensusThreshold);
         balances[_resultIndex].votes[_oracle] = balances[_resultIndex].votes[_oracle].add(_consensusThreshold);
@@ -255,7 +236,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         oracles[oracleIndex].didSetResult = true;
         resultSet = true;
         status = Status.OracleVoting;
-        finalResultIndex = _resultIndex;
+        resultIndex = _resultIndex;
 
         return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
     }
@@ -273,7 +254,7 @@ contract TopicEvent is ITopicEvent, Ownable {
 
         status = Status.Collection;
  
-        FinalResultSet(version, address(this), finalResultIndex);
+        FinalResultSet(version, address(this), resultIndex);
 
         return true;
     }
@@ -306,70 +287,6 @@ contract TopicEvent is ITopicEvent, Ownable {
     }
 
     /*
-    * @notice Gets the bet balances of the sender for all the results.
-    * @return An array of all the bet balances of the sender.
-    */
-    function getBetBalances() 
-        public
-        view
-        returns (uint256[10]) 
-    {
-        uint256[10] memory betBalances;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            betBalances[i] = balances[i].bets[msg.sender];
-        }
-        return betBalances;
-    }
-
-    /*
-    * @notice Gets the vote balances of the sender for all the results.
-    * @return An array of all the vote balances of the sender.
-    */
-    function getVoteBalances() 
-        public
-        view
-        returns (uint256[10]) 
-    {
-        uint256[10] memory voteBalances;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            voteBalances[i] = balances[i].votes[msg.sender];
-        }
-        return voteBalances;
-    }
-
-    /*
-    * @notice Gets total bets for all the results.
-    * @return An array of total bets for all results.
-    */
-    function getTotalBets() 
-        public
-        view
-        returns (uint256[10])
-    {
-        uint256[10] memory totalBets;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            totalBets[i] = balances[i].totalBets;
-        }
-        return totalBets;
-    }
-
-    /*
-    * @notice Gets total votes for all the results.
-    * @return An array of total votes for all results.
-    */
-    function getTotalVotes() 
-        public
-        view
-        returns (uint256[10])
-    {
-        uint256[10] memory totalVotes;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            totalVotes[i] = balances[i].totalVotes;
-        }
-        return totalVotes;
-    }
-
-    /*
     * @notice Gets the final result index and flag indicating if the result is final.
     * @return The result index and finalized bool.
     */
@@ -378,7 +295,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         view
         returns (uint8, bool) 
     {
-        return (finalResultIndex, status == Status.Collection);
+        return (resultIndex, status == Status.Collection);
     }
 
     /* 
@@ -391,11 +308,11 @@ contract TopicEvent is ITopicEvent, Ownable {
         inCollectionStatus()
         returns (uint256)  
     {
-        uint256 senderContribution = balances[finalResultIndex].bets[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalBets;
+        uint256 senderContribution = balances[resultIndex].bets[msg.sender];
+        uint256 winnersTotal = balances[resultIndex].totalBets;
         uint256 losersTotalMinusCut = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
+            if (i != resultIndex) {
                 losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBets);
             }
         }
@@ -415,11 +332,11 @@ contract TopicEvent is ITopicEvent, Ownable {
         returns (uint256, uint256) 
     {
         // Calculate BOT won
-        uint256 senderContribution = balances[finalResultIndex].votes[msg.sender];
-        uint256 winnersTotal = balances[finalResultIndex].totalVotes;
+        uint256 senderContribution = balances[resultIndex].votes[msg.sender];
+        uint256 winnersTotal = balances[resultIndex].totalVotes;
         uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != finalResultIndex) {
+            if (i != resultIndex) {
                 losersTotal = losersTotal.add(balances[i].totalVotes);
             }
         }
@@ -459,7 +376,7 @@ contract TopicEvent is ITopicEvent, Ownable {
         address oracleFactory = addressManager.getOracleFactoryAddress(version);
         uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
         address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
-            finalResultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
+            resultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({

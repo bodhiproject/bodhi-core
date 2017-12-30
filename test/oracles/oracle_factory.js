@@ -23,7 +23,7 @@ contract('OracleFactory', function(accounts) {
 
   const CORACLE_PARAMS = {
     _eventAddress: "0x1111111111111111111111111111111111111111",
-    _numOfResults: 3,
+    _numOfResults: 4,
     _oracle: ORACLE,
     _bettingStartBlock: 40,
     _bettingEndBlock: 60,
@@ -34,7 +34,7 @@ contract('OracleFactory', function(accounts) {
 
   const DORACLE_PARAMS = {
     _eventAddress: "0x1111111111111111111111111111111111111111",
-    _numOfResults: 3,
+    _numOfResults: 4,
     _lastResultIndex: 2,
     _arbitrationEndBlock: 200,
     _consensusThreshold: CONSENSUS_THRESHOLD

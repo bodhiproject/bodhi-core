@@ -11,7 +11,8 @@ const assert = require('chai').assert;
 
 contract('EventFactory', function(accounts) {
     const blockHeightManager = new BlockHeightManager(web3);
-    const testTopicParams = {
+    const RESULT_INVALID = "Invalid";
+    const TOPIC_PARAMS = {
         _oracle: accounts[1],
         _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
         _resultNames: ['first', 'second', 'third'],
@@ -20,6 +21,7 @@ contract('EventFactory', function(accounts) {
         _resultSettingStartBlock: 70,
         _resultSettingEndBlock: 90
     };
+    const NUM_OF_RESULTS = 4; // 3 results + invalid default
 
     let addressManager;
     let eventFactory;
@@ -42,7 +44,7 @@ contract('EventFactory', function(accounts) {
         await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: eventFactoryCreator });
         assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
         
-        let transaction = await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
+        let transaction = await eventFactory.createTopic(...Object.values(TOPIC_PARAMS), { from: topicCreator });
         topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
     });
 
@@ -76,31 +78,32 @@ contract('EventFactory', function(accounts) {
     describe('TopicEvent', async function() {
         it('initializes all the values of the new topic correctly', async function() {
             assert.equal(await topic.owner.call(), topicCreator);
-            assert.equal(web3.toUtf8(await topic.name.call(0)), testTopicParams._name[0]);
-            assert.equal(web3.toUtf8(await topic.name.call(1)), testTopicParams._name[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(0)), testTopicParams._resultNames[0]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(1)), testTopicParams._resultNames[1]);
-            assert.equal(web3.toUtf8(await topic.resultNames.call(2)), testTopicParams._resultNames[2]);
-            assert.equal((await topic.numOfResults.call()).toNumber(), 3);
+            assert.equal(web3.toUtf8(await topic.eventName.call(0)), TOPIC_PARAMS._name[0]);
+            assert.equal(web3.toUtf8(await topic.eventName.call(1)), TOPIC_PARAMS._name[1]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(0)), RESULT_INVALID);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(1)), TOPIC_PARAMS._resultNames[0]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(2)), TOPIC_PARAMS._resultNames[1]);
+            assert.equal(web3.toUtf8(await topic.eventResults.call(3)), TOPIC_PARAMS._resultNames[2]);
+            assert.equal((await topic.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
 
             let centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
-            assert.equal(await centralizedOracle.numOfResults.call(), 3);
-            assert.equal(await centralizedOracle.oracle.call(), testTopicParams._oracle);
-            assert.equal(await centralizedOracle.bettingStartBlock.call(), testTopicParams._bettingStartBlock);
-            assert.equal(await centralizedOracle.bettingEndBlock.call(), testTopicParams._bettingEndBlock);
+            assert.equal(await centralizedOracle.numOfResults.call(), 4);
+            assert.equal(await centralizedOracle.oracle.call(), TOPIC_PARAMS._oracle);
+            assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_PARAMS._bettingStartBlock);
+            assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_PARAMS._bettingEndBlock);
             assert.equal(await centralizedOracle.resultSettingStartBlock.call(), 
-                testTopicParams._resultSettingStartBlock);
-            assert.equal(await centralizedOracle.resultSettingEndBlock.call(), testTopicParams._resultSettingEndBlock);
+                TOPIC_PARAMS._resultSettingStartBlock);
+            assert.equal(await centralizedOracle.resultSettingEndBlock.call(), TOPIC_PARAMS._resultSettingEndBlock);
             assert.equal((await centralizedOracle.consensusThreshold.call()).toString(), 
                 (await addressManager.startingOracleThreshold.call()).toString());
         });
 
         it('does not allow recreating the same topic twice', async function() {
-            assert.isTrue(await eventFactory.doesTopicExist(testTopicParams._name, testTopicParams._resultNames,
-                testTopicParams._bettingStartBlock, testTopicParams._bettingEndBlock, 
-                testTopicParams._resultSettingStartBlock, testTopicParams._resultSettingEndBlock));
+            assert.isTrue(await eventFactory.doesTopicExist(TOPIC_PARAMS._name, TOPIC_PARAMS._resultNames,
+                TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock, 
+                TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock));
             try {
-                await eventFactory.createTopic(...Object.values(testTopicParams), { from: topicCreator });
+                await eventFactory.createTopic(...Object.values(TOPIC_PARAMS), { from: topicCreator });
             } catch(e) {
                 SolAssert.assertRevert(e);
             }
