@@ -30,6 +30,9 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         bool didSetResult;
     }
 
+    // Amount of QTUM to be distributed to BOT winners
+    uint8 public constant QTUM_PERCENTAGE = 10;
+
     bool public resultSet;
     Status public status = Status.Betting;
     bytes32[10] public eventName;
