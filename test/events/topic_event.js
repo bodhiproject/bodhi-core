@@ -987,7 +987,7 @@ contract('TopicEvent', function(accounts) {
             assert.isTrue(await testTopic.didWithdraw.call(USER2));
         });
 
-        it.only('transfers the tokens for a multiple betting/voting rounds', async function() {
+        it('transfers the tokens for a multiple betting/voting rounds', async function() {
             // DecentralizedOracle1 voting hits consensusThreshold
             let vote1a = web3.toBigNumber(6112345678);
             await token.approve(testTopic.address, vote1a, { from: USER1 });
