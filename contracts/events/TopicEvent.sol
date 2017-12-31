@@ -273,11 +273,9 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
         didWithdraw[msg.sender] = true;
 
-        uint256 qtumWon = calculateQtumContributorWinnings();
-        uint256 qtumReturn;
         uint256 botWon;
-        (qtumReturn, botWon) = calculateBotContributorWinnings();
-        qtumWon = qtumWon.add(qtumReturn);
+        uint256 qtumWon;
+        (botWon, qtumWon) = calculateWinnings();
 
         if (qtumWon > 0) {
             msg.sender.transfer(qtumWon);
@@ -339,57 +337,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         qtumWon = qtumWon.add(contribution.mul(losersTotal).div(winnersTotal).add(contributionMinusCut));
 
         return (botWon, qtumWon);
-    }
-
-    /* 
-    * @notice Calculates the QTUM tokens won based on the sender's QTUM token contributions.
-    * @return The amount of QTUM tokens won.
-    */
-    function calculateQtumContributorWinnings() 
-        public 
-        view
-        inCollectionStatus()
-        returns (uint256)  
-    {
-        uint256 senderContribution = balances[resultIndex].bets[msg.sender];
-        uint256 winnersTotal = balances[resultIndex].totalBets;
-        uint256 losersTotalMinusCut = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != resultIndex) {
-                losersTotalMinusCut = losersTotalMinusCut.add(balances[i].totalBets);
-            }
-        }
-        losersTotalMinusCut = losersTotalMinusCut.mul(90).div(100);
-        uint256 senderContributionMinusCut = senderContribution.mul(90).div(100);
-        return senderContribution.mul(losersTotalMinusCut).div(winnersTotal).add(senderContributionMinusCut);
-    }
-
-    /*
-    * @notice Calculates the QTUM and BOT tokens won based on the sender's BOT contributions.
-    * @return The amount of QTUM and BOT tokens won.
-    */
-    function calculateBotContributorWinnings()
-        public
-        view
-        inCollectionStatus()
-        returns (uint256, uint256) 
-    {
-        // Calculate BOT won
-        uint256 senderContribution = balances[resultIndex].votes[msg.sender];
-        uint256 winnersTotal = balances[resultIndex].totalVotes;
-        uint256 losersTotal = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
-            if (i != resultIndex) {
-                losersTotal = losersTotal.add(balances[i].totalVotes);
-            }
-        }
-        uint256 botWon = senderContribution.mul(losersTotal).div(winnersTotal).add(senderContribution);
-
-        // Calculate QTUM won
-        uint256 qtumReward = totalQtumValue.mul(10).div(100);
-        uint256 qtumWon = senderContribution.mul(qtumReward).div(winnersTotal);
-
-        return (qtumWon, botWon);
     }
 
     function createCentralizedOracle(
