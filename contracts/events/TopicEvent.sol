@@ -302,6 +302,46 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     }
 
     /* 
+    * @notice Calculates the BOT and QTUM tokens won based on the sender's contributions.
+    * @return The amount of BOT and QTUM tokens won.
+    */
+    function calculateWinnings()
+        public 
+        view
+        inCollectionStatus()
+        returns (uint256, uint256)  
+    {
+        // Calculate BOT winnings
+        uint256 contribution = balances[resultIndex].votes[msg.sender];
+        uint256 winnersTotal = balances[resultIndex].totalVotes;
+        uint256 losersTotal = 0;
+        for (uint8 i = 0; i < numOfResults; i++) {
+            if (i != resultIndex) {
+                losersTotal = losersTotal.add(balances[i].totalVotes);
+            }
+        }
+        uint256 botWon = contribution.mul(losersTotal).div(winnersTotal).add(contribution);
+        uint256 qtumReward = totalQtumValue.mul(QTUM_PERCENTAGE).div(100);
+        uint256 qtumWon = contribution.mul(qtumReward).div(winnersTotal);
+
+        // Calculate QTUM winnings
+        contribution = balances[resultIndex].bets[msg.sender];
+        winnersTotal = balances[resultIndex].totalBets;
+        losersTotal = 0;
+        for (i = 0; i < numOfResults; i++) {
+            if (i != resultIndex) {
+                losersTotal = losersTotal.add(balances[i].totalBets);
+            }
+        }
+        uint256 percentAfterCut = uint256(100).sub(uint256(QTUM_PERCENTAGE));
+        losersTotal = losersTotal.mul(percentAfterCut).div(100);
+        uint256 contributionMinusCut = contribution.mul(percentAfterCut).div(100);
+        qtumWon = qtumWon.add(contribution.mul(losersTotal).div(winnersTotal).add(contributionMinusCut));
+
+        return (botWon, qtumWon);
+    }
+
+    /* 
     * @notice Calculates the QTUM tokens won based on the sender's QTUM token contributions.
     * @return The amount of QTUM tokens won.
     */
