@@ -444,8 +444,6 @@ contract('TopicEvent', function(accounts) {
             await blockHeightManager.mineTo(TOPIC_PARAMS._resultSettingStartBlock);
             assert.isAtLeast(await getBlockNumber(), TOPIC_PARAMS._resultSettingStartBlock);
             assert.isBelow(await getBlockNumber(), TOPIC_PARAMS._resultSettingEndBlock);
-
-            assert.isFalse(await testTopic.resultSet.call());
         });
 
         it('sets the result and creates a new CentralizedOracle', async function() {
@@ -464,7 +462,6 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.setResult(finalResultIndex, { from: ORACLE });
 
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
@@ -516,7 +513,6 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.setResult(finalResultIndex, { from: ORACLE });
 
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
@@ -560,7 +556,6 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.setResult(firstResultIndex, { from: ORACLE });
 
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], firstResultIndex);
@@ -659,7 +654,6 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.setResult(centralizedOracleResultIndex, { from: ORACLE });
 
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResultIndex);
             let finalResult = await testTopic.getFinalResult();
@@ -710,7 +704,6 @@ contract('TopicEvent', function(accounts) {
 
         it('sets the result and creates a new DecentralizedOracle', async function() {
             assert.isTrue((await testTopic.oracles.call(1))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             assert.equal((await testTopic.getFinalResult())[0], votingOracle1ResultIndex);
 
@@ -756,7 +749,6 @@ contract('TopicEvent', function(accounts) {
             await centralizedOracle.setResult(centralizedOracleResult, { from: ORACLE });
 
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);
@@ -889,7 +881,6 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.setResult(cOracleResult, { from: ORACLE });
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], cOracleResult);
@@ -1223,7 +1214,6 @@ contract('TopicEvent', function(accounts) {
 
             let finalResultIndex = 1;
             await centralizedOracle.setResult(finalResultIndex, { from: ORACLE });
-            assert.isTrue(await testTopic.resultSet.call());
 
             var finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], finalResultIndex);
@@ -1284,7 +1274,6 @@ contract('TopicEvent', function(accounts) {
 
             await centralizedOracle.setResult(centralizedOracleResult, { from: ORACLE });
             assert.isTrue((await testTopic.oracles.call(0))[1]);
-            assert.isTrue(await testTopic.resultSet.call());
             assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
             let finalResult = await testTopic.getFinalResult();
             assert.equal(finalResult[0], centralizedOracleResult);

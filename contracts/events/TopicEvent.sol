@@ -33,7 +33,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     // Amount of QTUM to be distributed to BOT winners
     uint8 public constant QTUM_PERCENTAGE = 10;
 
-    bool public resultSet;
     Status public status = Status.Betting;
     bytes32[10] public eventName;
     bytes32[11] public eventResults;
@@ -58,11 +57,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     // Modifiers
     modifier fromCentralizedOracle() {
         require(msg.sender == oracles[0].oracleAddress);
-        _;
-    }
-
-    modifier resultIsSet() {
-        require(resultSet);
         _;
     }
 
@@ -172,7 +166,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         require(status == Status.Betting);
 
         oracles[0].didSetResult = true;
-        resultSet = true;
         status = Status.OracleVoting;
         resultIndex = _resultIndex;
 
@@ -237,7 +230,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         require(isValidOracle);
 
         oracles[oracleIndex].didSetResult = true;
-        resultSet = true;
         status = Status.OracleVoting;
         resultIndex = _resultIndex;
 
