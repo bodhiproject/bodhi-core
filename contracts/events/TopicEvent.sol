@@ -301,8 +301,13 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         inCollectionStatus()
         returns (uint256, uint256)  
     {
+        uint256 votes = balances[resultIndex].votes[msg.sender];
+        uint256 bets = balances[resultIndex].bets[msg.sender];
+        if (votes == 0 && bets == 0) {
+            return (0, 0);
+        }
+
         // Calculate BOT winnings
-        uint256 contribution = balances[resultIndex].votes[msg.sender];
         uint256 winnersTotal = balances[resultIndex].totalVotes;
         uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
@@ -310,12 +315,11 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
                 losersTotal = losersTotal.add(balances[i].totalVotes);
             }
         }
-        uint256 botWon = contribution.mul(losersTotal).div(winnersTotal).add(contribution);
+        uint256 botWon = votes.mul(losersTotal).div(winnersTotal).add(votes);
         uint256 qtumReward = totalQtumValue.mul(QTUM_PERCENTAGE).div(100);
-        uint256 qtumWon = contribution.mul(qtumReward).div(winnersTotal);
+        uint256 qtumWon = votes.mul(qtumReward).div(winnersTotal);
 
         // Calculate QTUM winnings
-        contribution = balances[resultIndex].bets[msg.sender];
         winnersTotal = balances[resultIndex].totalBets;
         losersTotal = 0;
         for (i = 0; i < numOfResults; i++) {
@@ -325,8 +329,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         }
         uint256 percentAfterCut = uint256(100).sub(uint256(QTUM_PERCENTAGE));
         losersTotal = losersTotal.mul(percentAfterCut).div(100);
-        uint256 contributionMinusCut = contribution.mul(percentAfterCut).div(100);
-        qtumWon = qtumWon.add(contribution.mul(losersTotal).div(winnersTotal).add(contributionMinusCut));
+        uint256 betsMinusCut = bets.mul(percentAfterCut).div(100);
+        qtumWon = qtumWon.add(bets.mul(losersTotal).div(winnersTotal).add(betsMinusCut));
 
         return (botWon, qtumWon);
     }
