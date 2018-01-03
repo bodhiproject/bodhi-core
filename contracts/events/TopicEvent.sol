@@ -310,7 +310,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         // Calculate QTUM winnings
         uint256 winnersTotal = balances[resultIndex].totalBets;
         uint256 losersTotal = 0;
-        for (i = 0; i < numOfResults; i++) {
+        for (uint8 i = 0; i < numOfResults; i++) {
             if (i != resultIndex) {
                 losersTotal = losersTotal.add(balances[i].totalBets);
             }
@@ -322,7 +322,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         // Calculate BOT winnings
         winnersTotal = balances[resultIndex].totalVotes;
         losersTotal = 0;
-        for (uint8 i = 0; i < numOfResults; i++) {
+        for (i = 0; i < numOfResults; i++) {
             if (i != resultIndex) {
                 losersTotal = losersTotal.add(balances[i].totalVotes);
             }
