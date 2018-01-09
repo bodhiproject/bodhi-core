@@ -303,12 +303,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     {
         uint256 votes = balances[resultIndex].votes[msg.sender];
         uint256 bets = balances[resultIndex].bets[msg.sender];
-        if (votes == 0 && bets == 0) {
-            return (0, 0);
-        }
 
-        // Calculate QTUM winnings
-        uint256 winnersTotal = balances[resultIndex].totalBets;
+        // Calculate Qtum reward total
         uint256 losersTotal = 0;
         for (uint8 i = 0; i < numOfResults; i++) {
             if (i != resultIndex) {
@@ -317,19 +313,29 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         }
         uint256 rewardQtum = uint256(QTUM_PERCENTAGE).mul(losersTotal).div(100);
         losersTotal = losersTotal.sub(rewardQtum);
-        uint256 qtumWon = bets.mul(losersTotal).div(winnersTotal).add(bets);
+
+        // Calculate QTUM winnings
+        uint256 winnersTotal;
+        uint256 qtumWon = 0;
+        if (bets > 0) {
+            winnersTotal = balances[resultIndex].totalBets;
+            qtumWon = bets.mul(losersTotal).div(winnersTotal).add(bets);
+        }
 
         // Calculate BOT winnings
-        winnersTotal = balances[resultIndex].totalVotes;
-        losersTotal = 0;
-        for (i = 0; i < numOfResults; i++) {
-            if (i != resultIndex) {
-                losersTotal = losersTotal.add(balances[i].totalVotes);
+        uint256 botWon = 0;
+        if (votes > 0) {
+            winnersTotal = balances[resultIndex].totalVotes;
+            losersTotal = 0;
+            for (i = 0; i < numOfResults; i++) {
+                if (i != resultIndex) {
+                    losersTotal = losersTotal.add(balances[i].totalVotes);
+                }
             }
+            botWon = votes.mul(losersTotal).div(winnersTotal).add(votes);
+            uint256 rewardWon = votes.mul(rewardQtum).div(winnersTotal);
+            qtumWon = qtumWon.add(rewardWon);
         }
-        uint256 botWon = votes.mul(losersTotal).div(winnersTotal).add(votes);
-        uint256 rewardWon = votes.mul(rewardQtum).div(winnersTotal);
-        qtumWon = qtumWon.add(rewardWon);
 
         return (botWon, qtumWon);
     }
