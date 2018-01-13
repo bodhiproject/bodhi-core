@@ -56,7 +56,7 @@ contract('OracleFactory', (accounts) => {
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('sets the values', async () => {
       assert.equal(await oracleFactory.version.call(), 0);
     });
@@ -83,7 +83,7 @@ contract('OracleFactory', (accounts) => {
     });
   });
 
-  describe('createCentralizedOracle()', async () => {
+  describe('createCentralizedOracle()', () => {
     it('initializes all the values', async () => {
       const tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
       const centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
@@ -116,7 +116,7 @@ contract('OracleFactory', (accounts) => {
     });
   });
 
-  describe('createDecentralizedOracle()', async () => {
+  describe('createDecentralizedOracle()', () => {
     it('initializes all the values', async () => {
       const tx = await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
       const decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);

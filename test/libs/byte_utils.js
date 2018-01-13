@@ -7,7 +7,7 @@ contract('ByteUtils', (accounts) => {
     instance = await ByteUtilsMock.new();
   });
 
-  describe('isEmpty', async () => {
+  describe('isEmpty', () => {
     it('should return true for an empty string', async () => {
       assert.equal(await instance.isEmpty(''), true);
     });
@@ -17,7 +17,7 @@ contract('ByteUtils', (accounts) => {
     });
   });
 
-  describe('bytesArrayToString', async () => {
+  describe('bytesArrayToString', () => {
     it('should return the correct concatenated string', async () => {
       let test = ['abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',

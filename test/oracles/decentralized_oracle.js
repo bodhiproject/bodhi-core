@@ -145,7 +145,7 @@ contract('DecentralizedOracle', (accounts) => {
     decentralizedOracle = await DecentralizedOracle.at((await topicEvent.oracles.call(1))[0]);
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     const arbitrationEndBlock = 220;
     const consensusThreshold = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
@@ -215,7 +215,7 @@ contract('DecentralizedOracle', (accounts) => {
     });
   });
 
-  describe('voteResult()', async () => {
+  describe('voteResult()', () => {
     it('allows voting', async () => {
       assert.isBelow(await getBlockNumber(), (await decentralizedOracle.arbitrationEndBlock.call()).toNumber());
 
@@ -345,8 +345,8 @@ contract('DecentralizedOracle', (accounts) => {
     });
   });
 
-  describe('finalizeResult()', async () => {
-    describe('in valid block range', async () => {
+  describe('finalizeResult()', () => {
+    describe('in valid block range', () => {
       beforeEach(async () => {
         const arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
         await blockHeightManager.mineTo(arbitrationEndBlock);
@@ -379,7 +379,7 @@ contract('DecentralizedOracle', (accounts) => {
       });
     });
 
-    describe('in invalid block range', async () => {
+    describe('in invalid block range', () => {
       it('throws if the block is below the arbitrationEndBlock', async () => {
         const arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
         assert.isBelow(await getBlockNumber(), arbitrationEndBlock);
@@ -394,7 +394,7 @@ contract('DecentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getVoteBalances()', async () => {
+  describe('getVoteBalances()', () => {
     it('returns the vote balances', async () => {
       const arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
       assert.isBelow(await getBlockNumber(), arbitrationEndBlock);
@@ -413,7 +413,7 @@ contract('DecentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getTotalVotes()', async () => {
+  describe('getTotalVotes()', () => {
     it('returns the total votes', async () => {
       const arbitrationEndBlock = (await decentralizedOracle.arbitrationEndBlock.call()).toNumber();
       assert.isBelow(await getBlockNumber(), arbitrationEndBlock);

@@ -27,7 +27,7 @@ contract('AdddressManager', (accounts) => {
     instance = await AdddressManager.deployed({ from: owner });
   });
 
-  describe('BodhiTokenAddress', async () => {
+  describe('BodhiTokenAddress', () => {
     it('should return the correct address if set', async () => {
       assert.equal(await instance.bodhiTokenAddress.call(), 0);
 
@@ -70,7 +70,7 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
-  describe('EventFactoryAddresses', async () => {
+  describe('EventFactoryAddresses', () => {
     it('should return the addresses if set', async () => {
       assert.equal(await instance.getEventFactoryAddress(0), 0);
       assert.equal(await instance.getEventFactoryAddress(1), 0);
@@ -123,7 +123,7 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
-  describe('OracleFactoryAddresses', async () => {
+  describe('OracleFactoryAddresses', () => {
     it('should return the addresses if set', async () => {
       assert.equal(await instance.getOracleFactoryAddress(0), 0);
       assert.equal(await instance.getOracleFactoryAddress(1), 0);

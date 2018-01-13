@@ -92,7 +92,7 @@ contract('CentralizedOracle', (accounts) => {
     startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('initializes all the values', async () => {
       assert.equal(await centralizedOracle.version.call(), 0);
       assert.equal(await centralizedOracle.owner.call(), topicEvent.address);
@@ -227,7 +227,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('fallback function', async () => {
+  describe('fallback function', () => {
     it('throws upon calling', async () => {
       try {
         await ethAsync.sendTransactionAsync({
@@ -242,7 +242,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('bet()', async () => {
+  describe('bet()', () => {
     it('allows betting', async () => {
       await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
@@ -345,7 +345,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('setResult()', async () => {
+  describe('setResult()', () => {
     beforeEach(async () => {
       assert.isFalse(await centralizedOracle.finished.call());
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
@@ -357,7 +357,7 @@ contract('CentralizedOracle', (accounts) => {
       );
     });
 
-    describe('in valid block', async () => {
+    describe('in valid block', () => {
       beforeEach(async () => {
         await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
         assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
@@ -446,7 +446,7 @@ contract('CentralizedOracle', (accounts) => {
       });
     });
 
-    describe('in invalid block', async () => {
+    describe('in invalid block', () => {
       it('throws if block is below the bettingEndBlock', async () => {
         assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
 
@@ -460,7 +460,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getBetBalances()', async () => {
+  describe('getBetBalances()', () => {
     it('returns the bet balances', async () => {
       await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
@@ -496,7 +496,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getTotalBets()', async () => {
+  describe('getTotalBets()', () => {
     it('returns the total bets', async () => {
       await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
@@ -529,7 +529,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getVoteBalances()', async () => {
+  describe('getVoteBalances()', () => {
     it('returns the vote balances', async () => {
       await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
@@ -551,7 +551,7 @@ contract('CentralizedOracle', (accounts) => {
     });
   });
 
-  describe('getTotalVotes()', async () => {
+  describe('getTotalVotes()', () => {
     it('returns the total votes', async () => {
       await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
