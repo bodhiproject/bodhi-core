@@ -95,7 +95,7 @@ contract('TopicEvent', (accounts) => {
     centralizedOracle = CentralizedOracle.at((await testTopic.oracles.call(0))[0]);
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('initializes all the values', async () => {
       assert.equal(await testTopic.owner.call(), OWNER);
       assert.equal(web3.toUtf8(await testTopic.eventName.call(0)), TOPIC_PARAMS._name[0]);
@@ -404,7 +404,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('fallback function', async () => {
+  describe('fallback function', () => {
     it('throws upon calling', async () => {
       try {
         await ethAsync.sendTransactionAsync({
@@ -419,7 +419,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('betFromOracle()', async () => {
+  describe('betFromOracle()', () => {
     it('allows users to bet', async () => {
       await blockHeightManager.mineTo(TOPIC_PARAMS._bettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_PARAMS._bettingStartBlock);
@@ -491,7 +491,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('centralizedOracleSetResult()', async () => {
+  describe('centralizedOracleSetResult()', () => {
     beforeEach(async () => {
       await blockHeightManager.mineTo(TOPIC_PARAMS._resultSettingStartBlock);
       assert.isAtLeast(await getBlockNumber(), TOPIC_PARAMS._resultSettingStartBlock);
@@ -596,7 +596,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('voteFromOracle()', async () => {
+  describe('voteFromOracle()', () => {
     const firstResultIndex = 1;
 
     beforeEach(async () => {
@@ -695,7 +695,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('decentralizedOracleSetResult()', async () => {
+  describe('decentralizedOracleSetResult()', () => {
     const centralizedOracleResultIndex = 1;
     const votingOracle1ResultIndex = 2;
     let votingOracle2;
@@ -800,7 +800,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('finalizeResult()', async () => {
+  describe('finalizeResult()', () => {
     const centralizedOracleResult = 1;
 
     beforeEach(async () => {
@@ -900,7 +900,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('withdrawWinnings()', async () => {
+  describe('withdrawWinnings()', () => {
     let bet1,
       bet2,
       bet3,
@@ -1267,7 +1267,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('getBetBalances()', async () => {
+  describe('getBetBalances()', () => {
     it('returns the bet balances', async () => {
       await blockHeightManager.mineTo(TOPIC_PARAMS._bettingStartBlock);
 
@@ -1296,7 +1296,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('getVoteBalances()', async () => {
+  describe('getVoteBalances()', () => {
     it('returns the vote balances', async () => {
       await blockHeightManager.mineTo(TOPIC_PARAMS._resultSettingStartBlock);
       await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
@@ -1320,7 +1320,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('getFinalResult()', async () => {
+  describe('getFinalResult()', () => {
     it('returns the final result index and name', async () => {
       await blockHeightManager.mineTo(TOPIC_PARAMS._resultSettingStartBlock);
       await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
@@ -1342,7 +1342,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe('calculateTokensWon', async () => {
+  describe('calculateTokensWon', () => {
     const centralizedOracleResult = 2;
     let bet1,
       bet2,

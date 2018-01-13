@@ -49,7 +49,7 @@ contract('EventFactory', (accounts) => {
     topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('sets all the values', async () => {
       assert.equal(await eventFactory.version.call(), 0);
     });
@@ -76,7 +76,7 @@ contract('EventFactory', (accounts) => {
     });
   });
 
-  describe('TopicEvent', async () => {
+  describe('TopicEvent', () => {
     it('initializes all the values of the new topic correctly', async () => {
       assert.equal(await topic.owner.call(), topicCreator);
       assert.equal(web3.toUtf8(await topic.eventName.call(0)), TOPIC_PARAMS._name[0]);
