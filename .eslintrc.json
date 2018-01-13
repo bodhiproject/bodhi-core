@@ -30,11 +30,6 @@
         "args": "none", // "all" for everything
         "caughtErrors": "none"
       }
-    ],
-    "object-property-newline": ["error",
-      {
-        "allowMultiplePropertiesPerLine": false
-      }
     ]
   }
 }
