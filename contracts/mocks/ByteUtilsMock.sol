@@ -7,7 +7,7 @@ contract ByteUtilsMock {
         return ByteUtils.isEmpty(_source);
     }
 
-    function toString(bytes32[10] _data) public pure returns (string) {
-        return ByteUtils.toString(_data);
+    function bytesArrayToString(bytes32[10] _data) public pure returns (string) {
+        return ByteUtils.bytesArrayToString(_data);
     }
 }
