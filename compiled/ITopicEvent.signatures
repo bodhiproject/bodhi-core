@@ -1,0 +1,5 @@
+3381fc18: betFromOracle(address,uint8)
+74513913: centralizedOracleSetResult(address,uint8,uint256)
+4529fd93: decentralizedOracleFinalizeResult()
+dee84d7e: decentralizedOracleSetResult(uint8,uint256)
+006a8a32: voteFromOracle(uint8,address,uint256)
