@@ -128,7 +128,7 @@ contract('TopicEvent', (accounts) => {
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock, 
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
         TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
@@ -153,7 +153,7 @@ contract('TopicEvent', (accounts) => {
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
         'abcdefghijklmnopqrstuvwxyzabcdef'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock, 
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
         TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
@@ -173,7 +173,7 @@ contract('TopicEvent', (accounts) => {
     it('should allow a space as the last character of a name array item', async () => {
       const name = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock, 
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
         TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
@@ -181,11 +181,12 @@ contract('TopicEvent', (accounts) => {
       assert.equal(web3.toUtf8(await testTopic.eventName.call(1)), name[1]);
     });
 
-    it('should allow a space as the first character if the next character is not empty in a name array item', 
+    it(
+      'should allow a space as the first character if the next character is not empty in a name array item',
       async () => {
         const name = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
         testTopic = await TopicEvent.new(
-          0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock, 
+          0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
           TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
           addressManager.address,
         );
@@ -195,7 +196,7 @@ contract('TopicEvent', (accounts) => {
     );
 
     it('can handle using all 11 results', async () => {
-      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 
+      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth',
         'ninth', 'ten'];
       testTopic = await TopicEvent.new(
         0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, 11,
@@ -218,7 +219,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('should only set the first 10 results', async () => {
-      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 
+      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth',
         'ninth', 'ten', 'eleven'];
       testTopic = await TopicEvent.new(
         0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, 11,

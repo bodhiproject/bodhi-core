@@ -106,7 +106,7 @@ contract('EventFactory', (accounts) => {
     it('stops parsing the results when an empty slot is reached', async () => {
       const results = ['first', 'second', '', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'ten'];
       const tx = await eventFactory.createTopic(
-        TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, TOPIC_PARAMS._bettingStartBlock, 
+        TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, TOPIC_PARAMS._bettingStartBlock,
         TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
       );
       topic = await TopicEvent.at(tx.logs[0].args._topicAddress);
@@ -127,7 +127,7 @@ contract('EventFactory', (accounts) => {
     it('throws if name is empty', async () => {
       try {
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, [], TOPIC_PARAMS._resultNames, TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._oracle, [], TOPIC_PARAMS._resultNames, TOPIC_PARAMS._bettingStartBlock,
           TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         );
         assert.fail();
@@ -139,7 +139,7 @@ contract('EventFactory', (accounts) => {
     it('throws if resultNames 0 or 1 are empty', async () => {
       try {
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, [], TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock, 
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, [], TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
           TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         );
         assert.fail();
@@ -149,7 +149,7 @@ contract('EventFactory', (accounts) => {
 
       try {
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['first', ''], TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['first', ''], TOPIC_PARAMS._bettingStartBlock,
           TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         );
         assert.fail();
@@ -159,7 +159,7 @@ contract('EventFactory', (accounts) => {
 
       try {
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['', 'second'], TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['', 'second'], TOPIC_PARAMS._bettingStartBlock,
           TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         );
         assert.fail();
