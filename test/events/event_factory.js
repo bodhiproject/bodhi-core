@@ -103,17 +103,25 @@ contract('EventFactory', (accounts) => {
       );
     });
 
-    it('does not allow recreating the same topic twice', async () => {
-      assert.isTrue(await eventFactory.doesTopicExist(
-        TOPIC_PARAMS._name, TOPIC_PARAMS._resultNames,
-        TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-        TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
-      ));
-      try {
-        await eventFactory.createTopic(...Object.values(TOPIC_PARAMS), { from: topicCreator });
-      } catch (e) {
-        SolAssert.assertRevert(e);
-      }
+    it('stops parsing the results when an empty slot is reached', async () => {
+      const results = ['first', 'second', '', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'ten'];
+      const tx = await eventFactory.createTopic(
+        TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, TOPIC_PARAMS._bettingStartBlock, 
+        TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+      );
+      topic = await TopicEvent.at(tx.logs[0].args._topicAddress);
+
+      assert.equal(web3.toUtf8(await topic.eventResults.call(0)), RESULT_INVALID);
+      assert.equal(web3.toUtf8(await topic.eventResults.call(1)), 'first');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(2)), 'second');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(3)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(4)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(5)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(6)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(7)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(8)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(9)), '');
+      assert.equal(web3.toUtf8(await topic.eventResults.call(10)), '');
     });
   });
 });
