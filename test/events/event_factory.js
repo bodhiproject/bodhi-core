@@ -123,5 +123,49 @@ contract('EventFactory', (accounts) => {
       assert.equal(web3.toUtf8(await topic.eventResults.call(9)), '');
       assert.equal(web3.toUtf8(await topic.eventResults.call(10)), '');
     });
+
+    it('throws if name is empty', async () => {
+      try {
+        await eventFactory.createTopic(
+          TOPIC_PARAMS._oracle, [], TOPIC_PARAMS._resultNames, TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        );
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+    });
+
+    it('throws if resultNames 0 or 1 are empty', async () => {
+      try {
+        await eventFactory.createTopic(
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, [], TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock, 
+          TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        );
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      try {
+        await eventFactory.createTopic(
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['first', ''], TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        );
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      try {
+        await eventFactory.createTopic(
+          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['', 'second'], TOPIC_PARAMS._bettingStartBlock, 
+          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        );
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+    });
   });
 });
