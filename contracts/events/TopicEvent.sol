@@ -83,7 +83,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         address _owner,
         address _centralizedOracle,
         bytes32[10] _name,
-        bytes32[10] _resultNames,
+        bytes32[11] _resultNames,
         uint256 _bettingStartBlock,
         uint256 _bettingEndBlock,
         uint256 _resultSettingStartBlock,
@@ -105,16 +105,16 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         owner = _owner;
         eventName = _name;
 
-        eventResults[0] = "Invalid";
-        numOfResults++;
-        for (uint i = 0; i < _resultNames.length; i++) {
-            if (!_resultNames[i].isEmpty()) {
-                eventResults[i + 1] = _resultNames[i];
-                numOfResults++;
-            } else {
-                break;
-            }
-        }
+        // eventResults[0] = "Invalid";
+        // numOfResults++;
+        // for (uint i = 0; i < _resultNames.length; i++) {
+        //     if (!_resultNames[i].isEmpty()) {
+        //         eventResults[i + 1] = _resultNames[i];
+        //         numOfResults++;
+        //     } else {
+        //         break;
+        //     }
+        // }
 
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
