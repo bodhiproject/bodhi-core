@@ -16,7 +16,8 @@ contract EventFactory {
         uint16 indexed _version,
         address indexed _topicAddress, 
         bytes32[10] _name, 
-        bytes32[11] _resultNames);
+        bytes32[11] _resultNames,
+        uint8 _numOfResults);
 
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
@@ -36,26 +37,35 @@ contract EventFactory {
         public
         returns (TopicEvent topicEvent) 
     {
+        require(!_name[0].isEmpty());
+        require(!_resultNames[0].isEmpty());
+        require(!_resultNames[1].isEmpty());
+        
         bytes32[11] memory resultNames;
+        uint8 numOfResults;
+
         resultNames[0] = "Invalid";
+        numOfResults++;
+
         for (uint i = 0; i < _resultNames.length; i++) {
             if (!_resultNames[i].isEmpty()) {
                 resultNames[i + 1] = _resultNames[i];
+                numOfResults++;
             } else {
                 break;
             }
         }
 
-        bytes32 topicHash = getTopicHash(_name, resultNames, _bettingStartBlock, _bettingEndBlock, 
+        bytes32 topicHash = getTopicHash(_name, resultNames, numOfResults, _bettingStartBlock, _bettingEndBlock, 
             _resultSettingStartBlock, _resultSettingEndBlock);
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, _bettingStartBlock, 
-            _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
+        TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
+            _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
         topics[topicHash] = topic;
 
-        TopicCreated(version, address(topic), _name, resultNames);
+        TopicCreated(version, address(topic), _name, resultNames, numOfResults);
 
         return topic;
     }
@@ -63,6 +73,7 @@ contract EventFactory {
     function getTopicHash(
         bytes32[10] _name, 
         bytes32[11] _resultNames, 
+        uint8 _numOfResults,
         uint256 _bettingStartBlock,
         uint256 _bettingEndBlock, 
         uint256 _resultSettingStartBlock,
@@ -71,7 +82,7 @@ contract EventFactory {
         pure    
         returns (bytes32)
     {
-        return keccak256(_name, _resultNames, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
-            _resultSettingEndBlock);
+        return keccak256(_name, _resultNames, _numOfResults, _bettingStartBlock, _bettingEndBlock, 
+            _resultSettingStartBlock, _resultSettingEndBlock);
     }
 }
