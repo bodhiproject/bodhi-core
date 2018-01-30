@@ -57,7 +57,6 @@ contract('TopicEvent', (accounts) => {
   let testTopic;
   let centralizedOracle;
   let decentralizedOracle;
-  const getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
 
   before(async () => {
     // Fund accounts with this amount

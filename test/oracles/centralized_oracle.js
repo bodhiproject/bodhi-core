@@ -9,15 +9,27 @@ const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const TopicEvent = artifacts.require('./TopicEvent.sol');
 const CentralizedOracle = artifacts.require('./oracles/CentralizedOracle.sol');
 const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol');
-const BlockHeightManager = require('../helpers/block_height_manager');
+const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
+function getTopicParams(oracle) {
+  const currTime = Utils.getCurrentBlockTime();
+  return {
+    _oracle: oracle,
+    _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
+    _resultNames: ['first', 'second', 'third'],
+    _bettingStartTime: currTime + 1000,
+    _bettingEndTime: currTime + 3000,
+    _resultSettingStartTime: currTime + 4000,
+    _resultSettingEndTime: currTime + 6000,
+  };
+}
+
 contract('CentralizedOracle', (accounts) => {
-  const blockHeightManager = new BlockHeightManager(web3);
-  const getBlockNumber = bluebird.promisify(web3.eth.getBlockNumber);
+  const timeMachine = new TimeMachine(web3);
 
   const NATIVE_DECIMALS = 8;
   const BOT_DECIMALS = 8;
@@ -32,29 +44,18 @@ contract('CentralizedOracle', (accounts) => {
   const USER5 = accounts[7];
 
   const RESULT_INVALID = 'Invalid';
-  const TOPIC_EVENT_PARAMS = {
-    _oracle: ORACLE,
-    _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
-    _resultNames: ['first', 'second', 'third'],
-    _bettingStartBlock: 40,
-    _bettingEndBlock: 60,
-    _resultSettingStartBlock: 70,
-    _resultSettingEndBlock: 90,
-  };
-  const NUM_OF_RESULTS = 4; // TOPIC_EVENT_PARAMS._resultNames + invalid default result
+  const NUM_OF_RESULTS = 4; // topicEventParams._resultNames + invalid default result
   const VERSION = 0;
 
   let addressManager;
+  let eventFactory;
   let token;
   let topicEvent;
   let centralizedOracle;
   let decentralizedOracle;
   let startingOracleThreshold;
 
-  beforeEach(blockHeightManager.snapshot);
-  afterEach(blockHeightManager.revert);
-
-  beforeEach(async () => {
+  before(async () => {
     const botBalance = Utils.getBigNumberWithDecimals(1000, BOT_DECIMALS);
 
     token = await BodhiToken.deployed({ from: ADMIN });
@@ -77,19 +78,29 @@ contract('CentralizedOracle', (accounts) => {
     await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
     assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
-    const eventFactory = await EventFactory.deployed(addressManager.address, { from: ADMIN });
+    eventFactory = await EventFactory.deployed(addressManager.address, { from: ADMIN });
     await addressManager.setEventFactoryAddress(eventFactory.address, { from: ADMIN });
     assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
 
     const oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+  });
 
-    const tx = await eventFactory.createTopic(...Object.values(TOPIC_EVENT_PARAMS), { from: OWNER });
+  beforeEach(async () => {
+    await timeMachine.mine();
+    await timeMachine.snapshot();
+
+    topicEventParams = getTopicParams(ORACLE);
+    const tx = await eventFactory.createTopic(...Object.values(topicEventParams), { from: OWNER });
     topicEvent = TopicEvent.at(tx.logs[0].args._topicAddress);
-    centralizedOracle = CentralizedOracle.at((await topicEvent.oracles.call(0))[0]);
 
+    centralizedOracle = CentralizedOracle.at((await topicEvent.oracles.call(0))[0]);
     startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+  });
+
+  afterEach(async () => {
+    await timeMachine.revert();
   });
 
   describe('constructor', () => {
@@ -99,15 +110,15 @@ contract('CentralizedOracle', (accounts) => {
       assert.equal(await centralizedOracle.eventAddress.call(), topicEvent.address);
       assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
-      assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      assert.equal(await centralizedOracle.bettingStartTime.call(), topicEventParams._bettingStartTime);
+      assert.equal(await centralizedOracle.bettingEndTime.call(), topicEventParams._bettingEndTime);
       assert.equal(
-        await centralizedOracle.resultSettingStartBlock.call(),
-        TOPIC_EVENT_PARAMS._resultSettingStartBlock,
+        await centralizedOracle.resultSettingStartTime.call(),
+        topicEventParams._resultSettingStartTime,
       );
       assert.equal(
-        await centralizedOracle.resultSettingEndBlock.call(),
-        TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+        await centralizedOracle.resultSettingEndTime.call(),
+        topicEventParams._resultSettingEndTime,
       );
       assert.equal(
         startingOracleThreshold.toString(),
@@ -117,10 +128,11 @@ contract('CentralizedOracle', (accounts) => {
 
     it('throws if owner is invalid', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, 0, topicEvent.address, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -131,10 +143,11 @@ contract('CentralizedOracle', (accounts) => {
 
     it('throws if oracle is invalid', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, 0,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -145,10 +158,11 @@ contract('CentralizedOracle', (accounts) => {
 
     it('throws if eventAddress is invalid', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, 0, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -159,10 +173,11 @@ contract('CentralizedOracle', (accounts) => {
 
     it('throws if numOfResults is 0', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, 0, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -171,12 +186,13 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if bettingEndBlock is <= bettingStartBlock', async () => {
+    it('throws if bettingEndTime is <= bettingStartTime', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingStartBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingStartTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -185,12 +201,13 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if resultSettingStartBlock is < bettingEndBlock', async () => {
+    it('throws if resultSettingStartTime is < bettingEndTime', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._bettingEndBlock - 1, TOPIC_EVENT_PARAMS._resultSettingEndBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._bettingEndTime - 1, topicEventParams._resultSettingEndTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -199,12 +216,13 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if resultSettingEndBlock is <= resultSettingStartBlock', async () => {
+    it('throws if resultSettingEndTime is <= resultSettingStartTime', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingStartBlock,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingStartTime,
           startingOracleThreshold,
         );
         assert.fail();
@@ -215,10 +233,11 @@ contract('CentralizedOracle', (accounts) => {
 
     it('throws if consensusThreshold == 0', async () => {
       try {
+        topicEventParams = getTopicParams(ORACLE);
         await CentralizedOracle.new(
           VERSION, OWNER, topicEvent.address, NUM_OF_RESULTS, ORACLE,
-          TOPIC_EVENT_PARAMS._bettingStartBlock, TOPIC_EVENT_PARAMS._bettingEndBlock,
-          TOPIC_EVENT_PARAMS._resultSettingStartBlock, TOPIC_EVENT_PARAMS._resultSettingEndBlock, 0,
+          topicEventParams._bettingStartTime, topicEventParams._bettingEndTime,
+          topicEventParams._resultSettingStartTime, topicEventParams._resultSettingEndTime, 0,
         );
         assert.fail();
       } catch (e) {
@@ -244,9 +263,9 @@ contract('CentralizedOracle', (accounts) => {
 
   describe('bet()', () => {
     it('allows betting', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._bettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._bettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       const betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
       const betResultIndex = 1;
@@ -263,7 +282,7 @@ contract('CentralizedOracle', (accounts) => {
     });
 
     it('throws if resultIndex is invalid', async () => {
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       try {
         await centralizedOracle.bet(3, {
@@ -277,9 +296,9 @@ contract('CentralizedOracle', (accounts) => {
     });
 
     it('throws if the oracle is finished', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
       await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
       assert.equal(
@@ -301,8 +320,8 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if current block is < bettingStartBlock', async () => {
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
+    it('throws if current block is < bettingStartTime', async () => {
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingStartTime);
 
       try {
         await centralizedOracle.bet(0, {
@@ -315,9 +334,9 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if current block is >= bettingEndBlock', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingEndBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+    it('throws if current block is >= bettingEndTime', async () => {
+      await timeMachine.increaseTime(topicEventParams._bettingEndTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       try {
         await centralizedOracle.bet(0, {
@@ -331,7 +350,7 @@ contract('CentralizedOracle', (accounts) => {
     });
 
     it('throws if the bet is 0', async () => {
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       try {
         await centralizedOracle.bet(0, {
@@ -359,9 +378,9 @@ contract('CentralizedOracle', (accounts) => {
 
     describe('in valid block', () => {
       beforeEach(async () => {
-        await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-        assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-        assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+        await timeMachine.increaseTime(topicEventParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+        assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
+        assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
       });
 
       it('sets the result index', async () => {
@@ -379,9 +398,9 @@ contract('CentralizedOracle', (accounts) => {
         );
       });
 
-      it('allows anyone to set the result if current block >= resultSettingEndBlock', async () => {
-        await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingEndBlock);
-        assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+      it('allows anyone to set the result if current block >= resultSettingEndTime', async () => {
+        await timeMachine.increaseTime(topicEventParams._resultSettingEndTime - Utils.getCurrentBlockTime());
+        assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
         await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
         assert.equal(
@@ -430,7 +449,7 @@ contract('CentralizedOracle', (accounts) => {
         }
       });
 
-      it('throws if the sender is not the oracle and < resultSettingEndBlock', async () => {
+      it('throws if the sender is not the oracle and < resultSettingEndTime', async () => {
         await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
         assert.equal(
           (await token.allowance(USER1, topicEvent.address)).toString(),
@@ -447,8 +466,8 @@ contract('CentralizedOracle', (accounts) => {
     });
 
     describe('in invalid block', () => {
-      it('throws if block is below the bettingEndBlock', async () => {
-        assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
+      it('throws if block is below the bettingEndTime', async () => {
+        assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
 
         try {
           await centralizedOracle.setResult(0, { from: ORACLE });
@@ -462,9 +481,9 @@ contract('CentralizedOracle', (accounts) => {
 
   describe('getBetBalances()', () => {
     it('returns the bet balances', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._bettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._bettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       const betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
       await centralizedOracle.bet(0, {
@@ -498,9 +517,9 @@ contract('CentralizedOracle', (accounts) => {
 
   describe('getTotalBets()', () => {
     it('returns the total bets', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._bettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._bettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._bettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
       const betAmount = Utils.getBigNumberWithDecimals(1, NATIVE_DECIMALS);
       await centralizedOracle.bet(0, {
@@ -531,9 +550,9 @@ contract('CentralizedOracle', (accounts) => {
 
   describe('getVoteBalances()', () => {
     it('returns the vote balances', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
       const startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
       await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
@@ -553,9 +572,9 @@ contract('CentralizedOracle', (accounts) => {
 
   describe('getTotalVotes()', () => {
     it('returns the total votes', async () => {
-      await blockHeightManager.mineTo(TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isAtLeast(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingStartBlock);
-      assert.isBelow(await getBlockNumber(), TOPIC_EVENT_PARAMS._resultSettingEndBlock);
+      await timeMachine.increaseTime(topicEventParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
       const startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
       await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
