@@ -4,7 +4,7 @@ import "./Oracle.sol";
 
 contract DecentralizedOracle is Oracle {
     uint8 public lastResultIndex;
-    uint256 public arbitrationEndBlock;
+    uint256 public arbitrationEndTime;
 
     /*
     * @notice Creates new DecentralizedOracle contract.
@@ -13,7 +13,7 @@ contract DecentralizedOracle is Oracle {
     * @param _eventAddress The address of the Event.
     * @param _numOfResults The number of result options.
     * @param _lastResultIndex The last result index set by the DecentralizedOracle.
-    * @param _arbitrationEndBlock The max block of this arbitration that voting will be allowed.
+    * @param _arbitrationEndTime The unix time when the voting period ends.
     * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
     */
     function DecentralizedOracle(
@@ -22,21 +22,21 @@ contract DecentralizedOracle is Oracle {
         address _eventAddress,
         uint8 _numOfResults,
         uint8 _lastResultIndex,
-        uint256 _arbitrationEndBlock,
+        uint256 _arbitrationEndTime,
         uint256 _consensusThreshold)
         Ownable(_owner)
         public
         validAddress(_eventAddress)
     {
         require(_numOfResults > 0);
-        require(_arbitrationEndBlock > block.number);
+        require(_arbitrationEndTime > block.timestamp);
         require(_consensusThreshold > 0);
 
         version = _version;
         eventAddress = _eventAddress;
         numOfResults = _numOfResults;
         lastResultIndex = _lastResultIndex;
-        arbitrationEndBlock = _arbitrationEndBlock;
+        arbitrationEndTime = _arbitrationEndTime;
         consensusThreshold = _consensusThreshold;
     }
 
@@ -51,7 +51,7 @@ contract DecentralizedOracle is Oracle {
         isNotFinished()
     {
         require(_botAmount > 0);
-        require(block.number < arbitrationEndBlock);
+        require(block.timestamp < arbitrationEndTime);
         require(_eventResultIndex != lastResultIndex);
 
         balances[_eventResultIndex].totalVotes = balances[_eventResultIndex].totalVotes.add(_botAmount);
@@ -76,7 +76,7 @@ contract DecentralizedOracle is Oracle {
         external 
         isNotFinished()
     {
-        require(block.number >= arbitrationEndBlock);
+        require(block.timestamp >= arbitrationEndTime);
 
         finished = true;
         resultIndex = lastResultIndex;
