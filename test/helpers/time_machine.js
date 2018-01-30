@@ -4,7 +4,8 @@ module.exports = class TimeMachine {
   }
 
   increaseTime(increaseSec) {
-    const id = Date.now();
+    const id = new Date().getTime();
+
     return new Promise((resolve, reject) => {
       web3.currentProvider.sendAsync({
         jsonrpc: '2.0',

@@ -32,6 +32,7 @@ contract('EventFactory', (accounts) => {
   const topicCreator = accounts[1];
 
   beforeEach(async () => {
+    await timeMachine.mine();
     await timeMachine.snapshot();
 
     addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
@@ -49,7 +50,7 @@ contract('EventFactory', (accounts) => {
   });
 
   afterEach(async () => {
-    await timeMachine.revert()
+    await timeMachine.revert();
   });
 
   describe('constructor', () => {

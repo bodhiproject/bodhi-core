@@ -30,6 +30,11 @@
         "args": "none", // "all" for everything
         "caughtErrors": "none"
       }
-    ]
+    ],
+    "object-property-newline": [2,
+      {
+        "allowAllPropertiesOnSameLine": true
+      }
+    ],
   }
 }
