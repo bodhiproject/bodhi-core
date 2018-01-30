@@ -320,7 +320,7 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if current block is < bettingStartTime', async () => {
+    it('throws if current time is < bettingStartTime', async () => {
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._bettingStartTime);
 
       try {
@@ -334,7 +334,7 @@ contract('CentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if current block is >= bettingEndTime', async () => {
+    it('throws if current time is >= bettingEndTime', async () => {
       await timeMachine.increaseTime(topicEventParams._bettingEndTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._bettingEndTime);
 
@@ -376,7 +376,7 @@ contract('CentralizedOracle', (accounts) => {
       );
     });
 
-    describe('in valid block', () => {
+    describe('in valid time', () => {
       beforeEach(async () => {
         await timeMachine.increaseTime(topicEventParams._resultSettingStartTime - Utils.getCurrentBlockTime());
         assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
@@ -398,7 +398,7 @@ contract('CentralizedOracle', (accounts) => {
         );
       });
 
-      it('allows anyone to set the result if current block >= resultSettingEndTime', async () => {
+      it('allows anyone to set the result if current time >= resultSettingEndTime', async () => {
         await timeMachine.increaseTime(topicEventParams._resultSettingEndTime - Utils.getCurrentBlockTime());
         assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
@@ -465,8 +465,8 @@ contract('CentralizedOracle', (accounts) => {
       });
     });
 
-    describe('in invalid block', () => {
-      it('throws if block is below the bettingEndTime', async () => {
+    describe('in invalid time', () => {
+      it('throws if time is < bettingEndTime', async () => {
         assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
 
         try {

@@ -200,7 +200,7 @@ contract('DecentralizedOracle', (accounts) => {
       }
     });
 
-    it('throws if arbitrationEndTime is less than or equal to current time', async () => {
+    it('throws if arbitrationEndTime is <= current time', async () => {
       await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), arbitrationEndTime);
 
@@ -359,7 +359,7 @@ contract('DecentralizedOracle', (accounts) => {
   });
 
   describe('finalizeResult()', () => {
-    describe('in valid block range', () => {
+    describe('in valid time range', () => {
       beforeEach(async () => {
         const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
         await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
@@ -392,8 +392,8 @@ contract('DecentralizedOracle', (accounts) => {
       });
     });
 
-    describe('in invalid block range', () => {
-      it('throws if the block is below the arbitrationEndTime', async () => {
+    describe('in invalid time range', () => {
+      it('throws if the time is below the arbitrationEndTime', async () => {
         const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
         assert.isBelow(Utils.getCurrentBlockTime(), arbitrationEndTime);
 

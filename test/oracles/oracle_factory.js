@@ -2,16 +2,39 @@ const AddressManager = artifacts.require('./storage/AddressManager.sol');
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const CentralizedOracle = artifacts.require('./oracles/CentralizedOracle.sol');
 const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol');
-const BlockHeightManager = require('../helpers/block_height_manager');
+const TimeMachine = require('../helpers/time_machine');
 const Utils = require('../helpers/utils');
 const assert = require('chai').assert;
 const SolAssert = require('../helpers/sol_assert');
 
 const web3 = global.web3;
 
-contract('OracleFactory', (accounts) => {
-  const blockHeightManager = new BlockHeightManager(web3);
+function getCOracleParams(oracle, consensusThreshold) {
+  const currTime = Utils.getCurrentBlockTime();
+  return {
+    _eventAddress: '0x1111111111111111111111111111111111111111',
+    _numOfResults: 4,
+    _oracle: oracle,
+    _bettingStartTime: currTime + 1000,
+    _bettingEndTime: currTime + 3000,
+    _resultSettingStartTime: currTime + 4000,
+    _resultSettingEndTime: currTime + 6000,
+    _consensusThreshold: consensusThreshold,
+  };
+}
 
+function getDOracleParams(arbitrationEndTime, consensusThreshold) {
+  const currTime = Utils.getCurrentBlockTime();
+  return {
+    _eventAddress: '0x1111111111111111111111111111111111111111',
+    _numOfResults: 4,
+    _lastResultIndex: 2,
+    _arbitrationEndTime: arbitrationEndTime,
+    _consensusThreshold: consensusThreshold,
+  };
+}
+
+contract('OracleFactory', (accounts) => {
   const NATIVE_DECIMALS = 8;
   const BOT_DECIMALS = 8;
 
@@ -22,38 +45,26 @@ contract('OracleFactory', (accounts) => {
   const VERSION = 0;
   const CONSENSUS_THRESHOLD = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
-  const CORACLE_PARAMS = {
-    _eventAddress: '0x1111111111111111111111111111111111111111',
-    _numOfResults: 4,
-    _oracle: ORACLE,
-    _bettingStartBlock: 40,
-    _bettingEndBlock: 60,
-    _resultSettingStartBlock: 70,
-    _resultSettingEndBlock: 90,
-    _consensusThreshold: CONSENSUS_THRESHOLD,
-  };
-
-  const DORACLE_PARAMS = {
-    _eventAddress: '0x1111111111111111111111111111111111111111',
-    _numOfResults: 4,
-    _lastResultIndex: 2,
-    _arbitrationEndBlock: 200,
-    _consensusThreshold: CONSENSUS_THRESHOLD,
-  };
-
+  const timeMachine = new TimeMachine(web3);
   let addressManager;
   let oracleFactory;
   let oracle;
-
-  beforeEach(blockHeightManager.snapshot);
-  afterEach(blockHeightManager.revert);
+  let cOracleParams;
+  let dOracleParams;
 
   beforeEach(async () => {
+    await timeMachine.mine();
+    await timeMachine.snapshot();
+
     addressManager = await AddressManager.deployed({ from: ADMIN });
     oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
 
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+  });
+
+  afterEach(async () => {
+    await timeMachine.revert();
   });
 
   describe('constructor', () => {
@@ -85,30 +96,32 @@ contract('OracleFactory', (accounts) => {
 
   describe('createCentralizedOracle()', () => {
     it('initializes all the values', async () => {
-      const tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
+      cOracleParams = getCOracleParams(ORACLE, CONSENSUS_THRESHOLD);
+      const tx = await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
       const centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       assert.equal(await centralizedOracle.version.call(), 0);
       assert.equal(await centralizedOracle.owner.call(), USER1);
-      assert.equal(await centralizedOracle.eventAddress.call(), CORACLE_PARAMS._eventAddress);
-      assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), CORACLE_PARAMS._numOfResults);
+      assert.equal(await centralizedOracle.eventAddress.call(), cOracleParams._eventAddress);
+      assert.equal((await centralizedOracle.numOfResults.call()).toNumber(), cOracleParams._numOfResults);
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
-      assert.equal(await centralizedOracle.bettingStartBlock.call(), CORACLE_PARAMS._bettingStartBlock);
-      assert.equal(await centralizedOracle.bettingEndBlock.call(), CORACLE_PARAMS._bettingEndBlock);
-      assert.equal(await centralizedOracle.resultSettingStartBlock.call(), CORACLE_PARAMS._resultSettingStartBlock);
-      assert.equal(await centralizedOracle.resultSettingEndBlock.call(), CORACLE_PARAMS._resultSettingEndBlock);
+      assert.equal(await centralizedOracle.bettingStartTime.call(), cOracleParams._bettingStartTime);
+      assert.equal(await centralizedOracle.bettingEndTime.call(), cOracleParams._bettingEndTime);
+      assert.equal(await centralizedOracle.resultSettingStartTime.call(), cOracleParams._resultSettingStartTime);
+      assert.equal(await centralizedOracle.resultSettingEndTime.call(), cOracleParams._resultSettingEndTime);
       assert.equal(
         (await centralizedOracle.consensusThreshold.call()).toString(),
-        CORACLE_PARAMS._consensusThreshold.toString(),
+        cOracleParams._consensusThreshold.toString(),
       );
     });
 
     it('throws if the CentralizedOracle has already been created', async () => {
-      const tx = await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
+      cOracleParams = getCOracleParams(ORACLE, CONSENSUS_THRESHOLD);
+      const tx = await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
       const centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       try {
-        await oracleFactory.createCentralizedOracle(...Object.values(CORACLE_PARAMS), { from: USER1 });
+        await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
         assert.fail();
       } catch (e) {
         SolAssert.assertRevert(e);
@@ -118,24 +131,27 @@ contract('OracleFactory', (accounts) => {
 
   describe('createDecentralizedOracle()', () => {
     it('initializes all the values', async () => {
-      const tx = await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      const arbitrationEndTime = Utils.getCurrentBlockTime() 
+        + (await addressManager.arbitrationLength.call()).toNumber();
+      dOracleParams = getDOracleParams(arbitrationEndTime, CONSENSUS_THRESHOLD);
+      const tx = await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
       const decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
 
-      assert.equal(await decentralizedOracle.eventAddress.call(), DORACLE_PARAMS._eventAddress);
-      assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), DORACLE_PARAMS._numOfResults);
-      assert.equal(await decentralizedOracle.lastResultIndex.call(), DORACLE_PARAMS._lastResultIndex);
-      assert.equal(
-        (await decentralizedOracle.arbitrationEndBlock.call()).toNumber(),
-        DORACLE_PARAMS._arbitrationEndBlock,
-      );
+      assert.equal(await decentralizedOracle.eventAddress.call(), dOracleParams._eventAddress);
+      assert.equal((await decentralizedOracle.numOfResults.call()).toNumber(), dOracleParams._numOfResults);
+      assert.equal(await decentralizedOracle.lastResultIndex.call(), dOracleParams._lastResultIndex);
+      assert.equal((await decentralizedOracle.arbitrationEndTime.call()).toNumber(), dOracleParams._arbitrationEndTime);
     });
 
     it('throws if the DecentralizedOracle has already been created', async () => {
-      const tx = await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+      const arbitrationEndTime = Utils.getCurrentBlockTime() 
+        + (await addressManager.arbitrationLength.call()).toNumber();
+      dOracleParams = getDOracleParams(arbitrationEndTime, CONSENSUS_THRESHOLD);
+      const tx = await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
       const decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
 
       try {
-        await oracleFactory.createDecentralizedOracle(...Object.values(DORACLE_PARAMS), { from: USER1 });
+        await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
         assert.fail();
       } catch (e) {
         SolAssert.assertRevert(e);

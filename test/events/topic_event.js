@@ -858,7 +858,7 @@ contract('TopicEvent', (accounts) => {
         (await testTopic.totalBotValue.call()).toString(),
       );
 
-      // Advance to arbitrationEndBlock
+      // Advance to arbitrationEndTime
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
       await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), arbitrationEndTime);
