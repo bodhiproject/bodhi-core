@@ -72,10 +72,10 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _centralizedOracle The address of the CentralizedOracle that will decide the result.
     * @param _name The question or statement prediction broken down by multiple bytes32.
     * @param _resultNames The possible results.
-    * @param _bettingStartBlock The block when betting will start.
-    * @param _bettingEndBlock The block when betting will end.
-    * @param _resultSettingStartBlock The first block the CentralizedOracle can set the result.
-    * @param _resultSettingEndBlock The last block the CentralizedOracle can set the result.
+    * @param _bettingStartTime The unix time when betting will start.
+    * @param _bettingEndTime The unix time when betting will end.
+    * @param _resultSettingStartTime The unix time when the CentralizedOracle can set the result.
+    * @param _resultSettingEndTime The unix time when anyone can set the result.
     * @param _addressManager The address of the AddressManager.
     */
     function TopicEvent(
@@ -85,10 +85,10 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         bytes32[10] _name,
         bytes32[11] _resultNames,
         uint8 _numOfResults,
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock,
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock,
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime,
         address _addressManager)
         Ownable(_owner)
         public
@@ -98,9 +98,9 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         require(!_name[0].isEmpty());
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
-        require(_bettingEndBlock > _bettingStartBlock);
-        require(_resultSettingStartBlock >= _bettingEndBlock);
-        require(_resultSettingEndBlock > _resultSettingStartBlock);
+        require(_bettingEndTime > _bettingStartTime);
+        require(_resultSettingStartTime >= _bettingEndTime);
+        require(_resultSettingEndTime > _resultSettingStartTime);
 
         version = _version;
         owner = _owner;
@@ -111,8 +111,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         addressManager = IAddressManager(_addressManager);
         token = ERC20(addressManager.bodhiTokenAddress());
 
-        createCentralizedOracle(_centralizedOracle, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock,
-            _resultSettingEndBlock);
+        createCentralizedOracle(_centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,
+            _resultSettingEndTime);
     }
 
     /// @notice Fallback function that rejects any amount sent to the contract.
@@ -334,16 +334,16 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
     function createCentralizedOracle(
         address _centralizedOracle, 
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock, 
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock)
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime)
         private
     {
         address oracleFactory = addressManager.getOracleFactoryAddress(version);
         address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(address(this), 
-            numOfResults, _centralizedOracle, _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, 
-            _resultSettingEndBlock, addressManager.startingOracleThreshold());
+            numOfResults, _centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime, 
+            _resultSettingEndTime, addressManager.startingOracleThreshold());
         
         assert(newOracle != address(0));
         oracles.push(Oracle({
@@ -357,9 +357,9 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         returns (bool)
     {
         address oracleFactory = addressManager.getOracleFactoryAddress(version);
-        uint256 arbitrationBlockLength = uint256(addressManager.arbitrationBlockLength());
+        uint256 arbitrationLength = uint256(addressManager.arbitrationLength());
         address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
-            resultIndex, block.number.add(arbitrationBlockLength), _consensusThreshold);
+            resultIndex, block.timestamp.add(arbitrationLength), _consensusThreshold);
         
         assert(newOracle != address(0));
         oracles.push(Oracle({
