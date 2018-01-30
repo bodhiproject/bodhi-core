@@ -1,5 +1,5 @@
 bb235d67: INVALID_RESULT_INDEX()
-4f2c07f5: arbitrationEndBlock()
+5df2578f: arbitrationEndTime()
 f9b0b5b9: consensusThreshold()
 fad56779: eventAddress()
 61cac418: finalizeResult()

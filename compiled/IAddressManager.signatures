@@ -1,4 +1,4 @@
-bd23754f: arbitrationBlockLength()
+8db8203d: arbitrationLength()
 5145e0b6: bodhiTokenAddress()
 bb8613c5: consensusThresholdIncrement()
 105845ef: currentEventFactoryIndex()
