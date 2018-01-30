@@ -96,6 +96,9 @@ contract('TopicEvent', (accounts) => {
   });
 
   describe('constructor', () => {
+    const resultNames = ['Invalid', 'first', 'second', 'third'];
+    const numOfResults = 4;
+
     it('initializes all the values', async () => {
       assert.equal(await testTopic.owner.call(), OWNER);
       assert.equal(web3.toUtf8(await testTopic.eventName.call(0)), TOPIC_PARAMS._name[0]);
@@ -104,9 +107,9 @@ contract('TopicEvent', (accounts) => {
       assert.equal(web3.toUtf8(await testTopic.eventResults.call(1)), TOPIC_PARAMS._resultNames[0]);
       assert.equal(web3.toUtf8(await testTopic.eventResults.call(2)), TOPIC_PARAMS._resultNames[1]);
       assert.equal(web3.toUtf8(await testTopic.eventResults.call(3)), TOPIC_PARAMS._resultNames[2]);
-      assert.equal((await testTopic.numOfResults.call()).toNumber(), 4);
+      assert.equal((await testTopic.numOfResults.call()).toNumber(), numOfResults);
 
-      assert.equal(await centralizedOracle.numOfResults.call(), 4);
+      assert.equal(await centralizedOracle.numOfResults.call(), numOfResults);
       assert.equal(await centralizedOracle.oracle.call(), TOPIC_PARAMS._oracle);
       assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_PARAMS._bettingStartBlock);
       assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_PARAMS._bettingEndBlock);
@@ -125,9 +128,8 @@ contract('TopicEvent', (accounts) => {
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, TOPIC_PARAMS._resultNames,
-        TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-        TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
+        TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
 
@@ -151,9 +153,8 @@ contract('TopicEvent', (accounts) => {
         'abcdefghijklmnopqrstuvwxyzabcdef', 'abcdefghijklmnopqrstuvwxyzabcdef',
         'abcdefghijklmnopqrstuvwxyzabcdef'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, TOPIC_PARAMS._resultNames,
-        TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-        TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
+        TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
 
@@ -172,9 +173,8 @@ contract('TopicEvent', (accounts) => {
     it('should allow a space as the last character of a name array item', async () => {
       const name = ['abcdefghijklmnopqrstuvwxyzabcde ', 'fghijklmnopqrstuvwxyz'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, name, TOPIC_PARAMS._resultNames,
-        TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-        TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
+        TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
       );
       assert.equal(web3.toUtf8(await testTopic.eventName.call(0)), name[0]);
@@ -186,9 +186,8 @@ contract('TopicEvent', (accounts) => {
       async () => {
         const name = ['abcdefghijklmnopqrstuvwxyzabcdef', ' ghijklmnopqrstuvwxyz'];
         testTopic = await TopicEvent.new(
-          0, OWNER, TOPIC_PARAMS._oracle, name, TOPIC_PARAMS._resultNames,
-          TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-          TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+          0, OWNER, TOPIC_PARAMS._oracle, name, resultNames, numOfResults, TOPIC_PARAMS._bettingStartBlock,
+          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
           addressManager.address,
         );
         assert.equal(web3.toUtf8(await testTopic.eventName.call(0)), name[0]);
@@ -196,32 +195,11 @@ contract('TopicEvent', (accounts) => {
       },
     );
 
-    it('stops parsing the results when an empty slot is reached', async () => {
-      const results = ['first', 'second', '', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'ten'];
+    it('can handle using all 11 results', async () => {
+      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth',
+        'ninth', 'ten'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results,
-        TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-        TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
-        addressManager.address,
-      );
-
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(0)), RESULT_INVALID);
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(1)), 'first');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(2)), 'second');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(3)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(4)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(5)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(6)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(7)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(8)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(9)), '');
-      assert.equal(web3.toUtf8(await testTopic.eventResults.call(10)), '');
-    });
-
-    it('can handle using all 10 results', async () => {
-      const results = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'ten'];
-      testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results,
+        0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, 11,
         TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
         TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
@@ -241,10 +219,10 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('should only set the first 10 results', async () => {
-      const results = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth',
-        'ten', 'eleven'];
+      const results = [RESULT_INVALID, 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth',
+        'ninth', 'ten', 'eleven'];
       testTopic = await TopicEvent.new(
-        0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results,
+        0, OWNER, TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, 11,
         TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
         TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
         addressManager.address,
