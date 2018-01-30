@@ -8,8 +8,6 @@ module.exports = class Utils {
 
   // Gets the unix time in seconds of the current block
   static getCurrentBlockTime() {
-    const blockNum = web3.eth.blockNumber;
-    const block = web3.eth.getBlock(blockNum);
-    return block.timestamp;
+    return web3.eth.getBlock(web3.eth.blockNumber).timestamp;
   }
-}
+};

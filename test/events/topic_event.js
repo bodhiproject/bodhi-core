@@ -99,7 +99,7 @@ contract('TopicEvent', (accounts) => {
     const resultNames = ['Invalid', 'first', 'second', 'third'];
     const numOfResults = 4;
 
-    it.only('initializes all the values', async () => {
+    it('initializes all the values', async () => {
       assert.equal(await testTopic.owner.call(), OWNER);
       assert.equal(web3.toUtf8(await testTopic.eventName.call(0)), TOPIC_PARAMS._name[0]);
       assert.equal(web3.toUtf8(await testTopic.eventName.call(1)), TOPIC_PARAMS._name[1]);

@@ -3,7 +3,7 @@ const EventFactory = artifacts.require('./events/EventFactory.sol');
 const TopicEvent = artifacts.require('./events/TopicEvent.sol');
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const CentralizedOracle = artifacts.require('./oracles/CentralizedOracle.sol');
-const BlockHeightManager = require('../helpers/block_height_manager');
+const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 
@@ -11,7 +11,7 @@ const web3 = global.web3;
 const assert = require('chai').assert;
 
 contract('EventFactory', (accounts) => {
-  const blockHeightManager = new BlockHeightManager(web3);
+  const timeMachine = new TimeMachine(web3);
   const RESULT_INVALID = 'Invalid';
   const TOPIC_PARAMS = {
     _oracle: accounts[1],
@@ -31,10 +31,9 @@ contract('EventFactory', (accounts) => {
   let topic;
   const topicCreator = accounts[1];
 
-  beforeEach(blockHeightManager.snapshot);
-  afterEach(blockHeightManager.revert);
-
   beforeEach(async () => {
+    await timeMachine.snapshot();
+
     addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
 
     eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
@@ -47,6 +46,10 @@ contract('EventFactory', (accounts) => {
 
     const transaction = await eventFactory.createTopic(...Object.values(TOPIC_PARAMS), { from: topicCreator });
     topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
+  });
+
+  afterEach(async () => {
+    await timeMachine.revert()
   });
 
   describe('constructor', () => {
