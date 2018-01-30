@@ -64,9 +64,9 @@ contract AddressManager is IAddressManager, Ownable {
 
     /*
     * @dev Sets the arbitrationLength that DecentralizedOracles will use.
-    * @param _newLength The new length in seconds of an arbitration period.
+    * @param _newLength The new length in seconds (unix time) of an arbitration period.
     */
-    function setArbitrationBlockLength(uint256 _newLength) 
+    function setArbitrationLength(uint256 _newLength) 
         public
         onlyOwner()
     {   

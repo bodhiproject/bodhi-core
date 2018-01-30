@@ -68,7 +68,7 @@ contract DecentralizedOracle is Oracle {
 
     /*
     * @notice This can be called by anyone if this VotingOracle did not meet the consensus threshold and has reached 
-    *   the arbitration end block. This finishes the Event and allows winners to withdraw their winnings from the Event 
+    *   the arbitration end time. This finishes the Event and allows winners to withdraw their winnings from the Event 
     *   contract.
     * @return Flag to indicate success of finalizing the result.
     */
