@@ -17,10 +17,10 @@ contract('EventFactory', (accounts) => {
     _oracle: accounts[1],
     _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
     _resultNames: ['first', 'second', 'third'],
-    _bettingStartBlock: 40,
-    _bettingEndBlock: 60,
-    _resultSettingStartBlock: 70,
-    _resultSettingEndBlock: 90,
+    _bettingStartTime: 40,
+    _bettingEndTime: 60,
+    _resultSettingStartTime: 70,
+    _resultSettingEndTime: 90,
   };
   const NUM_OF_RESULTS = 4; // 3 results + invalid default
 
@@ -52,6 +52,7 @@ contract('EventFactory', (accounts) => {
   describe('constructor', () => {
     it('sets all the values', async () => {
       assert.equal(await eventFactory.version.call(), 0);
+      
     });
 
     it('should store the EventFactory address in AddressManager', async () => {

@@ -1,17 +1,17 @@
-function getParamFromTransaction(transaction, paramName) {
-  assert.isObject(transaction);
+const web3 = global.web3;
 
-  const logs = transaction.logs;
-  assert.equal(logs.length, 1, 'Too many logs found.');
+class Utils {
+  // Converts the amount to a big number given the number of decimals
+  getBigNumberWithDecimals(amount, numOfDecimals) {
+    return web3.toBigNumber(amount * Math.pow(10, numOfDecimals));
+  }
 
-  return logs[0].args[paramName];
+  // Gets the unix time in seconds of the current block
+  async getCurrentUnixTime() {
+    const blockNum = await web3.eth.getBlockNumber();
+    const block = await web3.eth.getBlock(blockNum);
+    return block.timestamp;
+  }
 }
 
-function getBigNumberWithDecimals(amount, numOfDecimals) {
-  return web3.toBigNumber(amount * Math.pow(10, numOfDecimals));
-}
-
-Object.assign(exports, {
-  getParamFromTransaction,
-  getBigNumberWithDecimals,
-});
+module.exports = Utils;
