@@ -1,6 +1,5 @@
 const web3 = global.web3;
 const assert = require('chai').assert;
-const bluebird = require('bluebird');
 
 const BodhiToken = artifacts.require('./tokens/BodhiToken.sol');
 const AddressManager = artifacts.require('./storage/AddressManager.sol');
@@ -38,7 +37,6 @@ contract('DecentralizedOracle', (accounts) => {
   const USER4 = accounts[5];
   const USER5 = accounts[6];
   const USER6 = accounts[7];
-  const RESULT_INVALID = 'Invalid';
   const CENTRALIZED_ORACLE_RESULT = 1;
   const NUM_OF_RESULTS = 4; // topicParams._resultNames + invalid default result
   const VERSION = 0;
@@ -51,7 +49,6 @@ contract('DecentralizedOracle', (accounts) => {
   let centralizedOracle;
   let decentralizedOracle;
   let arbitrationLength;
-  let consensusIncrement;
 
   before(async () => {
     // Fund accounts
@@ -79,7 +76,6 @@ contract('DecentralizedOracle', (accounts) => {
     assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
     arbitrationLength = (await addressManager.arbitrationLength.call()).toNumber();
-    consensusIncrement = (await addressManager.consensusThresholdIncrement.call()).toNumber();
 
     // Init factories
     eventFactory = await EventFactory.deployed(addressManager.address, { from: ADMIN });

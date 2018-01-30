@@ -8,7 +8,6 @@ const EventFactory = artifacts.require('./events/EventFactory.sol');
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const TopicEvent = artifacts.require('./TopicEvent.sol');
 const CentralizedOracle = artifacts.require('./oracles/CentralizedOracle.sol');
-const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol');
 const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
@@ -43,7 +42,6 @@ contract('CentralizedOracle', (accounts) => {
   const USER4 = accounts[6];
   const USER5 = accounts[7];
 
-  const RESULT_INVALID = 'Invalid';
   const NUM_OF_RESULTS = 4; // topicEventParams._resultNames + invalid default result
   const VERSION = 0;
 
@@ -52,7 +50,6 @@ contract('CentralizedOracle', (accounts) => {
   let token;
   let topicEvent;
   let centralizedOracle;
-  let decentralizedOracle;
   let startingOracleThreshold;
 
   before(async () => {
@@ -554,7 +551,7 @@ contract('CentralizedOracle', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
-      const startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+      startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
       await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
       assert.equal(
         (await token.allowance(ORACLE, topicEvent.address)).toString(),
@@ -576,7 +573,7 @@ contract('CentralizedOracle', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
-      const startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
+      startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
       await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
       assert.equal(
         (await token.allowance(ORACLE, topicEvent.address)).toString(),

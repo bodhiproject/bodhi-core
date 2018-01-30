@@ -11,8 +11,8 @@ module.exports = class TimeMachine {
         jsonrpc: '2.0',
         method: 'evm_increaseTime',
         params: [increaseSec],
-        id: id,
-      }, err1 => {
+        id,
+      }, (err1) => {
         if (err1) {
           return reject(err1);
         }
@@ -21,21 +21,19 @@ module.exports = class TimeMachine {
           jsonrpc: '2.0',
           method: 'evm_mine',
           id: id + 1,
-        }, (err2, res) => {
-          return err2 ? reject(err2) : resolve(res);
-        });
+        }, (err2, res) => (err2 ? reject(err2) : resolve(res)));
       });
     });
   }
 
   mine() {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.web3.currentProvider.sendAsync({
         jsonrpc: '2.0',
         method: 'evm_mine',
         id: new Date().getTime(),
         params: [],
-      }, (err, res) => {
+      }, (err) => {
         if (err) {
           console.error(`Error mining block: ${err.message}`);
           return reject(err);
@@ -71,7 +69,7 @@ module.exports = class TimeMachine {
         method: 'evm_revert',
         id: new Date().getTime(),
         params: [this.snapshotId],
-      }, (err, res) => {
+      }, (err) => {
         if (err) {
           return reject(err);
         }

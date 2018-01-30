@@ -24,7 +24,6 @@ function getCOracleParams(oracle, consensusThreshold) {
 }
 
 function getDOracleParams(arbitrationEndTime, consensusThreshold) {
-  const currTime = Utils.getCurrentBlockTime();
   return {
     _eventAddress: '0x1111111111111111111111111111111111111111',
     _numOfResults: 4,
@@ -35,20 +34,17 @@ function getDOracleParams(arbitrationEndTime, consensusThreshold) {
 }
 
 contract('OracleFactory', (accounts) => {
-  const NATIVE_DECIMALS = 8;
   const BOT_DECIMALS = 8;
 
   const ADMIN = accounts[0];
   const ORACLE = accounts[1];
   const USER1 = accounts[2];
 
-  const VERSION = 0;
   const CONSENSUS_THRESHOLD = Utils.getBigNumberWithDecimals(100, BOT_DECIMALS);
 
   const timeMachine = new TimeMachine(web3);
   let addressManager;
   let oracleFactory;
-  let oracle;
   let cOracleParams;
   let dOracleParams;
 
@@ -117,8 +113,7 @@ contract('OracleFactory', (accounts) => {
 
     it('throws if the CentralizedOracle has already been created', async () => {
       cOracleParams = getCOracleParams(ORACLE, CONSENSUS_THRESHOLD);
-      const tx = await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
-      const centralizedOracle = CentralizedOracle.at(tx.logs[0].args._contractAddress);
+      await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
 
       try {
         await oracleFactory.createCentralizedOracle(...Object.values(cOracleParams), { from: USER1 });
@@ -131,7 +126,7 @@ contract('OracleFactory', (accounts) => {
 
   describe('createDecentralizedOracle()', () => {
     it('initializes all the values', async () => {
-      const arbitrationEndTime = Utils.getCurrentBlockTime() 
+      const arbitrationEndTime = Utils.getCurrentBlockTime()
         + (await addressManager.arbitrationLength.call()).toNumber();
       dOracleParams = getDOracleParams(arbitrationEndTime, CONSENSUS_THRESHOLD);
       const tx = await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
@@ -144,11 +139,10 @@ contract('OracleFactory', (accounts) => {
     });
 
     it('throws if the DecentralizedOracle has already been created', async () => {
-      const arbitrationEndTime = Utils.getCurrentBlockTime() 
+      const arbitrationEndTime = Utils.getCurrentBlockTime()
         + (await addressManager.arbitrationLength.call()).toNumber();
       dOracleParams = getDOracleParams(arbitrationEndTime, CONSENSUS_THRESHOLD);
-      const tx = await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
-      const decentralizedOracle = DecentralizedOracle.at(tx.logs[0].args._contractAddress);
+      await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });
 
       try {
         await oracleFactory.createDecentralizedOracle(...Object.values(dOracleParams), { from: USER1 });

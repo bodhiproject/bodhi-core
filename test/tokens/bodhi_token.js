@@ -3,7 +3,6 @@ const BlockHeightManager = require('../helpers/block_height_manager');
 const Utils = require('../helpers/utils');
 const assert = require('chai').assert;
 const SolAssert = require('../helpers/sol_assert');
-const bluebird = require('bluebird');
 
 contract('BodhiToken', (accounts) => {
   const blockHeightManager = new BlockHeightManager(web3);
