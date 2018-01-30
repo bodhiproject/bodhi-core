@@ -52,7 +52,6 @@ contract('EventFactory', (accounts) => {
   describe('constructor', () => {
     it('sets all the values', async () => {
       assert.equal(await eventFactory.version.call(), 0);
-      
     });
 
     it('should store the EventFactory address in AddressManager', async () => {
