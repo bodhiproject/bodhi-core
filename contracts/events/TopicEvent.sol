@@ -357,7 +357,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         returns (bool)
     {
         address oracleFactory = addressManager.getOracleFactoryAddress(version);
-        uint256 arbitrationLength = uint256(addressManager.arbitrationLength());
+        uint256 arbitrationLength = addressManager.arbitrationLength();
         address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
             resultIndex, block.timestamp.add(arbitrationLength), _consensusThreshold);
         
