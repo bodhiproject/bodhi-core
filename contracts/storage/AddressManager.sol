@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 
 import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
@@ -6,11 +6,11 @@ import "../libs/Ownable.sol";
 contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
 
-    uint16 public arbitrationBlockLength = 100; // Amount of blocks for a VotingOracle arbitration.
     uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
     uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
-    uint256 public startingOracleThreshold = 100 * (10**botDecimals);
-    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals);
+    uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
+    uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
+    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
     mapping(uint16 => address) private eventFactoryAddresses;
     mapping(uint16 => address) private oracleFactoryAddresses;
 
@@ -63,16 +63,16 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /*
-    * @dev Sets the arbitrationBlockLength that DecentralizedOracles will use.
-    * @param _newBlockLength The new block length of an arbitration period.
+    * @dev Sets the arbitrationLength that DecentralizedOracles will use.
+    * @param _newLength The new length in seconds (unix time) of an arbitration period.
     */
-    function setArbitrationBlockLength(uint16 _newBlockLength) 
+    function setArbitrationLength(uint256 _newLength) 
         public
         onlyOwner()
     {   
-        require(_newBlockLength > 0);
+        require(_newLength > 0);
 
-        arbitrationBlockLength = _newBlockLength;
+        arbitrationLength = _newLength;
     }
 
     /*

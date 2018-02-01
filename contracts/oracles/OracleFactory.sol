@@ -17,10 +17,10 @@ contract OracleFactory is IOracleFactory {
         address indexed _eventAddress, 
         uint8 _numOfResults,
         address _oracle,
-        uint256 _bettingStartBlock, 
-        uint256 _bettingEndBlock, 
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock, 
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime,
         uint256 _consensusThreshold);
     event DecentralizedOracleCreated(
         uint16 indexed _version, 
@@ -28,7 +28,7 @@ contract OracleFactory is IOracleFactory {
         address indexed _eventAddress, 
         uint8 _numOfResults, 
         uint8 _lastResultIndex, 
-        uint256 _arbitrationEndBlock, 
+        uint256 _arbitrationEndTime, 
         uint256 _consensusThreshold);
 
     /*
@@ -46,25 +46,25 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         uint8 _numOfResults,
         address _oracle,
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock,
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock,
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime,
         uint256 _consensusThreshold) 
         public
         returns (address)
     {
-        bytes32 hash = getCentralizedOracleHash(_eventAddress, _numOfResults, _oracle, _bettingStartBlock, 
-            _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, _consensusThreshold);
+        bytes32 hash = getCentralizedOracleHash(_eventAddress, _numOfResults, _oracle, _bettingStartTime, 
+            _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
         // CentralizedOracle should not exist yet
         require(oracles[hash] == address(0));
 
         CentralizedOracle cOracle = new CentralizedOracle(version, msg.sender, _eventAddress, _numOfResults, _oracle, 
-            _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, _consensusThreshold);
+            _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
         oracles[hash] = address(cOracle);
 
-        CentralizedOracleCreated(version, address(cOracle), _eventAddress, _numOfResults, _oracle, _bettingStartBlock, 
-            _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, _consensusThreshold);
+        CentralizedOracleCreated(version, address(cOracle), _eventAddress, _numOfResults, _oracle, _bettingStartTime, 
+            _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
 
         return address(cOracle);
     }
@@ -73,22 +73,22 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         uint8 _numOfResults,
         uint8 _lastResultIndex,
-        uint256 _arbitrationEndBlock,
+        uint256 _arbitrationEndTime,
         uint256 _consensusThreshold)
         public
         returns (address)
     {
-        bytes32 hash = getDecentralizedOracleHash(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndBlock, 
+        bytes32 hash = getDecentralizedOracleHash(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime, 
             _consensusThreshold);
         // DecentralizedOracle should not exist yet
         require(oracles[hash] == address(0));
 
         DecentralizedOracle dOracle = new DecentralizedOracle(version, msg.sender, _eventAddress, _numOfResults, 
-            _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+            _lastResultIndex, _arbitrationEndTime, _consensusThreshold);
         oracles[hash] = address(dOracle);
 
         DecentralizedOracleCreated(version, address(dOracle), _eventAddress, _numOfResults, _lastResultIndex, 
-            _arbitrationEndBlock, _consensusThreshold);
+            _arbitrationEndTime, _consensusThreshold);
 
         return address(dOracle);
     }
@@ -97,29 +97,29 @@ contract OracleFactory is IOracleFactory {
         address _eventAddress,
         uint8 _numOfResults,
         address _oracle,
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock,
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock,
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime,
         uint256 _consensusThreshold) 
         private
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _oracle, _bettingStartBlock, _bettingEndBlock, 
-            _resultSettingStartBlock, _resultSettingEndBlock, _consensusThreshold);
+        return keccak256(_eventAddress, _numOfResults, _oracle, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
     }
 
     function getDecentralizedOracleHash(
         address _eventAddress,
         uint8 _numOfResults,
         uint8 _lastResultIndex,
-        uint256 _arbitrationEndBlock,
+        uint256 _arbitrationEndTime,
         uint256 _consensusThreshold) 
         private
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndBlock, _consensusThreshold);
+        return keccak256(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime, _consensusThreshold);
     }
 }

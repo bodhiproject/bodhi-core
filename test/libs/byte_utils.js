@@ -1,6 +1,6 @@
 const ByteUtilsMock = artifacts.require('./mocks/ByteUtilsMock.sol');
 
-contract('ByteUtils', (accounts) => {
+contract('ByteUtils', () => {
   let instance;
 
   before(async () => {

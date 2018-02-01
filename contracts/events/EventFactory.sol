@@ -30,10 +30,10 @@ contract EventFactory {
         address _oracle, 
         bytes32[10] _name, 
         bytes32[10] _resultNames, 
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock,
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock)
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime)
         public
         returns (TopicEvent topicEvent) 
     {
@@ -56,13 +56,13 @@ contract EventFactory {
             }
         }
 
-        bytes32 topicHash = getTopicHash(_name, resultNames, numOfResults, _bettingStartBlock, _bettingEndBlock, 
-            _resultSettingStartBlock, _resultSettingEndBlock);
+        bytes32 topicHash = getTopicHash(_name, resultNames, numOfResults, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime);
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
         TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
-            _bettingStartBlock, _bettingEndBlock, _resultSettingStartBlock, _resultSettingEndBlock, addressManager);
+            _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
         topics[topicHash] = topic;
 
         TopicCreated(version, address(topic), _name, resultNames, numOfResults);
@@ -74,15 +74,15 @@ contract EventFactory {
         bytes32[10] _name, 
         bytes32[11] _resultNames, 
         uint8 _numOfResults,
-        uint256 _bettingStartBlock,
-        uint256 _bettingEndBlock, 
-        uint256 _resultSettingStartBlock,
-        uint256 _resultSettingEndBlock)
+        uint256 _bettingStartTime,
+        uint256 _bettingEndTime,
+        uint256 _resultSettingStartTime,
+        uint256 _resultSettingEndTime)
         internal
         pure    
         returns (bytes32)
     {
-        return keccak256(_name, _resultNames, _numOfResults, _bettingStartBlock, _bettingEndBlock, 
-            _resultSettingStartBlock, _resultSettingEndBlock);
+        return keccak256(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime);
     }
 }

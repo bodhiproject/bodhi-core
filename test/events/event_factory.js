@@ -3,38 +3,45 @@ const EventFactory = artifacts.require('./events/EventFactory.sol');
 const TopicEvent = artifacts.require('./events/TopicEvent.sol');
 const OracleFactory = artifacts.require('./oracles/OracleFactory.sol');
 const CentralizedOracle = artifacts.require('./oracles/CentralizedOracle.sol');
-const BlockHeightManager = require('../helpers/block_height_manager');
+const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 
 const web3 = global.web3;
 const assert = require('chai').assert;
 
-contract('EventFactory', (accounts) => {
-  const blockHeightManager = new BlockHeightManager(web3);
-  const RESULT_INVALID = 'Invalid';
-  const TOPIC_PARAMS = {
-    _oracle: accounts[1],
+function getTopicParams(oracle) {
+  const currTime = Utils.getCurrentBlockTime();
+  return {
+    _oracle: oracle,
     _name: ['Will Apple stock reach $300 by t', 'he end of 2017?'],
     _resultNames: ['first', 'second', 'third'],
-    _bettingStartBlock: 40,
-    _bettingEndBlock: 60,
-    _resultSettingStartBlock: 70,
-    _resultSettingEndBlock: 90,
+    _bettingStartTime: currTime + 1000,
+    _bettingEndTime: currTime + 3000,
+    _resultSettingStartTime: currTime + 4000,
+    _resultSettingEndTime: currTime + 6000,
   };
+}
+
+contract('EventFactory', (accounts) => {
+  const timeMachine = new TimeMachine(web3);
+
+  const RESULT_INVALID = 'Invalid';
   const NUM_OF_RESULTS = 4; // 3 results + invalid default
+
+  const eventFactoryCreator = accounts[0];
+  const topicCreator = accounts[1];
 
   let addressManager;
   let eventFactory;
-  const eventFactoryCreator = accounts[0];
   let oracleFactory;
+  let topicParams;
   let topic;
-  const topicCreator = accounts[1];
-
-  beforeEach(blockHeightManager.snapshot);
-  afterEach(blockHeightManager.revert);
 
   beforeEach(async () => {
+    await timeMachine.mine();
+    await timeMachine.snapshot();
+
     addressManager = await AddressManager.deployed({ from: eventFactoryCreator });
 
     eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
@@ -45,8 +52,13 @@ contract('EventFactory', (accounts) => {
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: eventFactoryCreator });
     assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
 
-    const transaction = await eventFactory.createTopic(...Object.values(TOPIC_PARAMS), { from: topicCreator });
+    topicParams = getTopicParams(topicCreator);
+    const transaction = await eventFactory.createTopic(...Object.values(topicParams), { from: topicCreator });
     topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
+  });
+
+  afterEach(async () => {
+    await timeMachine.revert();
   });
 
   describe('constructor', () => {
@@ -79,24 +91,24 @@ contract('EventFactory', (accounts) => {
   describe('TopicEvent', () => {
     it('initializes all the values of the new topic correctly', async () => {
       assert.equal(await topic.owner.call(), topicCreator);
-      assert.equal(web3.toUtf8(await topic.eventName.call(0)), TOPIC_PARAMS._name[0]);
-      assert.equal(web3.toUtf8(await topic.eventName.call(1)), TOPIC_PARAMS._name[1]);
+      assert.equal(web3.toUtf8(await topic.eventName.call(0)), topicParams._name[0]);
+      assert.equal(web3.toUtf8(await topic.eventName.call(1)), topicParams._name[1]);
       assert.equal(web3.toUtf8(await topic.eventResults.call(0)), RESULT_INVALID);
-      assert.equal(web3.toUtf8(await topic.eventResults.call(1)), TOPIC_PARAMS._resultNames[0]);
-      assert.equal(web3.toUtf8(await topic.eventResults.call(2)), TOPIC_PARAMS._resultNames[1]);
-      assert.equal(web3.toUtf8(await topic.eventResults.call(3)), TOPIC_PARAMS._resultNames[2]);
+      assert.equal(web3.toUtf8(await topic.eventResults.call(1)), topicParams._resultNames[0]);
+      assert.equal(web3.toUtf8(await topic.eventResults.call(2)), topicParams._resultNames[1]);
+      assert.equal(web3.toUtf8(await topic.eventResults.call(3)), topicParams._resultNames[2]);
       assert.equal((await topic.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
 
       const centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
       assert.equal(await centralizedOracle.numOfResults.call(), 4);
-      assert.equal(await centralizedOracle.oracle.call(), TOPIC_PARAMS._oracle);
-      assert.equal(await centralizedOracle.bettingStartBlock.call(), TOPIC_PARAMS._bettingStartBlock);
-      assert.equal(await centralizedOracle.bettingEndBlock.call(), TOPIC_PARAMS._bettingEndBlock);
+      assert.equal(await centralizedOracle.oracle.call(), topicParams._oracle);
+      assert.equal(await centralizedOracle.bettingStartTime.call(), topicParams._bettingStartTime);
+      assert.equal(await centralizedOracle.bettingEndTime.call(), topicParams._bettingEndTime);
       assert.equal(
-        await centralizedOracle.resultSettingStartBlock.call(),
-        TOPIC_PARAMS._resultSettingStartBlock,
+        await centralizedOracle.resultSettingStartTime.call(),
+        topicParams._resultSettingStartTime,
       );
-      assert.equal(await centralizedOracle.resultSettingEndBlock.call(), TOPIC_PARAMS._resultSettingEndBlock);
+      assert.equal(await centralizedOracle.resultSettingEndTime.call(), topicParams._resultSettingEndTime);
       assert.equal(
         (await centralizedOracle.consensusThreshold.call()).toString(),
         (await addressManager.startingOracleThreshold.call()).toString(),
@@ -105,9 +117,10 @@ contract('EventFactory', (accounts) => {
 
     it('stops parsing the results when an empty slot is reached', async () => {
       const results = ['first', 'second', '', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'ten'];
+      topicParams = getTopicParams(topicCreator);
       const tx = await eventFactory.createTopic(
-        TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, results, TOPIC_PARAMS._bettingStartBlock,
-        TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+        topicParams._oracle, topicParams._name, results, topicParams._bettingStartTime,
+        topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
       );
       topic = await TopicEvent.at(tx.logs[0].args._topicAddress);
 
@@ -126,9 +139,10 @@ contract('EventFactory', (accounts) => {
 
     it('throws if name is empty', async () => {
       try {
+        topicParams = getTopicParams(topicCreator);
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, [], TOPIC_PARAMS._resultNames, TOPIC_PARAMS._bettingStartBlock,
-          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+          topicParams._oracle, [], topicParams._resultNames, topicParams._bettingStartTime,
+          topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
         );
         assert.fail();
       } catch (e) {
@@ -138,9 +152,10 @@ contract('EventFactory', (accounts) => {
 
     it('throws if resultNames 0 or 1 are empty', async () => {
       try {
+        topicParams = getTopicParams(topicCreator);
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, [], TOPIC_PARAMS._bettingStartBlock, TOPIC_PARAMS._bettingEndBlock,
-          TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+          topicParams._oracle, topicParams._name, [], topicParams._bettingStartTime, topicParams._bettingEndTime,
+          topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
         );
         assert.fail();
       } catch (e) {
@@ -148,9 +163,10 @@ contract('EventFactory', (accounts) => {
       }
 
       try {
+        topicParams = getTopicParams(topicCreator);
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['first', ''], TOPIC_PARAMS._bettingStartBlock,
-          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+          topicParams._oracle, topicParams._name, ['first', ''], topicParams._bettingStartTime,
+          topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
         );
         assert.fail();
       } catch (e) {
@@ -158,9 +174,10 @@ contract('EventFactory', (accounts) => {
       }
 
       try {
+        topicParams = getTopicParams(topicCreator);
         await eventFactory.createTopic(
-          TOPIC_PARAMS._oracle, TOPIC_PARAMS._name, ['', 'second'], TOPIC_PARAMS._bettingStartBlock,
-          TOPIC_PARAMS._bettingEndBlock, TOPIC_PARAMS._resultSettingStartBlock, TOPIC_PARAMS._resultSettingEndBlock,
+          topicParams._oracle, topicParams._name, ['', 'second'], topicParams._bettingStartTime,
+          topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
         );
         assert.fail();
       } catch (e) {
