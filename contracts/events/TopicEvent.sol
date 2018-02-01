@@ -39,7 +39,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
     IAddressManager private addressManager;
-    ERC20 private token;
     Oracle[] public oracles;
     mapping(address => bool) public didWithdraw;
 
@@ -107,9 +106,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         eventName = _name;
         eventResults = _resultNames;
         numOfResults = _numOfResults;
-
         addressManager = IAddressManager(_addressManager);
-        token = ERC20(addressManager.bodhiTokenAddress());
 
         createCentralizedOracle(_centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,
             _resultSettingEndTime);
@@ -154,8 +151,10 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         fromCentralizedOracle()
     {
         require(!oracles[0].didSetResult);
-        require(token.allowance(_oracle, address(this)) >= _consensusThreshold);
         require(status == Status.Betting);
+
+        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
+        require(token.allowance(_oracle, address(this)) >= _consensusThreshold);
 
         oracles[0].didSetResult = true;
         status = Status.OracleVoting;
@@ -191,6 +190,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         }
         require(isValidOracle);
         require(_amount > 0);
+
+        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
         require(token.allowance(_sender, address(this)) >= _amount);
 
         balances[_resultIndex].totalVotes = balances[_resultIndex].totalVotes.add(_amount);
@@ -265,7 +266,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
             msg.sender.transfer(qtumWon);
         }
         if (botWon > 0) {
-            token.transfer(msg.sender, botWon);
+            ERC20(addressManager.bodhiTokenAddress()).transfer(msg.sender, botWon);
         }
 
         WinningsWithdrawn(version, msg.sender, qtumWon, botWon);
