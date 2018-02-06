@@ -15,7 +15,7 @@ contract AddressManager is IAddressManager, Ownable {
     mapping(uint16 => address) private oracleFactoryAddresses;
 
     // Events
-    event BodhiTokenAddressChanged(address indexed _oldAddress, address indexed _newAddress);
+    event BodhiTokenAddressChanged(address indexed _newAddress);
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
 
@@ -31,7 +31,7 @@ contract AddressManager is IAddressManager, Ownable {
     {
         bodhiTokenAddress = _tokenAddress;
 
-        BodhiTokenAddressChanged(bodhiTokenAddress, _tokenAddress);
+        BodhiTokenAddressChanged(bodhiTokenAddress);
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
