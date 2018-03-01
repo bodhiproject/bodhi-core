@@ -281,7 +281,7 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, 0, topicParams._oracle, topicParams._name, topicParams._resultNames,
+          0, 0, topicParams._oracle, topicParams._name, topicParams._resultNames, numOfResults,
           topicParams._bettingStartTime, topicParams._bettingEndTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
@@ -296,9 +296,8 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, 0, topicParams._name, topicParams._resultNames,
-          topicParams._bettingStartTime, topicParams._bettingEndTime,
-          topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
+          0, OWNER, 0, topicParams._name, topicParams._resultNames, numOfResults, topicParams._bettingStartTime, 
+          topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
         );
         assert.fail();
@@ -311,9 +310,9 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, topicParams._centralizedOracle, topicParams._name,
-          topicParams._resultNames, topicParams._bettingStartTime, topicParams._bettingEndTime,
-          topicParams._resultSettingStartTime, topicParams._resultSettingEndTime, 0,
+          0, OWNER, topicParams._centralizedOracle, topicParams._name, topicParams._resultNames, numOfResults,
+          topicParams._bettingStartTime, topicParams._bettingEndTime, topicParams._resultSettingStartTime,
+          topicParams._resultSettingEndTime, 0,
         );
         assert.fail();
       } catch (e) {
@@ -325,7 +324,7 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, topicParams._centralizedOracle, [], topicParams._resultNames,
+          0, OWNER, topicParams._centralizedOracle, [], topicParams._resultNames, numOfResults,
           topicParams._bettingStartTime, topicParams._bettingEndTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
@@ -340,7 +339,7 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, topicParams._centralizedOracle, topicParams._name, [],
+          0, OWNER, topicParams._centralizedOracle, topicParams._name, [], 1,
           topicParams._bettingStartTime, topicParams._bettingEndTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
@@ -354,7 +353,7 @@ contract('TopicEvent', (accounts) => {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
           0, topicParams._owner, topicParams._centralizedOracle, topicParams._name,
-          ['first'], topicParams._bettingStartTime, topicParams._bettingEndTime,
+          ['first'], 2, topicParams._bettingStartTime, topicParams._bettingEndTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
         );
@@ -366,7 +365,7 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, topicParams._centralizedOracle, topicParams._name, ['', 'second'],
+          0, OWNER, topicParams._centralizedOracle, topicParams._name, ['', 'second'], 2,
           topicParams._bettingStartTime, topicParams._bettingEndTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
@@ -382,7 +381,7 @@ contract('TopicEvent', (accounts) => {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
           0, OWNER, topicParams._centralizedOracle, topicParams._name,
-          topicParams._resultNames, topicParams._bettingStartTime, topicParams._bettingStartTime,
+          topicParams._resultNames, numOfResults, topicParams._bettingStartTime, topicParams._bettingStartTime,
           topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
         );
@@ -397,8 +396,8 @@ contract('TopicEvent', (accounts) => {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
           0, OWNER, topicParams._centralizedOracle, topicParams._name,
-          topicParams._resultNames, topicParams._bettingStartTime, topicParams._bettingEndTime,
-          topicParams._bettingEndTime - 1, topicParams._resultSettingEndTime,
+          topicParams._resultNames, numOfResults, topicParams._bettingStartTime, topicParams._bettingEndTime,
+          topicParams._bettingEndTime - 1, topicParams._resultSettingEndTime, addressManager.address,
         );
         assert.fail();
       } catch (e) {
@@ -411,8 +410,8 @@ contract('TopicEvent', (accounts) => {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
           0, OWNER, topicParams._centralizedOracle, topicParams._name,
-          topicParams._resultNames, topicParams._bettingStartTime, topicParams._bettingEndTime,
-          topicParams._resultSettingStartTime, topicParams._resultSettingStartTime,
+          topicParams._resultNames, numOfResults, topicParams._bettingStartTime, topicParams._bettingEndTime,
+          topicParams._resultSettingStartTime, topicParams._resultSettingStartTime, addressManager.address,
         );
         assert.fail();
       } catch (e) {
