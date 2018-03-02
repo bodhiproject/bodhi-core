@@ -123,6 +123,34 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
+  describe('setCurrentEventFactoryIndex()', () => {
+    it('allows the owner to set the currentEventFactoryIndex', async () => {
+      assert.equal(await instance.currentEventFactoryIndex.call(), 0);
+
+      await instance.setCurrentEventFactoryIndex(5, { from: owner });
+      assert.equal(await instance.currentEventFactoryIndex.call(), 5);
+
+      await instance.setCurrentEventFactoryIndex(10, { from: owner });
+      assert.equal(await instance.currentEventFactoryIndex.call(), 10);
+
+      await instance.setCurrentEventFactoryIndex(0, { from: owner });
+      assert.equal(await instance.currentEventFactoryIndex.call(), 0);
+    });
+
+    it('throws if a non-owner tries set the currentEventFactoryIndex', async () => {
+      assert.equal(await instance.currentEventFactoryIndex.call(), 0);
+
+      try {
+        await instance.setCurrentEventFactoryIndex(5, { from: accounts[1] });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      assert.equal(await instance.currentEventFactoryIndex.call(), 0);
+    });
+  });
+
   describe('OracleFactoryAddresses', () => {
     it('should return the addresses if set', async () => {
       assert.equal(await instance.oracleFactoryVersionToAddress.call(0), 0);
@@ -173,6 +201,34 @@ contract('AdddressManager', (accounts) => {
       } catch (e) {
         SolAssert.assertRevert(e);
       }
+    });
+  });
+
+  describe('setCurrentOracleFactoryIndex()', () => {
+    it('allows the owner to set the currentOracleFactoryIndex', async () => {
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 0);
+
+      await instance.setCurrentOracleFactoryIndex(5, { from: owner });
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 5);
+
+      await instance.setCurrentOracleFactoryIndex(10, { from: owner });
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 10);
+
+      await instance.setCurrentOracleFactoryIndex(0, { from: owner });
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 0);
+    });
+
+    it('throws if a non-owner tries set the currentOracleFactoryIndex', async () => {
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 0);
+
+      try {
+        await instance.setCurrentOracleFactoryIndex(5, { from: accounts[1] });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      assert.equal(await instance.currentOracleFactoryIndex.call(), 0);
     });
   });
 });

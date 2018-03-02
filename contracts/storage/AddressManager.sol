@@ -6,8 +6,8 @@ import "../libs/Ownable.sol";
 contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
 
-    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
-    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
+    uint16 public currentEventFactoryIndex = 0; // Version of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Version of the next upgraded OracleFactory contract
     uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
     uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
