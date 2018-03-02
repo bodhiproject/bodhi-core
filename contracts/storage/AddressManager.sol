@@ -104,7 +104,7 @@ contract AddressManager is IAddressManager, Ownable {
     function getLastEventFactoryIndex() 
         public 
         view 
-        returns (uint16) 
+        returns (uint16 lastEventFactoryIndex) 
     {
         if (currentEventFactoryIndex == 0) {
             return 0;
@@ -118,7 +118,7 @@ contract AddressManager is IAddressManager, Ownable {
     function getLastOracleFactoryIndex() 
         public 
         view 
-        returns (uint16) 
+        returns (uint16 lastOracleFactoryIndex) 
     {
         if (currentOracleFactoryIndex == 0) {
             return 0;
