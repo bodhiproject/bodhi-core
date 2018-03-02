@@ -72,17 +72,17 @@ contract('AdddressManager', (accounts) => {
 
   describe('EventFactoryAddresses', () => {
     it('should return the addresses if set', async () => {
-      assert.equal(await instance.getEventFactoryAddress(0), 0);
-      assert.equal(await instance.getEventFactoryAddress(1), 0);
-      assert.equal(await instance.getEventFactoryAddress(2), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(0), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(1), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(2), 0);
 
       await instance.setEventFactoryAddress(eventAddress1, { from: owner });
       await instance.setEventFactoryAddress(eventAddress2, { from: owner });
       await instance.setEventFactoryAddress(eventAddress3, { from: owner });
 
-      assert.equal(await instance.getEventFactoryAddress(0), eventAddress1);
-      assert.equal(await instance.getEventFactoryAddress(1), eventAddress2);
-      assert.equal(await instance.getEventFactoryAddress(2), eventAddress3);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(0), eventAddress1);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(1), eventAddress2);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(2), eventAddress3);
     });
 
     it('should return the last EventFactory index', async () => {
@@ -99,7 +99,7 @@ contract('AdddressManager', (accounts) => {
     });
 
     it('throws if a non-owner tries setting the address', async () => {
-      assert.equal(await instance.getEventFactoryAddress(0), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(0), 0);
 
       try {
         await instance.setEventFactoryAddress(eventAddress1, { from: accounts[1] });
@@ -108,11 +108,11 @@ contract('AdddressManager', (accounts) => {
         SolAssert.assertRevert(e);
       }
 
-      assert.equal(await instance.getEventFactoryAddress(0), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(0), 0);
     });
 
     it('throws if trying to set an invalid address', async () => {
-      assert.equal(await instance.getEventFactoryAddress(0), 0);
+      assert.equal(await instance.eventFactoryVersionToAddress.call(0), 0);
 
       try {
         await instance.setEventFactoryAddress(0, { from: owner });
