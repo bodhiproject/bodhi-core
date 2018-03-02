@@ -296,7 +296,7 @@ contract('TopicEvent', (accounts) => {
       try {
         topicParams = getTopicParams(ORACLE);
         await TopicEvent.new(
-          0, OWNER, 0, topicParams._name, topicParams._resultNames, numOfResults, topicParams._bettingStartTime, 
+          0, OWNER, 0, topicParams._name, topicParams._resultNames, numOfResults, topicParams._bettingStartTime,
           topicParams._bettingEndTime, topicParams._resultSettingStartTime, topicParams._resultSettingEndTime,
           addressManager.address,
         );
