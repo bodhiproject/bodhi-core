@@ -49,6 +49,16 @@ contract AddressManager is IAddressManager, Ownable {
         EventFactoryAddressAdded(index, _contractAddress);
     }
 
+    /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets 
+    ///   upgraded, we need to be able to continue where the last version was.
+    /// @param _newIndex The index of where the next EventFactory version should start.
+    function setCurrentEventFactoryIndex(uint16 _newIndex)
+      public
+      onlyOwner()
+    {
+      currentEventFactoryIndex = _newIndex;
+    }
+
     /// @dev Allows the owner to set the address of an OracleFactory contract.
     /// @param _contractAddress The address of the OracleFactory contract.
     function setOracleFactoryAddress(address _contractAddress) 
@@ -62,6 +72,16 @@ contract AddressManager is IAddressManager, Ownable {
         currentOracleFactoryIndex++;
 
         OracleFactoryAddressAdded(index, _contractAddress);
+    }
+
+    /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets 
+    ///   upgraded, we need to be able to continue where the last version was.
+    /// @param _newIndex The index of where the next OracleFactory version should start.
+    function setCurrentOracleFactoryIndex(uint16 _newIndex)
+      public
+      onlyOwner()
+    {
+      currentOracleFactoryIndex = _newIndex;
     }
 
     /*
