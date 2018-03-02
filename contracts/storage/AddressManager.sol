@@ -45,6 +45,7 @@ contract AddressManager is IAddressManager, Ownable {
     {
         uint16 index = currentEventFactoryIndex;
         eventFactoryVersionToAddress[index] = _contractAddress;
+        eventFactoryAddressToVersion[_contractAddress] = index;
         currentEventFactoryIndex++;
 
         EventFactoryAddressAdded(index, _contractAddress);
@@ -59,6 +60,7 @@ contract AddressManager is IAddressManager, Ownable {
     {
         uint16 index = currentOracleFactoryIndex;
         oracleFactoryVersionToAddress[index] = _contractAddress;
+        oracleFactoryAddressToVersion[_contractAddress] = index;
         currentOracleFactoryIndex++;
 
         OracleFactoryAddressAdded(index, _contractAddress);
