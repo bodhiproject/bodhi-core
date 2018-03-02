@@ -84,7 +84,7 @@ contract('DecentralizedOracle', (accounts) => {
 
     const oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+    assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
   });
 
   beforeEach(async () => {

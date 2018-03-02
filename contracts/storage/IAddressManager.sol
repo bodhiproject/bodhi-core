@@ -13,5 +13,4 @@ contract IAddressManager {
     function setBodhiTokenAddress(address _tokenAddress) public;
     function getLastEventFactoryIndex() public view returns (uint16);
     function getLastOracleFactoryIndex() public view returns (uint16);
-    function getOracleFactoryAddress(uint16 _indexOfAddress) public view returns (address);
 }

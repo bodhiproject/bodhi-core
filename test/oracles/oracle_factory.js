@@ -56,7 +56,7 @@ contract('OracleFactory', (accounts) => {
     oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
 
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+    assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
   });
 
   afterEach(async () => {
@@ -70,13 +70,13 @@ contract('OracleFactory', (accounts) => {
 
     it('stores the OracleFactory address in AddressManager', async () => {
       const index = await addressManager.getLastOracleFactoryIndex();
-      assert.equal(await addressManager.getOracleFactoryAddress(index), oracleFactory.address);
+      assert.equal(await addressManager.oracleFactoryVersionToAddress.call(index), oracleFactory.address);
     });
 
     it('saves the correct version number', async () => {
       oracleFactory = await OracleFactory.new(addressManager.address, { from: ADMIN });
       await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
-      assert.equal(await addressManager.getOracleFactoryAddress(1), oracleFactory.address);
+      assert.equal(await addressManager.oracleFactoryVersionToAddress.call(1), oracleFactory.address);
       assert.equal(await oracleFactory.version.call(), 1);
     });
 

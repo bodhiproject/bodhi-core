@@ -125,17 +125,17 @@ contract('AdddressManager', (accounts) => {
 
   describe('OracleFactoryAddresses', () => {
     it('should return the addresses if set', async () => {
-      assert.equal(await instance.getOracleFactoryAddress(0), 0);
-      assert.equal(await instance.getOracleFactoryAddress(1), 0);
-      assert.equal(await instance.getOracleFactoryAddress(2), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(0), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(1), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(2), 0);
 
       await instance.setOracleFactoryAddress(oracleAddress1, { from: owner });
       await instance.setOracleFactoryAddress(oracleAddress2, { from: owner });
       await instance.setOracleFactoryAddress(oracleAddress3, { from: owner });
 
-      assert.equal(await instance.getOracleFactoryAddress(0), oracleAddress1);
-      assert.equal(await instance.getOracleFactoryAddress(1), oracleAddress2);
-      assert.equal(await instance.getOracleFactoryAddress(2), oracleAddress3);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(0), oracleAddress1);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(1), oracleAddress2);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(2), oracleAddress3);
     });
 
     it('should return the last OracleFactory index', async () => {
@@ -152,7 +152,7 @@ contract('AdddressManager', (accounts) => {
     });
 
     it('throws if a non-owner tries setting the address', async () => {
-      assert.equal(await instance.getOracleFactoryAddress(0), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(0), 0);
 
       try {
         await instance.setOracleFactoryAddress(oracleAddress1, { from: accounts[1] });
@@ -161,11 +161,11 @@ contract('AdddressManager', (accounts) => {
         SolAssert.assertRevert(e);
       }
 
-      assert.equal(await instance.getOracleFactoryAddress(0), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(0), 0);
     });
 
     it('throws if trying to set an invalid address', async () => {
-      assert.equal(await instance.getOracleFactoryAddress(0), 0);
+      assert.equal(await instance.oracleFactoryVersionToAddress.call(0), 0);
 
       try {
         await instance.setOracleFactoryAddress(0, { from: owner });
