@@ -77,11 +77,11 @@ contract('CentralizedOracle', (accounts) => {
 
     eventFactory = await EventFactory.deployed(addressManager.address, { from: ADMIN });
     await addressManager.setEventFactoryAddress(eventFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
+    assert.equal(await addressManager.eventFactoryVersionToAddress.call(0), eventFactory.address);
 
     const oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+    assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
   });
 
   beforeEach(async () => {

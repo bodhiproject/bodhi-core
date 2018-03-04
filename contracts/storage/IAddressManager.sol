@@ -7,10 +7,10 @@ contract IAddressManager {
     uint256 public arbitrationLength;
     uint256 public startingOracleThreshold;
     uint256 public consensusThresholdIncrement;
+    mapping(uint16 => address) public eventFactoryVersionToAddress;
+    mapping(uint16 => address) public oracleFactoryVersionToAddress;
 
     function setBodhiTokenAddress(address _tokenAddress) public;
-    function getLastEventFactoryIndex() public view returns (uint16);
-    function getEventFactoryAddress(uint16 _indexOfAddress) public view returns (address);
-    function getLastOracleFactoryIndex() public view returns (uint16);
-    function getOracleFactoryAddress(uint16 _indexOfAddress) public view returns (address);
+    function getLastEventFactoryIndex() public view returns (uint16 lastEventFactoryIndex);
+    function getLastOracleFactoryIndex() public view returns (uint16 lastOracleFactoryIndex);
 }

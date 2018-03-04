@@ -6,13 +6,13 @@ import "../libs/Ownable.sol";
 contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
 
-    uint16 public currentEventFactoryIndex = 0; // Index of the next upgraded EventFactory contract
-    uint16 public currentOracleFactoryIndex = 0; // Index of the next upgraded OracleFactory contract
+    uint16 public currentEventFactoryIndex = 0; // Version of the next upgraded EventFactory contract
+    uint16 public currentOracleFactoryIndex = 0; // Version of the next upgraded OracleFactory contract
     uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
     uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
-    mapping(uint16 => address) private eventFactoryAddresses;
-    mapping(uint16 => address) private oracleFactoryAddresses;
+    mapping(address => uint16) public eventFactoryAddressToVersion;
+    mapping(address => uint16) public oracleFactoryAddressToVersion;
 
     // Events
     event BodhiTokenAddressChanged(address indexed _newAddress);
@@ -42,10 +42,21 @@ contract AddressManager is IAddressManager, Ownable {
         validAddress(_contractAddress)
     {
         uint16 index = currentEventFactoryIndex;
-        eventFactoryAddresses[index] = _contractAddress;
+        eventFactoryVersionToAddress[index] = _contractAddress;
+        eventFactoryAddressToVersion[_contractAddress] = index;
         currentEventFactoryIndex++;
 
         EventFactoryAddressAdded(index, _contractAddress);
+    }
+
+    /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets 
+    ///   upgraded, we need to be able to continue where the last version was.
+    /// @param _newIndex The index of where the next EventFactory version should start.
+    function setCurrentEventFactoryIndex(uint16 _newIndex)
+      public
+      onlyOwner()
+    {
+      currentEventFactoryIndex = _newIndex;
     }
 
     /// @dev Allows the owner to set the address of an OracleFactory contract.
@@ -56,10 +67,21 @@ contract AddressManager is IAddressManager, Ownable {
         validAddress(_contractAddress) 
     {
         uint16 index = currentOracleFactoryIndex;
-        oracleFactoryAddresses[index] = _contractAddress;
+        oracleFactoryVersionToAddress[index] = _contractAddress;
+        oracleFactoryAddressToVersion[_contractAddress] = index;
         currentOracleFactoryIndex++;
 
         OracleFactoryAddressAdded(index, _contractAddress);
+    }
+
+    /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets 
+    ///   upgraded, we need to be able to continue where the last version was.
+    /// @param _newIndex The index of where the next OracleFactory version should start.
+    function setCurrentOracleFactoryIndex(uint16 _newIndex)
+      public
+      onlyOwner()
+    {
+      currentOracleFactoryIndex = _newIndex;
     }
 
     /*
@@ -102,7 +124,7 @@ contract AddressManager is IAddressManager, Ownable {
     function getLastEventFactoryIndex() 
         public 
         view 
-        returns (uint16) 
+        returns (uint16 lastEventFactoryIndex) 
     {
         if (currentEventFactoryIndex == 0) {
             return 0;
@@ -111,39 +133,17 @@ contract AddressManager is IAddressManager, Ownable {
         }
     }
 
-    /// @notice Gets the address of the EventFactory contract.
-    /// @param _indexOfAddress The index of the stored EventFactory contract address.
-    /// @return The address of the EventFactory contract.
-    function getEventFactoryAddress(uint16 _indexOfAddress) 
-        public 
-        view 
-        returns (address) 
-    {
-        return eventFactoryAddresses[_indexOfAddress];
-    }
-
     /// @notice Gets the latest index of a deployed OracleFactory contract.
     /// @return The index of the latest deployed OracleFactory contract.
     function getLastOracleFactoryIndex() 
         public 
         view 
-        returns (uint16) 
+        returns (uint16 lastOracleFactoryIndex) 
     {
         if (currentOracleFactoryIndex == 0) {
             return 0;
         } else {
             return currentOracleFactoryIndex - 1;
         }
-    }
-
-    /// @notice Gets the address of the OracleFactory contract.
-    /// @param _indexOfAddress The index of the stored OracleFactory contract address.
-    /// @return The address of OracleFactory contract.
-    function getOracleFactoryAddress(uint16 _indexOfAddress) 
-        public 
-        view 
-        returns (address) 
-    {
-        return oracleFactoryAddresses[_indexOfAddress];
     }
 }

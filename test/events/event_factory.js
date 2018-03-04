@@ -46,11 +46,11 @@ contract('EventFactory', (accounts) => {
 
     eventFactory = await EventFactory.deployed(addressManager.address, { from: eventFactoryCreator });
     await addressManager.setEventFactoryAddress(eventFactory.address, { from: eventFactoryCreator });
-    assert.equal(await addressManager.getEventFactoryAddress(0), eventFactory.address);
+    assert.equal(await addressManager.eventFactoryVersionToAddress.call(0), eventFactory.address);
 
     oracleFactory = await OracleFactory.deployed(addressManager.address, { from: eventFactoryCreator });
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: eventFactoryCreator });
-    assert.equal(await addressManager.getOracleFactoryAddress(0), oracleFactory.address);
+    assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
 
     topicParams = getTopicParams(topicCreator);
     const transaction = await eventFactory.createTopic(...Object.values(topicParams), { from: topicCreator });
@@ -68,13 +68,13 @@ contract('EventFactory', (accounts) => {
 
     it('should store the EventFactory address in AddressManager', async () => {
       const index = await addressManager.getLastEventFactoryIndex();
-      assert.equal(await addressManager.getEventFactoryAddress(index), eventFactory.address);
+      assert.equal(await addressManager.eventFactoryVersionToAddress.call(index), eventFactory.address);
     });
 
     it('saves the correct version number', async () => {
       eventFactory = await EventFactory.new(addressManager.address, { from: eventFactoryCreator });
       await addressManager.setEventFactoryAddress(eventFactory.address, { from: eventFactoryCreator });
-      assert.equal(await addressManager.getEventFactoryAddress(1), eventFactory.address);
+      assert.equal(await addressManager.eventFactoryVersionToAddress.call(1), eventFactory.address);
       assert.equal(await eventFactory.version.call(), 1);
     });
 

@@ -341,7 +341,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         uint256 _resultSettingEndTime)
         private
     {
-        address oracleFactory = addressManager.getOracleFactoryAddress(version);
+        address oracleFactory = addressManager.oracleFactoryVersionToAddress(version);
         address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(address(this), 
             numOfResults, _centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime, 
             _resultSettingEndTime, addressManager.startingOracleThreshold());
@@ -357,7 +357,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         private 
         returns (bool)
     {
-        address oracleFactory = addressManager.getOracleFactoryAddress(version);
+        address oracleFactory = addressManager.oracleFactoryVersionToAddress(version);
         uint256 arbitrationLength = addressManager.arbitrationLength();
         address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
             resultIndex, block.timestamp.add(arbitrationLength), _consensusThreshold);
