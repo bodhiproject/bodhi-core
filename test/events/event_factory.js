@@ -100,6 +100,7 @@ contract('EventFactory', (accounts) => {
       assert.equal(web3.toUtf8(await topic.eventResults.call(2)), topicParams._resultNames[1]);
       assert.equal(web3.toUtf8(await topic.eventResults.call(3)), topicParams._resultNames[2]);
       assert.equal((await topic.numOfResults.call()).toNumber(), NUM_OF_RESULTS);
+      SolAssert.assertBNEqual(await topic.escrowAmount.call(), escrowAmount);
 
       const centralizedOracle = await CentralizedOracle.at((await topic.oracles.call(0))[0]);
       assert.equal(await centralizedOracle.numOfResults.call(), 4);
@@ -111,10 +112,12 @@ contract('EventFactory', (accounts) => {
         topicParams._resultSettingStartTime,
       );
       assert.equal(await centralizedOracle.resultSettingEndTime.call(), topicParams._resultSettingEndTime);
-      assert.equal(
-        (await centralizedOracle.consensusThreshold.call()).toString(),
-        (await addressManager.startingOracleThreshold.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await centralizedOracle.consensusThreshold.call(),
+        await addressManager.startingOracleThreshold.call());
+    });
+
+    it('transfers the escrow from the event creator to the AddressManager', async () => {
+      assert.equal((await token.balanceOf(addressManager.address)).toString(), escrowAmount.toString());
     });
 
     it('stops parsing the results when an empty slot is reached', async () => {
