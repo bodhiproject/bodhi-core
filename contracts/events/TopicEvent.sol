@@ -90,7 +90,6 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         uint256 _bettingEndTime,
         uint256 _resultSettingStartTime,
         uint256 _resultSettingEndTime,
-        uint256 _escrowAmount,
         address _addressManager)
         Ownable(_owner)
         public
@@ -109,8 +108,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         eventName = _name;
         eventResults = _resultNames;
         numOfResults = _numOfResults;
-        escrowAmount = _escrowAmount;
         addressManager = IAddressManager(_addressManager);
+        escrowAmount = addressManager.eventEscrowAmount();
 
         createCentralizedOracle(_centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,
             _resultSettingEndTime);
