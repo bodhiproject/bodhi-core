@@ -12,6 +12,7 @@ const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol
 const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
+const { mintBodhiTokens } = require('../helpers/init_helper');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -58,24 +59,7 @@ contract('TopicEvent', (accounts) => {
   let decentralizedOracle;
 
   before(async () => {
-    // Fund accounts with this amount
-    const botBalance = Utils.getBigNumberWithDecimals(1000, BOT_DECIMALS);
-
-    token = await BodhiToken.deployed({ from: ADMIN });
-    await token.mintByOwner(OWNER, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(OWNER)).toString(), botBalance.toString());
-    await token.mintByOwner(ORACLE, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(ORACLE)).toString(), botBalance.toString());
-    await token.mintByOwner(USER1, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER1)).toString(), botBalance.toString());
-    await token.mintByOwner(USER2, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER2)).toString(), botBalance.toString());
-    await token.mintByOwner(USER3, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER3)).toString(), botBalance.toString());
-    await token.mintByOwner(USER4, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER4)).toString(), botBalance.toString());
-    await token.mintByOwner(USER5, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER5)).toString(), botBalance.toString());
+    token = await mintBodhiTokens(ADMIN, accounts);
 
     addressManager = await AddressManager.deployed({ from: ADMIN });
     await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
