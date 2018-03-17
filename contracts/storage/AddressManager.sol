@@ -44,7 +44,7 @@ contract AddressManager is IAddressManager, Ownable {
         ERC20 token = ERC20(bodhiTokenAddress);
         require(token.allowance(_creator, address(this)) >= eventEscrowAmount);
 
-        token.transferFrom(_creator, addressManager, eventEscrowAmount);
+        token.transferFrom(_creator, address(this), eventEscrowAmount);
 
         EscrowDeposited(_creator, eventEscrowAmount);
     }
@@ -57,7 +57,7 @@ contract AddressManager is IAddressManager, Ownable {
         external
         isWhitelisted(msg.sender)
     {
-        ERC20(bodhiTokenAddress).transfer(address(this), _creator, _escrowAmount);
+        ERC20(bodhiTokenAddress).transfer(_creator, _escrowAmount);
 
         EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
     }

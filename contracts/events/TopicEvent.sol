@@ -38,7 +38,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
-    uint256 public escrowAmount,
+    uint256 public escrowAmount;
     IAddressManager private addressManager;
     Oracle[] public oracles;
     mapping(address => bool) public didWithdraw;
