@@ -38,6 +38,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
+    uint256 public escrowAmount,
     IAddressManager private addressManager;
     Oracle[] public oracles;
     mapping(address => bool) public didWithdraw;
@@ -75,6 +76,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _bettingEndTime The unix time when betting will end.
     * @param _resultSettingStartTime The unix time when the CentralizedOracle can set the result.
     * @param _resultSettingEndTime The unix time when anyone can set the result.
+    * @param _escrowAmount The amount of BOT deposited to create the Event.
     * @param _addressManager The address of the AddressManager.
     */
     function TopicEvent(
@@ -88,6 +90,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         uint256 _bettingEndTime,
         uint256 _resultSettingStartTime,
         uint256 _resultSettingEndTime,
+        uint256 _escrowAmount,
         address _addressManager)
         Ownable(_owner)
         public
@@ -106,6 +109,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         eventName = _name;
         eventResults = _resultNames;
         numOfResults = _numOfResults;
+        escrowAmount = _escrowAmount;
         addressManager = IAddressManager(_addressManager);
 
         createCentralizedOracle(_centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,

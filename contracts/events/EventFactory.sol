@@ -63,8 +63,10 @@ contract EventFactory {
 
         IAddressManager(addressManager).transferEscrow(msg.sender);
 
+        uint256 escrowAmount = IAddressManager(addressManager).eventEscrowAmount();
         TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
-            _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
+            _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, escrowAmount,
+            addressManager);
         topics[topicHash] = topic;
 
         TopicCreated(version, address(topic), _name, resultNames, numOfResults);

@@ -15,7 +15,7 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
     mapping(address => uint16) public eventFactoryAddressToVersion;
     mapping(address => uint16) public oracleFactoryAddressToVersion;
-    mapping(address => bool) public whitelistedContracts;
+    mapping(address => bool) private whitelistedContracts;
 
     // Events
     event BodhiTokenAddressChanged(address indexed _newAddress);
