@@ -11,6 +11,7 @@ contract IAddressManager {
     mapping(uint16 => address) public eventFactoryVersionToAddress;
     mapping(uint16 => address) public oracleFactoryVersionToAddress;
 
+    function transferEscrow(address _creator) external;
     function setBodhiTokenAddress(address _tokenAddress) public;
     function getLastEventFactoryIndex() public view returns (uint16 lastEventFactoryIndex);
     function getLastOracleFactoryIndex() public view returns (uint16 lastOracleFactoryIndex);

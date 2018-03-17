@@ -2,6 +2,7 @@ pragma solidity ^0.4.18;
 
 import "./IAddressManager.sol";
 import "../libs/Ownable.sol";
+import "../tokens/ERC20.sol";
 
 contract AddressManager is IAddressManager, Ownable {
     uint256 public constant botDecimals = 8; // Number of decimals for BOT
@@ -20,8 +21,25 @@ contract AddressManager is IAddressManager, Ownable {
     event BodhiTokenAddressChanged(address indexed _newAddress);
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
+    event EscrowDeposited(address indexed _depositer, uint256 escrowAmount);
 
     function AddressManager() Ownable(msg.sender) public {
+    }
+
+    /*
+    * Transfer the escrow amount needed to create an Event.
+    * @param _creator The address of the creator.
+    */
+    function transferEscrow(address _creator)
+        external
+    {
+        require(whitelistedContracts[msg.sender]);
+        ERC20 token = ERC20(bodhiTokenAddress);
+        require(token.allowance(_creator, address(this)) >= eventEscrowAmount);
+
+        token.transferFrom(_creator, addressManager, eventEscrowAmount);
+
+        EscrowDeposited(_creator, eventEscrowAmount);
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.

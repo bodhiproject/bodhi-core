@@ -2,7 +2,6 @@ pragma solidity ^0.4.18;
 
 import "./TopicEvent.sol";
 import "../storage/IAddressManager.sol";
-import "../tokens/ERC20.sol";
 
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
@@ -10,7 +9,6 @@ contract EventFactory {
 
     uint16 public version;
     address private addressManager;
-    uint256 public eventEscrowAmount;
     mapping(bytes32 => TopicEvent) public topics;
 
     // Events
@@ -26,7 +24,6 @@ contract EventFactory {
 
         addressManager = _addressManager;
         version = IAddressManager(addressManager).currentEventFactoryIndex();
-        eventEscrowAmount = IAddressManager(addressManager).eventEscrowAmount();
     }
     
     function createTopic(
@@ -64,7 +61,7 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        transferEscrow(msg.sender);
+        IAddressManager(addressManager).transferEscrow(msg.sender);
 
         TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
@@ -89,18 +86,5 @@ contract EventFactory {
     {
         return keccak256(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime, 
             _resultSettingStartTime, _resultSettingEndTime);
-    }
-
-    /*
-    * Transfer the escrow amount needed to create an Event.
-    * @param _creator The address of the creator.
-    */
-    function transferEscrow(address _creator)
-        private
-    {
-        ERC20 token = ERC20(addressManager.bodhiTokenAddress());
-        require(token.allowance(_creator, addressManager) >= eventEscrowAmount);
-
-        token.transferFrom(_creator, addressManager, eventEscrowAmount);
     }
 }
