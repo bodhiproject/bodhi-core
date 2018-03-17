@@ -11,7 +11,7 @@ const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol
 const TimeMachine = require('../helpers/time_machine');
 const Utils = require('../helpers/utils');
 const SolAssert = require('../helpers/sol_assert');
-const { mintBodhiTokens } = require('../helpers/init_helper');
+const ContractHelper = require('../helpers/contract_helper');
 
 function getTopicParams(oracle) {
   const currTime = Utils.getCurrentBlockTime();
@@ -52,7 +52,7 @@ contract('DecentralizedOracle', (accounts) => {
   let arbitrationLength;
 
   before(async () => {
-    token = await mintBodhiTokens(ADMIN, accounts);
+    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
 
     // Init AddressManager
     addressManager = await AddressManager.deployed({ from: ADMIN });

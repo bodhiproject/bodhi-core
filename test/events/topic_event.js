@@ -12,7 +12,7 @@ const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol
 const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
-const { mintBodhiTokens } = require('../helpers/init_helper');
+const ContractHelper = require('../helpers/contract_helper');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -59,7 +59,7 @@ contract('TopicEvent', (accounts) => {
   let decentralizedOracle;
 
   before(async () => {
-    token = await mintBodhiTokens(ADMIN, accounts);
+    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
 
     addressManager = await AddressManager.deployed({ from: ADMIN });
     await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
