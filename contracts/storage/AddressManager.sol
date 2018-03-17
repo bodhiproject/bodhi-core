@@ -8,6 +8,7 @@ contract AddressManager is IAddressManager, Ownable {
 
     uint16 public currentEventFactoryIndex = 0; // Version of the next upgraded EventFactory contract
     uint16 public currentOracleFactoryIndex = 0; // Version of the next upgraded OracleFactory contract
+    uint256 public eventEscrowAmount = 100 * (10**botDecimals); // Amount of escrow deposit needed to create an event
     uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
     uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold

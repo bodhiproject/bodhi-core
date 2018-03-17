@@ -4,6 +4,7 @@ contract IAddressManager {
     uint16 public currentEventFactoryIndex;
     uint16 public currentOracleFactoryIndex;
     address public bodhiTokenAddress;
+    uint256 public eventEscrowAmount;
     uint256 public arbitrationLength;
     uint256 public startingOracleThreshold;
     uint256 public consensusThresholdIncrement;
