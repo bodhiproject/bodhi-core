@@ -57,8 +57,7 @@ contract AddressManager is IAddressManager, Ownable {
         external
         isWhitelisted(msg.sender)
     {
-        ERC20 token = ERC20(bodhiTokenAddress);
-        token.transfer(address(this), _creator, _escrowAmount);
+        ERC20(bodhiTokenAddress).transfer(address(this), _creator, _escrowAmount);
 
         EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
     }
