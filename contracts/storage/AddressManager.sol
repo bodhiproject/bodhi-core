@@ -31,6 +31,7 @@ contract AddressManager is IAddressManager, Ownable {
         validAddress(_tokenAddress) 
     {
         bodhiTokenAddress = _tokenAddress;
+        whitelistedContracts[_tokenAddress] = true;
 
         BodhiTokenAddressChanged(bodhiTokenAddress);
     }
