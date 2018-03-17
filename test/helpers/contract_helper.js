@@ -41,6 +41,6 @@ module.exports = class ContractHelper {
 
   static async approve(tokenContract, sender, to, amount) {
     await tokenContract.approve(to, amount, { from: sender });
-    assert.equal((await token.allowance(sender, to)).toString(), amount.toString());
+    assert.equal((await tokenContract.allowance(sender, to)).toString(), amount.toString());
   }
 };

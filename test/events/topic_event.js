@@ -57,11 +57,11 @@ contract('TopicEvent', (accounts) => {
   let testTopic;
   let centralizedOracle;
   let decentralizedOracle;
+  let escrowAmount;
 
   before(async () => {
-    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
-
     addressManager = await AddressManager.deployed({ from: ADMIN });
+    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
     await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
     assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
@@ -77,6 +77,9 @@ contract('TopicEvent', (accounts) => {
   beforeEach(async () => {
     await timeMachine.mine();
     await timeMachine.snapshot();
+
+    escrowAmount = await addressManager.eventEscrowAmount.call();
+    await ContractHelper.approve(token, OWNER, addressManager.address, escrowAmount);
 
     topicParams = getTopicParams(ORACLE);
     const tx = await eventFactory.createTopic(...Object.values(topicParams), { from: OWNER });
