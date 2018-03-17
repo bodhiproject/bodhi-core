@@ -11,6 +11,7 @@ const DecentralizedOracle = artifacts.require('./oracles/DecentralizedOracle.sol
 const TimeMachine = require('../helpers/time_machine');
 const Utils = require('../helpers/utils');
 const SolAssert = require('../helpers/sol_assert');
+const { mintBodhiTokens } = require('../helpers/init_helper');
 
 function getTopicParams(oracle) {
   const currTime = Utils.getCurrentBlockTime();
@@ -51,24 +52,7 @@ contract('DecentralizedOracle', (accounts) => {
   let arbitrationLength;
 
   before(async () => {
-    // Fund accounts
-    const botBalance = Utils.getBigNumberWithDecimals(10000, BOT_DECIMALS);
-
-    token = await BodhiToken.deployed({ from: ADMIN });
-    await token.mintByOwner(ORACLE, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(ORACLE)).toString(), botBalance.toString());
-    await token.mintByOwner(USER1, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER1)).toString(), botBalance.toString());
-    await token.mintByOwner(USER2, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER2)).toString(), botBalance.toString());
-    await token.mintByOwner(USER3, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER3)).toString(), botBalance.toString());
-    await token.mintByOwner(USER4, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER4)).toString(), botBalance.toString());
-    await token.mintByOwner(USER5, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER5)).toString(), botBalance.toString());
-    await token.mintByOwner(USER6, botBalance, { from: ADMIN });
-    assert.equal((await token.balanceOf(USER6)).toString(), botBalance.toString());
+    token = await mintBodhiTokens(ADMIN, accounts);
 
     // Init AddressManager
     addressManager = await AddressManager.deployed({ from: ADMIN });
