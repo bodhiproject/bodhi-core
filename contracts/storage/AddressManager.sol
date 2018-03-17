@@ -24,6 +24,12 @@ contract AddressManager is IAddressManager, Ownable {
     event EscrowDeposited(address indexed _depositer, uint256 escrowAmount);
     event EscrowWithdrawn(address indexed _eventAddress, address indexed _depositer, uint256 escrowAmount);
 
+    // Modifiers
+    modifier isWhitelisted(address _contractAddress) {
+        require(whitelistedContracts[_contractAddress] == true);
+        _;
+    }
+
     function AddressManager() Ownable(msg.sender) public {
     }
 
@@ -33,8 +39,8 @@ contract AddressManager is IAddressManager, Ownable {
     */
     function transferEscrow(address _creator)
         external
+        isWhitelisted(msg.sender)
     {
-        require(whitelistedContracts[msg.sender]);
         ERC20 token = ERC20(bodhiTokenAddress);
         require(token.allowance(_creator, address(this)) >= eventEscrowAmount);
 
@@ -49,9 +55,8 @@ contract AddressManager is IAddressManager, Ownable {
     */
     function withdrawEscrow(address _creator, uint256 _escrowAmount)
         external
+        isWhitelisted(msg.sender)
     {
-        require(whitelistedContracts[msg.sender]);
-
         ERC20 token = ERC20(bodhiTokenAddress);
         token.transfer(address(this), _creator, _escrowAmount);
 
