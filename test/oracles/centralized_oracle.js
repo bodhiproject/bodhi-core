@@ -47,8 +47,8 @@ contract('CentralizedOracle', (accounts) => {
   const VERSION = 0;
 
   let addressManager;
-  let eventFactory;
   let token;
+  let eventFactory;
   let topicEvent;
   let centralizedOracle;
   let startingOracleThreshold;
@@ -72,6 +72,9 @@ contract('CentralizedOracle', (accounts) => {
   beforeEach(async () => {
     await timeMachine.mine();
     await timeMachine.snapshot();
+
+    const escrowAmount = await addressManager.eventEscrowAmount.call();
+    await ContractHelper.approve(token, OWNER, addressManager.address, escrowAmount);
 
     topicEventParams = getTopicParams(ORACLE);
     const tx = await eventFactory.createTopic(...Object.values(topicEventParams), { from: OWNER });

@@ -57,7 +57,6 @@ contract('TopicEvent', (accounts) => {
   let testTopic;
   let centralizedOracle;
   let decentralizedOracle;
-  let escrowAmount;
 
   before(async () => {
     addressManager = await AddressManager.deployed({ from: ADMIN });
@@ -78,7 +77,7 @@ contract('TopicEvent', (accounts) => {
     await timeMachine.mine();
     await timeMachine.snapshot();
 
-    escrowAmount = await addressManager.eventEscrowAmount.call();
+    const escrowAmount = await addressManager.eventEscrowAmount.call();
     await ContractHelper.approve(token, OWNER, addressManager.address, escrowAmount);
 
     topicParams = getTopicParams(ORACLE);
