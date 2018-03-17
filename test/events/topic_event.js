@@ -50,27 +50,21 @@ contract('TopicEvent', (accounts) => {
 
   const INVALID_RESULT_INDEX = 4;
 
-  let token;
   let addressManager;
+  let token;
   let eventFactory;
+  let oracleFactory;
   let topicParams;
   let testTopic;
   let centralizedOracle;
   let decentralizedOracle;
 
   before(async () => {
-    addressManager = await AddressManager.deployed({ from: ADMIN });
-    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
-    await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
-    assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
-
-    eventFactory = await EventFactory.deployed(addressManager.address, { from: ADMIN });
-    await addressManager.setEventFactoryAddress(eventFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.eventFactoryVersionToAddress.call(0), eventFactory.address);
-
-    const oracleFactory = await OracleFactory.deployed(addressManager.address, { from: ADMIN });
-    await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: ADMIN });
-    assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
+    const baseContracts = await ContractHelper.initBaseContracts(ADMIN, accounts);
+    addressManager = baseContracts.addressManager;
+    token = baseContracts.bodhiToken;
+    eventFactory = baseContracts.eventFactory;
+    oracleFactory = baseContracts.oracleFactory;
   });
 
   beforeEach(async () => {
