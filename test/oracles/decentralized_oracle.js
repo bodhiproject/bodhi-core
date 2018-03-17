@@ -42,8 +42,8 @@ contract('DecentralizedOracle', (accounts) => {
   const NUM_OF_RESULTS = 4; // topicParams._resultNames + invalid default result
   const VERSION = 0;
 
-  let token;
   let addressManager;
+  let token;
   let eventFactory;
   let topicParams;
   let topicEvent;
@@ -52,10 +52,11 @@ contract('DecentralizedOracle', (accounts) => {
   let arbitrationLength;
 
   before(async () => {
-    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
-
     // Init AddressManager
     addressManager = await AddressManager.deployed({ from: ADMIN });
+
+    // Init BodhiToken
+    token = await ContractHelper.mintBodhiTokens(ADMIN, accounts);
     await addressManager.setBodhiTokenAddress(token.address, { from: ADMIN });
     assert.equal(await addressManager.bodhiTokenAddress.call(), token.address);
 
@@ -74,6 +75,10 @@ contract('DecentralizedOracle', (accounts) => {
   beforeEach(async () => {
     await timeMachine.mine();
     await timeMachine.snapshot();
+
+    // Approve for event creation
+    const escrowAmount = await addressManager.eventEscrowAmount.call();
+    await ContractHelper.approve(token, ORACLE, addressManager.address, escrowAmount);
 
     // Init TopicEvent
     topicParams = getTopicParams(ORACLE);
