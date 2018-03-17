@@ -277,6 +277,17 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     }
 
     /*
+    * @notice Allows the creator of the Event to withdraw the escrow amount.
+    */
+    function withdrawEscrow()
+        external
+        onlyOwner()
+        inCollectionStatus()
+    {
+        addressManager.withdrawEscrow(msg.sender, escrowAmount);
+    }
+
+    /*
     * @notice Gets the final result index and flag indicating if the result is final.
     * @return The result index and finalized bool.
     */

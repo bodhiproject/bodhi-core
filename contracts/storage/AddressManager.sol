@@ -22,12 +22,13 @@ contract AddressManager is IAddressManager, Ownable {
     event EventFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event EscrowDeposited(address indexed _depositer, uint256 escrowAmount);
+    event EscrowWithdrawn(address indexed _eventAddress, address indexed _depositer, uint256 escrowAmount);
 
     function AddressManager() Ownable(msg.sender) public {
     }
 
     /*
-    * Transfer the escrow amount needed to create an Event.
+    * @notice Transfer the escrow amount needed to create an Event.
     * @param _creator The address of the creator.
     */
     function transferEscrow(address _creator)
@@ -40,6 +41,21 @@ contract AddressManager is IAddressManager, Ownable {
         token.transferFrom(_creator, addressManager, eventEscrowAmount);
 
         EscrowDeposited(_creator, eventEscrowAmount);
+    }
+
+    /*
+    * @notice Withdraws the escrow for an Event.
+    * @param _creator The address of the creator.
+    */
+    function withdrawEscrow(address _creator, uint256 _escrowAmount)
+        external
+    {
+        require(whitelistedContracts[msg.sender]);
+
+        ERC20 token = ERC20(bodhiTokenAddress);
+        token.transfer(address(this), _creator, _escrowAmount);
+
+        EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
