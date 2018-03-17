@@ -13,6 +13,7 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
     mapping(address => uint16) public eventFactoryAddressToVersion;
     mapping(address => uint16) public oracleFactoryAddressToVersion;
+    mapping(address => bool) public whitelistedContracts;
 
     // Events
     event BodhiTokenAddressChanged(address indexed _newAddress);
@@ -46,6 +47,8 @@ contract AddressManager is IAddressManager, Ownable {
         eventFactoryAddressToVersion[_contractAddress] = index;
         currentEventFactoryIndex++;
 
+        whitelistedContracts[_contractAddress] = true;
+
         EventFactoryAddressAdded(index, _contractAddress);
     }
 
@@ -70,6 +73,8 @@ contract AddressManager is IAddressManager, Ownable {
         oracleFactoryVersionToAddress[index] = _contractAddress;
         oracleFactoryAddressToVersion[_contractAddress] = index;
         currentOracleFactoryIndex++;
+
+        whitelistedContracts[_contractAddress] = true;
 
         OracleFactoryAddressAdded(index, _contractAddress);
     }
