@@ -52,6 +52,9 @@ contract('EventFactory', (accounts) => {
     await addressManager.setOracleFactoryAddress(oracleFactory.address, { from: eventFactoryCreator });
     assert.equal(await addressManager.oracleFactoryVersionToAddress.call(0), oracleFactory.address);
 
+    // Send escrow
+    
+
     topicParams = getTopicParams(topicCreator);
     const transaction = await eventFactory.createTopic(...Object.values(topicParams), { from: topicCreator });
     topic = await TopicEvent.at(transaction.logs[0].args._topicAddress);
