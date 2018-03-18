@@ -235,7 +235,7 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
-  describe('Escrow transfer/withdraw', () => {
+  describe.only('Escrow transfer/withdraw', () => {
     let bodhiToken;
     let escrowAmount;
 
@@ -248,21 +248,67 @@ contract('AdddressManager', (accounts) => {
       assert.equal(await addressManager.eventFactoryVersionToAddress.call(0), WHITELISTED_ADDRESS);
 
       escrowAmount = await addressManager.eventEscrowAmount.call();
-
-      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount);
-      await addressManager.transferEscrow(USER1, { from: WHITELISTED_ADDRESS });
     });
 
     it('can tranfer the escrow', async () => {
+      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount);
+      await addressManager.transferEscrow(USER1, { from: WHITELISTED_ADDRESS });
       SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), escrowAmount);
     });
 
+    it('throws if trying to transfer from a non-whitelisted address', async () => {
+      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount);
+
+      try {
+        await addressManager.transferEscrow(USER1, { from: USER1 });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), 0);
+    });
+
+    it('throws if trying to transfer without enough allowance', async () => {
+      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount.sub(1));
+
+      try {
+        await addressManager.transferEscrow(USER1, { from: WHITELISTED_ADDRESS });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), 0);
+    });
+
     it('can withdraw the escrow', async () => {
+      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount);
+      await addressManager.transferEscrow(USER1, { from: WHITELISTED_ADDRESS });
+
       const balanceBefore = await bodhiToken.balanceOf(USER1);
 
       await addressManager.withdrawEscrow(USER1, escrowAmount, { from: WHITELISTED_ADDRESS });
       SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), 0);
       SolAssert.assertBNEqual(await bodhiToken.balanceOf(USER1), balanceBefore.add(escrowAmount));
+    });
+
+    it('throws if trying to withdraw from a non-whitelisted address', async () => {
+      await ContractHelper.approve(bodhiToken, USER1, addressManager.address, escrowAmount);
+      await addressManager.transferEscrow(USER1, { from: WHITELISTED_ADDRESS });
+      SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), escrowAmount);
+
+      const balanceBefore = await bodhiToken.balanceOf(USER1);
+
+      try {
+        await addressManager.withdrawEscrow(USER1, escrowAmount, { from: USER1 });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      SolAssert.assertBNEqual(await bodhiToken.balanceOf(addressManager.address), escrowAmount);
+      SolAssert.assertBNEqual(await bodhiToken.balanceOf(USER1), balanceBefore);
     });
   });
 });
