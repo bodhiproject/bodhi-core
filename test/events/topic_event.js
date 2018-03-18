@@ -1184,7 +1184,7 @@ contract('TopicEvent', (accounts) => {
     });
   });
 
-  describe.only('withdrawEscrow()', () => {
+  describe('withdrawEscrow()', () => {
     it('transfer the escrow to the creator', async () => {
       // Set result
       await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());

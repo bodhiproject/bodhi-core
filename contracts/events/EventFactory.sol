@@ -67,6 +67,8 @@ contract EventFactory {
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
         topics[topicHash] = topic;
 
+        IAddressManager(addressManager).addWhitelistContract(address(topic));
+
         TopicCreated(version, address(topic), _name, resultNames, numOfResults);
 
         return topic;

@@ -13,6 +13,7 @@ contract IAddressManager {
 
     function transferEscrow(address _creator) external;
     function withdrawEscrow(address _creator, uint256 _escrowAmount) external;
+    function addWhitelistContract(address _contractAddress) external;
     function setBodhiTokenAddress(address _tokenAddress) public;
     function getLastEventFactoryIndex() public view returns (uint16 lastEventFactoryIndex);
     function getLastOracleFactoryIndex() public view returns (uint16 lastOracleFactoryIndex);
