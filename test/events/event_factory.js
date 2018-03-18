@@ -117,7 +117,7 @@ contract('EventFactory', (accounts) => {
     });
 
     it('transfers the escrow from the event creator to the AddressManager', async () => {
-      assert.equal((await token.balanceOf(addressManager.address)).toString(), escrowAmount.toString());
+      SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
     });
 
     it('stops parsing the results when an empty slot is reached', async () => {

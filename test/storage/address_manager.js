@@ -235,7 +235,7 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
-  describe.only('Escrow transfer/withdraw', () => {
+  describe('Escrow transfer/withdraw', () => {
     let bodhiToken;
     let escrowAmount;
 

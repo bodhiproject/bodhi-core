@@ -58,6 +58,7 @@ contract('TopicEvent', (accounts) => {
   let testTopic;
   let centralizedOracle;
   let decentralizedOracle;
+  let escrowAmount;
 
   before(async () => {
     const baseContracts = await ContractHelper.initBaseContracts(ADMIN, accounts);
@@ -71,7 +72,7 @@ contract('TopicEvent', (accounts) => {
     await timeMachine.mine();
     await timeMachine.snapshot();
 
-    const escrowAmount = await addressManager.eventEscrowAmount.call();
+    escrowAmount = await addressManager.eventEscrowAmount.call();
     await ContractHelper.approve(token, OWNER, addressManager.address, escrowAmount);
 
     topicParams = getTopicParams(ORACLE);
@@ -98,6 +99,7 @@ contract('TopicEvent', (accounts) => {
       assert.equal(web3.toUtf8(await testTopic.eventResults.call(2)), topicParams._resultNames[1]);
       assert.equal(web3.toUtf8(await testTopic.eventResults.call(3)), topicParams._resultNames[2]);
       assert.equal((await testTopic.numOfResults.call()).toNumber(), numOfResults);
+      SolAssert.assertBNEqual(await testTopic.escrowAmount.call(), await addressManager.eventEscrowAmount.call());
 
       assert.equal(await centralizedOracle.numOfResults.call(), numOfResults);
       assert.equal(await centralizedOracle.oracle.call(), topicParams._oracle);
@@ -1179,6 +1181,44 @@ contract('TopicEvent', (accounts) => {
       } catch (e) {
         SolAssert.assertRevert(e);
       }
+    });
+  });
+
+  describe.only('withdrawEscrow()', () => {
+    it('transfer the escrow to the creator', async () => {
+      // Set result
+      await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
+      assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
+
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
+
+      await centralizedOracle.setResult(0, { from: ORACLE });
+      assert.isTrue((await testTopic.oracles.call(0))[1]);
+      assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
+      const finalResult = await testTopic.getFinalResult();
+      assert.equal(finalResult[0], 0);
+      assert.isFalse(finalResult[1]);
+
+      // Finalize
+      decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
+
+      const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
+      await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
+      assert.isAtLeast(Utils.getCurrentBlockTime(), arbitrationEndTime);
+
+      await decentralizedOracle.finalizeResult({ from: USER1 });
+      assert.isTrue(await decentralizedOracle.finished.call());
+      assert.equal((await testTopic.status.call()).toNumber(), STATUS_COLLECTION);
+
+      // Withdraw escrow
+      const balanceBefore = await token.balanceOf(OWNER);
+      SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
+
+      assert.equal(await testTopic.owner.call(), OWNER);
+      await testTopic.withdrawEscrow({ from: OWNER });
+      SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), 0);
+      SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBefore.add(escrowAmount));
     });
   });
 
