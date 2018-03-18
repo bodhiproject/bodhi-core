@@ -23,6 +23,7 @@ contract AddressManager is IAddressManager, Ownable {
     event OracleFactoryAddressAdded(uint16 _index, address indexed _contractAddress);
     event EscrowDeposited(address indexed _depositer, uint256 escrowAmount);
     event EscrowWithdrawn(address indexed _eventAddress, address indexed _depositer, uint256 escrowAmount);
+    event ContractWhitelisted(address indexed _contractAddress);
 
     // Modifiers
     modifier isWhitelisted(address _contractAddress) {
@@ -60,6 +61,20 @@ contract AddressManager is IAddressManager, Ownable {
         ERC20(bodhiTokenAddress).transfer(_creator, _escrowAmount);
 
         EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
+    }
+
+    /*
+    * @dev Adds a whitelisted contract address. Only allowed to be called from previously whitelisted addresses.
+    * @param _contractAddress The address of the contract to whitelist.
+    */
+    function addWhitelistContract(address _contractAddress)
+        external
+        isWhitelisted(msg.sender)
+        validAddress(_contractAddress)
+    {
+        whitelistedContracts[_contractAddress] = true;
+
+        ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
