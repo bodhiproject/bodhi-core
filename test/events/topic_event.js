@@ -101,26 +101,12 @@ contract('TopicEvent', (accounts) => {
 
       assert.equal(await centralizedOracle.numOfResults.call(), numOfResults);
       assert.equal(await centralizedOracle.oracle.call(), topicParams._oracle);
-      assert.equal(
-        (await centralizedOracle.bettingStartTime.call()).toString(),
-        topicParams._bettingStartTime.toString(),
-      );
-      assert.equal(
-        (await centralizedOracle.bettingEndTime.call()).toString(),
-        topicParams._bettingEndTime.toString(),
-      );
-      assert.equal(
-        (await centralizedOracle.resultSettingStartTime.call()).toString(),
-        topicParams._resultSettingStartTime.toString(),
-      );
-      assert.equal(
-        (await centralizedOracle.resultSettingEndTime.call()).toString(),
-        topicParams._resultSettingEndTime.toString(),
-      );
-      assert.equal(
-        (await centralizedOracle.consensusThreshold.call()).toString(),
-        (await addressManager.startingOracleThreshold.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await centralizedOracle.bettingStartTime.call(), topicParams._bettingStartTime);
+      SolAssert.assertBNEqual(await centralizedOracle.bettingEndTime.call(), topicParams._bettingEndTime);
+      SolAssert.assertBNEqual(await centralizedOracle.resultSettingStartTime.call(), topicParams._resultSettingStartTime);
+      SolAssert.assertBNEqual(await centralizedOracle.resultSettingEndTime.call(), topicParams._resultSettingEndTime);
+      SolAssert.assertBNEqual(await centralizedOracle.consensusThreshold.call(),
+        await addressManager.startingOracleThreshold.call());
     });
 
     it('can handle a long name using all 10 array slots', async () => {
@@ -432,10 +418,10 @@ contract('TopicEvent', (accounts) => {
       const newBalance = web3.eth.getBalance(testTopic.address).toNumber();
       const difference = newBalance - initialBalance;
       assert.equal(difference, betAmount);
-      assert.equal((await testTopic.totalQtumValue.call()).toString(), betAmount.toString());
+      SolAssert.assertBNEqual(await testTopic.totalQtumValue.call(), betAmount);
 
       const betBalances = await testTopic.getBetBalances({ from: USER1 });
-      assert.equal(betBalances[betResultIndex].toString(), betAmount.toString());
+      SolAssert.assertBNEqual(betBalances[betResultIndex], betAmount);
     });
 
     it('throws on an invalid result index', async () => {
@@ -495,11 +481,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('sets the result and creates a new CentralizedOracle', async () => {
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, testTopic.address)).toString(),
-        CORACLE_THRESHOLD.toString(),
-      );
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       try {
         assert.equal((await testTopic.oracles(1))[0], 0);
@@ -517,8 +499,8 @@ contract('TopicEvent', (accounts) => {
       assert.equal(finalResult[0], finalResultIndex);
       assert.isFalse(finalResult[1]);
 
-      assert.equal((await testTopic.totalBotValue.call()).toString(), CORACLE_THRESHOLD.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), CORACLE_THRESHOLD);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), CORACLE_THRESHOLD);
 
       decentralizedOracle = await testTopic.oracles.call(1);
       assert.notEqual(decentralizedOracle[0], 0);
@@ -526,8 +508,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('throws on an invalid result index', async () => {
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       try {
         assert.equal((await testTopic.oracles.call(1))[0], 0);
@@ -545,8 +526,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('throws if sender is not the CentralizedOracle', async () => {
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, CORACLE_THRESHOLD);
 
       try {
         await testTopic.centralizedOracleSetResult(ORACLE, 2, CORACLE_THRESHOLD, { from: ORACLE });
@@ -557,7 +537,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('throws if CentralizedOracle already set the result', async () => {
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       const finalResultIndex = 1;
       await centralizedOracle.setResult(finalResultIndex, { from: ORACLE });
@@ -568,7 +548,7 @@ contract('TopicEvent', (accounts) => {
       assert.equal(finalResult[0], finalResultIndex);
       assert.isFalse(finalResult[1]);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       try {
         await centralizedOracle.setResult(2, { from: ORACLE });
@@ -580,8 +560,7 @@ contract('TopicEvent', (accounts) => {
 
     it('throws if allowance is < consensusThreshold', async () => {
       const amount = Utils.getBigNumberWithDecimals(99, BOT_DECIMALS);
-      await token.approve(testTopic.address, amount, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), amount.toString());
+      await ContractHelper.approve(token, ORACLE, testTopic.address, amount);
 
       try {
         await centralizedOracle.setResult(1, { from: ORACLE });
@@ -600,8 +579,7 @@ contract('TopicEvent', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       await centralizedOracle.setResult(firstResultIndex, { from: ORACLE });
 
@@ -615,32 +593,26 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('allows votes from DecentralizedOracles', async () => {
-      assert.equal((await testTopic.totalBotValue.call()).toString(), CORACLE_THRESHOLD.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), CORACLE_THRESHOLD);
 
       const vote1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(35, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(2, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[2].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[2], vote2);
 
       const vote3 = Utils.getBigNumberWithDecimals(10, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote3, { from: USER3 });
-      assert.equal((await token.allowance(USER3, testTopic.address)).toString(), vote3.toString());
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3);
       await decentralizedOracle.voteResult(0, vote3, { from: USER3 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER3 }))[0].toString(), vote3.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[0], vote3);
 
       const totalVoteBalance = CORACLE_THRESHOLD.add(vote1).add(vote2).add(vote3);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalVoteBalance.toString());
-      assert.equal(
-        (await token.balanceOf(testTopic.address)).toString(),
-        (await testTopic.totalBotValue.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), await testTopic.totalBotValue.call());
     });
 
     it('throws if voting on an invalid result index', async () => {
@@ -702,8 +674,7 @@ contract('TopicEvent', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       await centralizedOracle.setResult(centralizedOracleResultIndex, { from: ORACLE });
 
@@ -717,19 +688,17 @@ contract('TopicEvent', (accounts) => {
       // DecentralizedOracle voting
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
-      assert.equal((await testTopic.totalBotValue.call()).toString(), CORACLE_THRESHOLD.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), CORACLE_THRESHOLD);
 
       const vote1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(35, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(0, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[0].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[0], vote2);
 
       // Verify no DecentralizedOracle at index 2
       try {
@@ -741,20 +710,13 @@ contract('TopicEvent', (accounts) => {
 
       // Winning vote
       const vote3 = CORACLE_THRESHOLD.add(1);
-      await token.approve(testTopic.address, vote3, { from: USER3 });
-      assert.equal((await token.allowance(USER3, testTopic.address)).toString(), vote3.toString());
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3);
       await decentralizedOracle.voteResult(votingOracle1ResultIndex, vote3, { from: USER3 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER3 }))[votingOracle1ResultIndex].toString(),
-        vote3.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[votingOracle1ResultIndex], vote3);
 
       const totalVoteBalance = CORACLE_THRESHOLD.add(vote1).add(vote2).add(vote3);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalVoteBalance.toString());
-      assert.equal(
-        (await token.balanceOf(testTopic.address)).toString(),
-        (await testTopic.totalBotValue.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), await testTopic.totalBotValue.call());
       assert.isAbove(
         (await decentralizedOracle.getTotalVotes())[votingOracle1ResultIndex].toNumber(),
         (await decentralizedOracle.consensusThreshold.call()).toNumber(),
@@ -784,8 +746,7 @@ contract('TopicEvent', (accounts) => {
       assert.notEqual((await testTopic.oracles.call(2))[0], votingOracle2.address);
 
       const winningVote = threshold.add(1);
-      await token.approve(testTopic.address, winningVote, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), winningVote.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, winningVote);
 
       try {
         await votingOracle2.voteResult(0, winningVote, { from: USER1 });
@@ -805,9 +766,7 @@ contract('TopicEvent', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
-
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
       await centralizedOracle.setResult(centralizedOracleResult, { from: ORACLE });
 
       assert.isTrue((await testTopic.oracles.call(0))[1]);
@@ -820,29 +779,23 @@ contract('TopicEvent', (accounts) => {
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
       const vote1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(35, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(2, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[2].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[2], vote2);
 
       const vote3 = Utils.getBigNumberWithDecimals(10, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote3, { from: USER3 });
-      assert.equal((await token.allowance(USER3, testTopic.address)).toString(), vote3.toString());
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3);
       await decentralizedOracle.voteResult(0, vote3, { from: USER3 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER3 }))[0].toString(), vote3.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[0], vote3);
 
       const totalVoteBalance = CORACLE_THRESHOLD.add(vote1).add(vote2).add(vote3);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalVoteBalance.toString());
-      assert.equal(
-        (await token.balanceOf(testTopic.address)).toString(),
-        (await testTopic.totalBotValue.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), await testTopic.totalBotValue.call());
 
       // Advance to arbitrationEndTime
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
@@ -919,7 +872,7 @@ contract('TopicEvent', (accounts) => {
         value: bet1,
       });
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), bet1.toNumber());
-      assert.equal((await testTopic.getBetBalances({ from: USER1 }))[0].toString(), bet1.toString());
+      SolAssert.assertBNEqual((await testTopic.getBetBalances({ from: USER1 }))[0], bet1);
 
       bet2 = web3.toBigNumber(2212345678);
       await centralizedOracle.bet(1, {
@@ -928,7 +881,7 @@ contract('TopicEvent', (accounts) => {
       });
       let totalBetBalance = bet1.add(bet2);
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
-      assert.equal((await testTopic.getBetBalances({ from: USER2 }))[1].toString(), bet2.toString());
+      SolAssert.assertBNEqual((await testTopic.getBetBalances({ from: USER2 }))[1], bet2);
 
       bet3 = web3.toBigNumber(3027596457);
       await centralizedOracle.bet(cOracleResult, {
@@ -937,10 +890,7 @@ contract('TopicEvent', (accounts) => {
       });
       totalBetBalance = bet1.add(bet2).add(bet3);
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
-      assert.equal(
-        (await testTopic.getBetBalances({ from: USER3 }))[cOracleResult].toString(),
-        bet3.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getBetBalances({ from: USER3 }))[cOracleResult], bet3);
 
       bet4 = web3.toBigNumber(1298765432);
       await centralizedOracle.bet(cOracleResult, {
@@ -949,20 +899,16 @@ contract('TopicEvent', (accounts) => {
       });
       totalBetBalance = bet1.add(bet2).add(bet3).add(bet4);
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
-      assert.equal(
-        (await testTopic.getBetBalances({ from: USER4 }))[cOracleResult].toString(),
-        bet4.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getBetBalances({ from: USER4 }))[cOracleResult], bet4);
 
-      assert.equal((await testTopic.totalQtumValue.call()).toString(), totalBetBalance.toString());
+      SolAssert.assertBNEqual(await testTopic.totalQtumValue.call(), totalBetBalance);
 
       // CentralizedOracle sets result 2
       await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal((await token.allowance(ORACLE, testTopic.address)).toString(), CORACLE_THRESHOLD.toString());
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       await centralizedOracle.setResult(cOracleResult, { from: ORACLE });
       assert.isTrue((await testTopic.oracles.call(0))[1]);
@@ -977,21 +923,19 @@ contract('TopicEvent', (accounts) => {
     it('transfers the tokens for a single voting round', async () => {
       // DecentralizedOracle voting under consensusThreshold
       const vote1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(35, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(1, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[1].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[1], vote2);
 
       const totalVoteBalance = CORACLE_THRESHOLD.add(vote1).add(vote2);
       const totalBotValue = await testTopic.totalBotValue.call();
-      assert.equal(totalBotValue.toString(), totalVoteBalance.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(totalBotValue, totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), totalBotValue);
 
       // DecentralizedOracle finalize result
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
@@ -1014,8 +958,8 @@ contract('TopicEvent', (accounts) => {
       let expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
       let expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       await testTopic.withdrawWinnings({ from: USER3 });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(USER3));
 
       // USER4 winner
@@ -1026,8 +970,8 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
       expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       await testTopic.withdrawWinnings({ from: USER4 });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(USER4));
 
       // ORACLE winner
@@ -1038,8 +982,8 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = (await web3.eth.getBalance(testTopic.address)).sub(qtumWon);
       expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       await testTopic.withdrawWinnings({ from: ORACLE });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(ORACLE));
 
       // USER1 loser
@@ -1066,73 +1010,48 @@ contract('TopicEvent', (accounts) => {
     it('transfers the tokens for a multiple betting/voting rounds', async () => {
       // DecentralizedOracle1 voting hits consensusThreshold
       const vote1a = web3.toBigNumber(6112345678);
-      await token.approve(testTopic.address, vote1a, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1a.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1a);
       await decentralizedOracle.voteResult(dOracle1Result, vote1a, { from: USER1 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER1 }))[dOracle1Result].toString(),
-        vote1a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[dOracle1Result], vote1a);
 
       const vote2 = web3.toBigNumber(3887654322);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(dOracle1Result, vote2, { from: USER2 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER2 }))[dOracle1Result].toString(),
-        vote2.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[dOracle1Result], vote2);
 
       let totalVoteBalance = CORACLE_THRESHOLD.add(vote1a).add(vote2);
       let totalBotValue = await testTopic.totalBotValue.call();
-      assert.equal(totalBotValue.toString(), totalVoteBalance.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), totalBotValue);
 
       // DecentralizedOracle2 voting hits consensusThreshold
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
-      assert.equal(
-        (await decentralizedOracle.consensusThreshold.call()).toString(),
-        Utils.getBigNumberWithDecimals(110, BOT_DECIMALS).toString(),
-      );
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(),
+        Utils.getBigNumberWithDecimals(110, BOT_DECIMALS));
 
       const vote3 = web3.toBigNumber(7373737373);
-      await token.approve(testTopic.address, vote3, { from: USER3 });
-      assert.equal((await token.allowance(USER3, testTopic.address)).toString(), vote3.toString());
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3);
       await decentralizedOracle.voteResult(dOracle2Result, vote3, { from: USER3 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER3 }))[dOracle2Result].toString(),
-        vote3.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[dOracle2Result], vote3);
 
       const vote4 = web3.toBigNumber(3626262627);
-      await token.approve(testTopic.address, vote4, { from: USER4 });
-      assert.equal((await token.allowance(USER4, testTopic.address)).toString(), vote4.toString());
+      await ContractHelper.approve(token, USER4, testTopic.address, vote4);
       await decentralizedOracle.voteResult(dOracle2Result, vote4, { from: USER4 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER4 }))[dOracle2Result].toString(),
-        vote4.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER4 }))[dOracle2Result], vote4);
 
       totalVoteBalance = totalVoteBalance.add(vote3).add(vote4);
       totalBotValue = await testTopic.totalBotValue.call();
-      assert.equal(totalBotValue.toString(), totalVoteBalance.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(totalBotValue, totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), totalBotValue);
 
       // DecentralizedOracle3 voting under consensusThreshold
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
-      assert.equal(
-        (await decentralizedOracle.consensusThreshold.call()).toString(),
-        Utils.getBigNumberWithDecimals(120, BOT_DECIMALS).toString(),
-      );
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(),
+        Utils.getBigNumberWithDecimals(120, BOT_DECIMALS));
 
       const vote1b = web3.toBigNumber(7135713713);
-      await token.approve(testTopic.address, vote1b, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1b.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1b);
       await decentralizedOracle.voteResult(dOracle1Result, vote1b, { from: USER1 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER1 }))[dOracle1Result].toString(),
-        vote1a.add(vote1b).toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[dOracle1Result], vote1a.add(vote1b));
 
       // DecentralizedOracle finalize result
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
@@ -1148,10 +1067,10 @@ contract('TopicEvent', (accounts) => {
       assert.isTrue(finalResult[1]);
 
       const expectedQtumValue = bet1.add(bet2).add(bet3).add(bet4);
-      assert.equal((await testTopic.totalQtumValue.call()).toString(), expectedQtumValue.toString());
+      SolAssert.assertBNEqual(await testTopic.totalQtumValue.call(), expectedQtumValue);
       const expectedBotValue = CORACLE_THRESHOLD.add(vote1a).add(vote1b).add(vote2).add(vote3)
         .add(vote4);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), expectedBotValue.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), expectedBotValue);
 
       // USER3 winner withdraw
       let winningsArr = await testTopic.calculateWinnings({ from: USER3 });
@@ -1162,8 +1081,8 @@ contract('TopicEvent', (accounts) => {
       let expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       assert.isFalse(await testTopic.didWithdraw.call(USER3));
       await testTopic.withdrawWinnings({ from: USER3 });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(USER3));
 
       // USER4 winner withdraw
@@ -1175,8 +1094,8 @@ contract('TopicEvent', (accounts) => {
       expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       assert.isFalse(await testTopic.didWithdraw.call(USER4));
       await testTopic.withdrawWinnings({ from: USER4 });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(USER4));
 
       // ORACLE winner withdraw
@@ -1188,8 +1107,8 @@ contract('TopicEvent', (accounts) => {
       expectedBot = (await token.balanceOf(testTopic.address)).sub(botWon);
       assert.isFalse(await testTopic.didWithdraw.call(ORACLE));
       await testTopic.withdrawWinnings({ from: ORACLE });
-      assert.equal((await web3.eth.getBalance(testTopic.address)).toString(), expectedQtum.toString());
-      assert.equal((await token.balanceOf(testTopic.address)).toString(), expectedBot.toString());
+      SolAssert.assertBNEqual(await web3.eth.getBalance(testTopic.address), expectedQtum);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), expectedBot);
       assert.isTrue(await testTopic.didWithdraw.call(ORACLE));
 
       // USER1 loser withdraw
@@ -1288,9 +1207,9 @@ contract('TopicEvent', (accounts) => {
       });
 
       const betBalances = await testTopic.getBetBalances({ from: ORACLE });
-      assert.equal(betBalances[0].toString(), bet0.toString());
-      assert.equal(betBalances[1].toString(), bet1.toString());
-      assert.equal(betBalances[2].toString(), bet2.toString());
+      SolAssert.assertBNEqual(betBalances[0], bet0);
+      SolAssert.assertBNEqual(betBalances[1], bet1);
+      SolAssert.assertBNEqual(betBalances[2], bet2);
     });
   });
 
@@ -1299,24 +1218,24 @@ contract('TopicEvent', (accounts) => {
       await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
       await centralizedOracle.setResult(1, { from: ORACLE });
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
       const vote1 = Utils.getBigNumberWithDecimals(20, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(35, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(2, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[2].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[2], vote2);
 
       const vote3 = Utils.getBigNumberWithDecimals(10, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote3, { from: USER3 });
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3);
       await decentralizedOracle.voteResult(0, vote3, { from: USER3 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER3 }))[0].toString(), vote3.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[0], vote3);
     });
   });
 
@@ -1325,7 +1244,7 @@ contract('TopicEvent', (accounts) => {
       await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       const finalResultIndex = 1;
       await centralizedOracle.setResult(finalResultIndex, { from: ORACLE });
@@ -1387,18 +1306,14 @@ contract('TopicEvent', (accounts) => {
       totalBetBalance = bet1.add(bet2).add(bet3).add(bet4);
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
 
-      assert.equal((await testTopic.totalQtumValue.call()).toString(), totalBetBalance.toString());
+      SolAssert.assertBNEqual(await testTopic.totalQtumValue.call(), totalBetBalance);
 
       // CentralizedOracle sets result 2
       await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await token.approve(testTopic.address, CORACLE_THRESHOLD, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, testTopic.address)).toString(),
-        CORACLE_THRESHOLD.toString(),
-      );
+      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
       await centralizedOracle.setResult(centralizedOracleResult, { from: ORACLE });
       assert.isTrue((await testTopic.oracles.call(0))[1]);
@@ -1411,23 +1326,18 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle voting under consensusThreshold
       const vote1 = Utils.getBigNumberWithDecimals(45, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote1, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1);
       await decentralizedOracle.voteResult(0, vote1, { from: USER1 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER1 }))[0].toString(), vote1.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[0], vote1);
 
       const vote2 = Utils.getBigNumberWithDecimals(54, BOT_DECIMALS);
-      await token.approve(testTopic.address, vote2, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2);
       await decentralizedOracle.voteResult(1, vote2, { from: USER2 });
-      assert.equal((await testTopic.getVoteBalances({ from: USER2 }))[1].toString(), vote2.toString());
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[1], vote2);
 
       const totalVoteBalance = CORACLE_THRESHOLD.add(vote1).add(vote2);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalVoteBalance.toString());
-      assert.equal(
-        (await token.balanceOf(testTopic.address)).toString(),
-        (await testTopic.totalBotValue.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalVoteBalance);
+      SolAssert.assertBNEqual(await token.balanceOf(testTopic.address), await testTopic.totalBotValue.call());
 
       // DecentralizedOracle finalize result
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
@@ -1456,7 +1366,7 @@ contract('TopicEvent', (accounts) => {
 
       let winningsArr = await testTopic.calculateWinnings({ from: USER3 });
       assert.equal(winningsArr[0], 0);
-      assert.equal(winningsArr[1].toString(), qtumWon.toString());
+      SolAssert.assertBNEqual(winningsArr[1], qtumWon);
 
       // USER4:
       // 0 BOT won
@@ -1465,8 +1375,8 @@ contract('TopicEvent', (accounts) => {
       qtumWon = Math.floor(bet4.mul(losingQtum).div(winningQtum).add(bet4));
 
       winningsArr = await testTopic.calculateWinnings({ from: USER4 });
-      assert.equal(winningsArr[0], botWon.toString());
-      assert.equal(winningsArr[1].toString(), qtumWon.toString());
+      SolAssert.assertBNEqual(winningsArr[0], botWon);
+      SolAssert.assertBNEqual(winningsArr[1], qtumWon);
 
       // ORACLE:
       // 100 * 99 / 100 = 99 + 100 = 199 BOT won
@@ -1476,8 +1386,8 @@ contract('TopicEvent', (accounts) => {
       qtumWon = vote.mul(rewardQtum).div(winningBot);
 
       winningsArr = await testTopic.calculateWinnings({ from: ORACLE });
-      assert.equal(winningsArr[0].toString(), botWon.toString());
-      assert.equal(winningsArr[1].toString(), qtumWon.toString());
+      SolAssert.assertBNEqual(winningsArr[0], botWon);
+      SolAssert.assertBNEqual(winningsArr[1], qtumWon);
     });
 
     it('returns the BOT and QTUM for multiple rounds', async () => {
@@ -1521,7 +1431,7 @@ contract('TopicEvent', (accounts) => {
       totalBetBalance = bet1.add(bet2).add(bet3).add(bet4);
       assert.equal(web3.eth.getBalance(testTopic.address).toNumber(), totalBetBalance.toNumber());
 
-      assert.equal((await testTopic.totalQtumValue.call()).toString(), totalBetBalance.toString());
+      SolAssert.assertBNEqual(await testTopic.totalQtumValue.call(), totalBetBalance);
 
       // CentralizedOracle votes with 100 BOT to set result 2.
       let threshold = CORACLE_THRESHOLD;
@@ -1533,96 +1443,68 @@ contract('TopicEvent', (accounts) => {
       await centralizedOracle.setResult(centralizedOracleResult, { from: ORACLE });
 
       let totalBotValue = CORACLE_THRESHOLD;
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalBotValue);
       assert.equal((await testTopic.getFinalResult())[0], centralizedOracleResult);
 
       // DecentralizedOracle1 voting. Threshold hits and result becomes 0.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), threshold.toString());
-      assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), CORACLE_THRESHOLD.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), threshold);
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), CORACLE_THRESHOLD);
 
       const vote1a = web3.toBigNumber(6012345678);
-      await token.approve(testTopic.address, vote1a, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1a.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1a);
       await decentralizedOracle.voteResult(decentralizedOracle1Result, vote1a, { from: USER1 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER1 }))[decentralizedOracle1Result].toString(),
-        vote1a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[decentralizedOracle1Result], vote1a);
 
       const vote2a = web3.toBigNumber(5123456789);
-      await token.approve(testTopic.address, vote2a, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2a.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2a);
       await decentralizedOracle.voteResult(decentralizedOracle1Result, vote2a, { from: USER2 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER2 }))[decentralizedOracle1Result].toString(),
-        vote2a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[decentralizedOracle1Result], vote2a);
 
       totalBotValue = totalBotValue.add(vote1a).add(vote2a);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalBotValue);
       assert.equal((await testTopic.getFinalResult())[0], decentralizedOracle1Result);
 
       // DecentralizedOracle2 voting. Threshold hits and result becomes 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
       threshold = vote1a.add(vote2a).add(consensusThresholdIncrement);
-      assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), threshold.toString());
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote3a = web3.toBigNumber(3012345678);
-      await token.approve(testTopic.address, vote3a, { from: USER3 });
-      assert.equal((await token.allowance(USER3, testTopic.address)).toString(), vote3a.toString());
+      await ContractHelper.approve(token, USER3, testTopic.address, vote3a);
       await decentralizedOracle.voteResult(decentralizedOracle2Result, vote3a, { from: USER3 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER3 }))[decentralizedOracle2Result].toString(),
-        vote3a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER3 }))[decentralizedOracle2Result], vote3a);
 
       const vote4a = web3.toBigNumber(4087654321);
-      await token.approve(testTopic.address, vote4a, { from: USER4 });
-      assert.equal((await token.allowance(USER4, testTopic.address)).toString(), vote4a.toString());
+      await ContractHelper.approve(token, USER4, testTopic.address, vote4a);
       await decentralizedOracle.voteResult(decentralizedOracle2Result, vote4a, { from: USER4 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER4 }))[decentralizedOracle2Result].toString(),
-        vote4a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER4 }))[decentralizedOracle2Result], vote4a);
 
       const vote5a = web3.toBigNumber(5543215678);
-      await token.approve(testTopic.address, vote5a, { from: USER5 });
-      assert.equal((await token.allowance(USER5, testTopic.address)).toString(), vote5a.toString());
+      await ContractHelper.approve(token, USER5, testTopic.address, vote5a);
       await decentralizedOracle.voteResult(decentralizedOracle2Result, vote5a, { from: USER5 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER5 }))[decentralizedOracle2Result].toString(),
-        vote5a.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER5 }))[decentralizedOracle2Result], vote5a);
 
       totalBotValue = totalBotValue.add(vote3a).add(vote4a).add(vote5a);
-      assert.equal((await testTopic.totalBotValue.call()).toString(), totalBotValue.toString());
+      SolAssert.assertBNEqual(await testTopic.totalBotValue.call(), totalBotValue);
       assert.equal((await testTopic.getFinalResult())[0], decentralizedOracle2Result);
 
       // DecentralizedOracle3 voting. Fails and result gets finalized to 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
       threshold = vote3a.add(vote4a).add(vote5a).add(consensusThresholdIncrement);
-      assert.equal((await decentralizedOracle.consensusThreshold.call()).toString(), threshold.toString());
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote1b = web3.toBigNumber(5377777777);
       const totalVote1 = vote1a.add(vote1b);
-      await token.approve(testTopic.address, vote1b, { from: USER1 });
-      assert.equal((await token.allowance(USER1, testTopic.address)).toString(), vote1b.toString());
+      await ContractHelper.approve(token, USER1, testTopic.address, vote1b);
       await decentralizedOracle.voteResult(decentralizedOracle1Result, vote1b, { from: USER1 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER1 }))[decentralizedOracle1Result].toString(),
-        totalVote1.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER1 }))[decentralizedOracle1Result], totalVote1);
 
       const vote2b = web3.toBigNumber(4955555555);
       const totalVote2 = vote2a.add(vote2b);
-      await token.approve(testTopic.address, vote2b, { from: USER2 });
-      assert.equal((await token.allowance(USER2, testTopic.address)).toString(), vote2b.toString());
+      await ContractHelper.approve(token, USER2, testTopic.address, vote2b);
       await decentralizedOracle.voteResult(decentralizedOracle1Result, vote2b, { from: USER2 });
-      assert.equal(
-        (await testTopic.getVoteBalances({ from: USER2 }))[decentralizedOracle1Result].toString(),
-        totalVote2.toString(),
-      );
+      SolAssert.assertBNEqual((await testTopic.getVoteBalances({ from: USER2 }))[decentralizedOracle1Result], totalVote2);
 
       // Finalize result 2
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
@@ -1652,8 +1534,8 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = web3.toBigNumber(expectedQtum).add(extraQtum);
 
       let winningsArr = await testTopic.calculateWinnings({ from: USER3 });
-      assert.equal(winningsArr[0], expectedBot.toString());
-      assert.equal(winningsArr[1].toString(), expectedQtum.toString());
+      SolAssert.assertBNEqual(winningsArr[0], expectedBot);
+      SolAssert.assertBNEqual(winningsArr[1], expectedQtum);
 
       // USER4 winner
       votes = vote4a;
@@ -1665,8 +1547,8 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = web3.toBigNumber(expectedQtum).add(extraQtum);
 
       winningsArr = await testTopic.calculateWinnings({ from: USER4 });
-      assert.equal(winningsArr[0], expectedBot.toString());
-      assert.equal(winningsArr[1].toString(), expectedQtum.toString());
+      SolAssert.assertBNEqual(winningsArr[0], expectedBot);
+      SolAssert.assertBNEqual(winningsArr[1], expectedQtum);
 
       // USER5 winner
       votes = vote5a;
@@ -1678,8 +1560,8 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = web3.toBigNumber(expectedQtum).add(extraQtum);
 
       winningsArr = await testTopic.calculateWinnings({ from: USER5 });
-      assert.equal(winningsArr[0], expectedBot.toString());
-      assert.equal(winningsArr[1].toString(), expectedQtum.toString());
+      SolAssert.assertBNEqual(winningsArr[0], expectedBot);
+      SolAssert.assertBNEqual(winningsArr[1], expectedQtum);
 
       // CentralizedOracle winner
       votes = CORACLE_THRESHOLD;
@@ -1691,18 +1573,18 @@ contract('TopicEvent', (accounts) => {
       expectedQtum = web3.toBigNumber(expectedQtum).add(extraQtum);
 
       winningsArr = await testTopic.calculateWinnings({ from: ORACLE });
-      assert.equal(winningsArr[0], expectedBot.toString());
-      assert.equal(winningsArr[1].toString(), expectedQtum.toString());
+      SolAssert.assertBNEqual(winningsArr[0], expectedBot);
+      SolAssert.assertBNEqual(winningsArr[1], expectedQtum);
 
       // USER1 loser
       winningsArr = await testTopic.calculateWinnings({ from: USER1 });
-      assert.equal(winningsArr[0], 0);
-      assert.equal(winningsArr[1].toString(), 0);
+      SolAssert.assertBNEqual(winningsArr[0], 0);
+      SolAssert.assertBNEqual(winningsArr[1], 0);
 
       // USER2 loser
       winningsArr = await testTopic.calculateWinnings({ from: USER2 });
-      assert.equal(winningsArr[0], 0);
-      assert.equal(winningsArr[1].toString(), 0);
+      SolAssert.assertBNEqual(winningsArr[0], 0);
+      SolAssert.assertBNEqual(winningsArr[1], 0);
     });
 
     it('throws if status is not Status:Collection', async () => {
