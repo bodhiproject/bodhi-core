@@ -1185,40 +1185,78 @@ contract('TopicEvent', (accounts) => {
   });
 
   describe('withdrawEscrow()', () => {
-    it('transfer the escrow to the creator', async () => {
-      // Set result
-      await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
-      assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
-      assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
+    describe('in Status:Collection', () => {
+      beforeEach(async () => {
+        // Set result
+        await timeMachine.increaseTime(topicParams._resultSettingStartTime - Utils.getCurrentBlockTime());
+        assert.isAtLeast(Utils.getCurrentBlockTime(), topicParams._resultSettingStartTime);
+        assert.isBelow(Utils.getCurrentBlockTime(), topicParams._resultSettingEndTime);
 
-      await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
+        await ContractHelper.approve(token, ORACLE, testTopic.address, CORACLE_THRESHOLD);
 
-      await centralizedOracle.setResult(0, { from: ORACLE });
-      assert.isTrue((await testTopic.oracles.call(0))[1]);
-      assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
-      const finalResult = await testTopic.getFinalResult();
-      assert.equal(finalResult[0], 0);
-      assert.isFalse(finalResult[1]);
+        await centralizedOracle.setResult(0, { from: ORACLE });
+        assert.isTrue((await testTopic.oracles.call(0))[1]);
+        assert.equal((await testTopic.status.call()).toNumber(), STATUS_VOTING);
+        const finalResult = await testTopic.getFinalResult();
+        assert.equal(finalResult[0], 0);
+        assert.isFalse(finalResult[1]);
 
-      // Finalize
-      decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
+        // Finalize
+        decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(1))[0]);
 
-      const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
-      await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
-      assert.isAtLeast(Utils.getCurrentBlockTime(), arbitrationEndTime);
+        const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call()).toNumber();
+        await timeMachine.increaseTime(arbitrationEndTime - Utils.getCurrentBlockTime());
+        assert.isAtLeast(Utils.getCurrentBlockTime(), arbitrationEndTime);
 
-      await decentralizedOracle.finalizeResult({ from: USER1 });
-      assert.isTrue(await decentralizedOracle.finished.call());
-      assert.equal((await testTopic.status.call()).toNumber(), STATUS_COLLECTION);
+        await decentralizedOracle.finalizeResult({ from: USER1 });
+        assert.isTrue(await decentralizedOracle.finished.call());
+        assert.equal((await testTopic.status.call()).toNumber(), STATUS_COLLECTION);
+      }); 
 
-      // Withdraw escrow
-      const balanceBefore = await token.balanceOf(OWNER);
-      SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
+      it('transfer the escrow to the creator', async () => {
+        // Withdraw escrow
+        const balanceBefore = await token.balanceOf(OWNER);
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
 
-      assert.equal(await testTopic.owner.call(), OWNER);
-      await testTopic.withdrawEscrow({ from: OWNER });
-      SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), 0);
-      SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBefore.add(escrowAmount));
+        assert.equal(await testTopic.owner.call(), OWNER);
+        await testTopic.withdrawEscrow({ from: OWNER });
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), 0);
+        SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBefore.add(escrowAmount));
+      });
+
+      it('throws if trying to withdraw escrow from non-owner address', async () => {
+        const balanceBeforeOwner = await token.balanceOf(OWNER);
+        const balanceBeforeUser1 = await token.balanceOf(USER1);
+
+        try {
+          await testTopic.withdrawEscrow({ from: USER1 });
+          assert.fail();
+        } catch (e) {
+          SolAssert.assertRevert(e);
+        }
+
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
+        SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBeforeOwner);
+        SolAssert.assertBNEqual(await token.balanceOf(USER1), balanceBeforeUser1);
+      });
+    });
+
+    describe('not in Status:Collection', () => {
+      it('throws if trying to withdraw escrow not in Status:Collection', async () => {
+        assert.notEqual((await testTopic.status.call()).toNumber(), STATUS_COLLECTION);
+
+        const balanceBefore = await token.balanceOf(OWNER);
+
+        try {
+          await testTopic.withdrawEscrow({ from: OWNER });
+          assert.fail();
+        } catch (e) {
+          SolAssert.assertRevert(e);
+        }
+
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
+        SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBefore);
+      });
     });
   });
 
