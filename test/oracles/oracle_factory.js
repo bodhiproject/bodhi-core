@@ -105,10 +105,7 @@ contract('OracleFactory', (accounts) => {
       assert.equal(await centralizedOracle.bettingEndTime.call(), cOracleParams._bettingEndTime);
       assert.equal(await centralizedOracle.resultSettingStartTime.call(), cOracleParams._resultSettingStartTime);
       assert.equal(await centralizedOracle.resultSettingEndTime.call(), cOracleParams._resultSettingEndTime);
-      assert.equal(
-        (await centralizedOracle.consensusThreshold.call()).toString(),
-        cOracleParams._consensusThreshold.toString(),
-      );
+      SolAssert.assertBNEqual(await centralizedOracle.consensusThreshold.call(), cOracleParams._consensusThreshold);
     });
 
     it('throws if the CentralizedOracle has already been created', async () => {

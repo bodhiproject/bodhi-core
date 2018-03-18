@@ -38,6 +38,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     bytes32[11] public eventResults;
     uint256 public totalQtumValue;
     uint256 public totalBotValue;
+    uint256 public escrowAmount;
     IAddressManager private addressManager;
     Oracle[] public oracles;
     mapping(address => bool) public didWithdraw;
@@ -75,6 +76,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _bettingEndTime The unix time when betting will end.
     * @param _resultSettingStartTime The unix time when the CentralizedOracle can set the result.
     * @param _resultSettingEndTime The unix time when anyone can set the result.
+    * @param _escrowAmount The amount of BOT deposited to create the Event.
     * @param _addressManager The address of the AddressManager.
     */
     function TopicEvent(
@@ -107,6 +109,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         eventResults = _resultNames;
         numOfResults = _numOfResults;
         addressManager = IAddressManager(_addressManager);
+        escrowAmount = addressManager.eventEscrowAmount();
 
         createCentralizedOracle(_centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,
             _resultSettingEndTime);
@@ -270,6 +273,17 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         }
 
         WinningsWithdrawn(version, msg.sender, qtumWon, botWon);
+    }
+
+    /*
+    * @notice Allows the creator of the Event to withdraw the escrow amount.
+    */
+    function withdrawEscrow()
+        external
+        onlyOwner()
+        inCollectionStatus()
+    {
+        addressManager.withdrawEscrow(msg.sender, escrowAmount);
     }
 
     /*

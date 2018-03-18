@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import "../storage/IAddressManager.sol";
 import "./TopicEvent.sol";
+import "../storage/IAddressManager.sol";
 
 /// @title Event Factory allows the creation of individual prediction events.
 contract EventFactory {
@@ -61,9 +61,13 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
+        IAddressManager(addressManager).transferEscrow(msg.sender);
+
         TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
         topics[topicHash] = topic;
+
+        IAddressManager(addressManager).addWhitelistContract(address(topic));
 
         TopicCreated(version, address(topic), _name, resultNames, numOfResults);
 
