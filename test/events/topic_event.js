@@ -1214,7 +1214,6 @@ contract('TopicEvent', (accounts) => {
       }); 
 
       it('transfer the escrow to the creator', async () => {
-        // Withdraw escrow
         const balanceBefore = await token.balanceOf(OWNER);
         SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
 

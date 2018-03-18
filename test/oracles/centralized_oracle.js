@@ -98,10 +98,7 @@ contract('CentralizedOracle', (accounts) => {
         await centralizedOracle.resultSettingEndTime.call(),
         topicEventParams._resultSettingEndTime,
       );
-      assert.equal(
-        startingOracleThreshold.toString(),
-        (await addressManager.startingOracleThreshold.call()).toString(),
-      );
+      SolAssert.assertBNEqual(await addressManager.startingOracleThreshold.call(), startingOracleThreshold);
     });
 
     it('throws if owner is invalid', async () => {
@@ -252,11 +249,8 @@ contract('CentralizedOracle', (accounts) => {
         value: betAmount,
       });
 
-      assert.equal((await centralizedOracle.getTotalBets())[betResultIndex].toString(), betAmount.toString());
-      assert.equal(
-        (await centralizedOracle.getBetBalances({ from: USER1 }))[betResultIndex].toString(),
-        betAmount.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getTotalBets())[betResultIndex], betAmount);
+      SolAssert.assertBNEqual((await centralizedOracle.getBetBalances({ from: USER1 }))[betResultIndex], betAmount);
     });
 
     it('throws if resultIndex is invalid', async () => {
@@ -278,12 +272,7 @@ contract('CentralizedOracle', (accounts) => {
       assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingStartTime);
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
-      await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, topicEvent.address)).toString(),
-        startingOracleThreshold.toString(),
-      );
-
+      await ContractHelper.approve(token, ORACLE, topicEvent.address, startingOracleThreshold);
       await centralizedOracle.setResult(0, { from: ORACLE });
       assert.isTrue(await centralizedOracle.finished.call());
 
@@ -347,11 +336,7 @@ contract('CentralizedOracle', (accounts) => {
       assert.isFalse(await centralizedOracle.finished.call());
       assert.equal(await centralizedOracle.oracle.call(), ORACLE);
 
-      await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, topicEvent.address)).toString(),
-        startingOracleThreshold.toString(),
-      );
+      await ContractHelper.approve(token, ORACLE, topicEvent.address, startingOracleThreshold);
     });
 
     describe('in valid time', () => {
@@ -366,38 +351,24 @@ contract('CentralizedOracle', (accounts) => {
         await centralizedOracle.setResult(resultIndex, { from: ORACLE });
         assert.isTrue(await centralizedOracle.finished.call());
         assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
-        assert.equal(
-          (await centralizedOracle.getTotalVotes())[resultIndex].toString(),
-          startingOracleThreshold.toString(),
-        );
-        assert.equal(
-          (await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex].toString(),
-          startingOracleThreshold.toString(),
-        );
+        SolAssert.assertBNEqual((await centralizedOracle.getTotalVotes())[resultIndex], startingOracleThreshold);
+        SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
+          startingOracleThreshold);
       });
 
       it('allows anyone to set the result if current time >= resultSettingEndTime', async () => {
         await timeMachine.increaseTime(topicEventParams._resultSettingEndTime - Utils.getCurrentBlockTime());
         assert.isAtLeast(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
-        await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
-        assert.equal(
-          (await token.allowance(USER1, topicEvent.address)).toString(),
-          startingOracleThreshold.toString(),
-        );
+        await ContractHelper.approve(token, USER1, topicEvent.address, startingOracleThreshold);
 
         const resultIndex = 2;
         await centralizedOracle.setResult(resultIndex, { from: USER1 });
         assert.isTrue(await centralizedOracle.finished.call());
         assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
-        assert.equal(
-          (await centralizedOracle.getTotalVotes())[resultIndex].toString(),
-          startingOracleThreshold.toString(),
-        );
-        assert.equal(
-          (await centralizedOracle.getVoteBalances({ from: USER1 }))[resultIndex].toString(),
-          startingOracleThreshold.toString(),
-        );
+        SolAssert.assertBNEqual((await centralizedOracle.getTotalVotes())[resultIndex], startingOracleThreshold);
+        SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: USER1 }))[resultIndex],
+          startingOracleThreshold);
       });
 
       it('throws if resultIndex is invalid', async () => {
@@ -413,11 +384,7 @@ contract('CentralizedOracle', (accounts) => {
         await centralizedOracle.setResult(0, { from: ORACLE });
         assert.isTrue(await centralizedOracle.finished.call());
 
-        await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
-        assert.equal(
-          (await token.allowance(ORACLE, topicEvent.address)).toString(),
-          startingOracleThreshold.toString(),
-        );
+        await ContractHelper.approve(token, ORACLE, topicEvent.address, startingOracleThreshold);
 
         try {
           await centralizedOracle.setResult(1, { from: ORACLE });
@@ -428,11 +395,7 @@ contract('CentralizedOracle', (accounts) => {
       });
 
       it('throws if the sender is not the oracle and < resultSettingEndTime', async () => {
-        await token.approve(topicEvent.address, startingOracleThreshold, { from: USER1 });
-        assert.equal(
-          (await token.allowance(USER1, topicEvent.address)).toString(),
-          startingOracleThreshold.toString(),
-        );
+        await ContractHelper.approve(token, USER1, topicEvent.address, startingOracleThreshold);
 
         try {
           await centralizedOracle.setResult(0, { from: USER1 });
@@ -468,28 +431,19 @@ contract('CentralizedOracle', (accounts) => {
         from: USER1,
         value: betAmount,
       });
-      assert.equal(
-        (await centralizedOracle.getBetBalances({ from: USER1 }))[0].toString(),
-        betAmount.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getBetBalances({ from: USER1 }))[0], betAmount);
 
       await centralizedOracle.bet(1, {
         from: USER2,
         value: betAmount,
       });
-      assert.equal(
-        (await centralizedOracle.getBetBalances({ from: USER2 }))[1].toString(),
-        betAmount.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getBetBalances({ from: USER2 }))[1], betAmount);
 
       await centralizedOracle.bet(2, {
         from: USER3,
         value: betAmount,
       });
-      assert.equal(
-        (await centralizedOracle.getBetBalances({ from: USER3 }))[2].toString(),
-        betAmount.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getBetBalances({ from: USER3 }))[2], betAmount);
     });
   });
 
@@ -504,25 +458,19 @@ contract('CentralizedOracle', (accounts) => {
         from: USER1,
         value: betAmount,
       });
-      assert.equal((await centralizedOracle.getTotalBets())[0].toString(), betAmount.toString());
+      SolAssert.assertBNEqual((await centralizedOracle.getTotalBets())[0], betAmount);
 
       await centralizedOracle.bet(0, {
         from: USER2,
         value: betAmount,
       });
-      assert.equal(
-        (await centralizedOracle.getTotalBets({ from: USER2 }))[0].toString(),
-        betAmount.mul(2).toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getTotalBets({ from: USER2 }))[0], betAmount.mul(2));
 
       await centralizedOracle.bet(0, {
         from: USER3,
         value: betAmount,
       });
-      assert.equal(
-        (await centralizedOracle.getTotalBets({ from: USER3 }))[0].toString(),
-        betAmount.mul(3).toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getTotalBets({ from: USER3 }))[0], betAmount.mul(3));
     });
   });
 
@@ -533,18 +481,12 @@ contract('CentralizedOracle', (accounts) => {
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
       startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
-      await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, topicEvent.address)).toString(),
-        startingOracleThreshold.toString(),
-      );
+      await ContractHelper.approve(token, ORACLE, topicEvent.address, startingOracleThreshold);
 
       const resultIndex = 2;
       await centralizedOracle.setResult(resultIndex, { from: ORACLE });
-      assert.equal(
-        (await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex].toString(),
-        startingOracleThreshold.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
+        startingOracleThreshold);
     });
   });
 
@@ -555,18 +497,11 @@ contract('CentralizedOracle', (accounts) => {
       assert.isBelow(Utils.getCurrentBlockTime(), topicEventParams._resultSettingEndTime);
 
       startingOracleThreshold = await centralizedOracle.consensusThreshold.call();
-      await token.approve(topicEvent.address, startingOracleThreshold, { from: ORACLE });
-      assert.equal(
-        (await token.allowance(ORACLE, topicEvent.address)).toString(),
-        startingOracleThreshold.toString(),
-      );
+      await ContractHelper.approve(token, ORACLE, topicEvent.address, startingOracleThreshold);
 
       const resultIndex = 2;
       await centralizedOracle.setResult(resultIndex, { from: ORACLE });
-      assert.equal(
-        (await centralizedOracle.getTotalVotes())[resultIndex].toString(),
-        startingOracleThreshold.toString(),
-      );
+      SolAssert.assertBNEqual((await centralizedOracle.getTotalVotes())[resultIndex], startingOracleThreshold);
     });
   });
 });
