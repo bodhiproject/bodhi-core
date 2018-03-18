@@ -88,6 +88,7 @@ contract AddressManager is IAddressManager, Ownable {
         whitelistedContracts[_tokenAddress] = true;
 
         BodhiTokenAddressChanged(bodhiTokenAddress);
+        ContractWhitelisted(_tokenAddress);
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
@@ -105,6 +106,7 @@ contract AddressManager is IAddressManager, Ownable {
         whitelistedContracts[_contractAddress] = true;
 
         EventFactoryAddressAdded(index, _contractAddress);
+        ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets 
@@ -132,6 +134,7 @@ contract AddressManager is IAddressManager, Ownable {
         whitelistedContracts[_contractAddress] = true;
 
         OracleFactoryAddressAdded(index, _contractAddress);
+        ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets 
