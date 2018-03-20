@@ -229,7 +229,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         status = Status.OracleVoting;
         resultIndex = _resultIndex;
 
-        return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
+        return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.thresholdPercentIncrease()));
     }
 
     /*

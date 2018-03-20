@@ -823,7 +823,7 @@ contract('TopicEvent', (accounts) => {
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call())
         .add(await addressManager.arbitrationLength.call());
       const threshold = (await decentralizedOracle.consensusThreshold.call())
-        .add(await addressManager.consensusThresholdIncrement.call());
+        .add(await addressManager.thresholdPercentIncrease.call());
       const votingOracle2 = await DecentralizedOracle.new(
         0, OWNER, testTopic.address, numOfResults,
         centralizedOracleResult, arbitrationEndTime, threshold, { from: OWNER },
@@ -1468,7 +1468,7 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('returns the BOT and QTUM for multiple rounds', async () => {
-      const consensusThresholdIncrement = await addressManager.consensusThresholdIncrement.call();
+      const thresholdPercentIncrease = await addressManager.thresholdPercentIncrease.call();
       const decentralizedOracle1Result = 0;
       const decentralizedOracle2Result = 2;
 
@@ -1544,7 +1544,7 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle2 voting. Threshold hits and result becomes 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
-      threshold = vote1a.add(vote2a).add(consensusThresholdIncrement);
+      threshold = vote1a.add(vote2a).add(thresholdPercentIncrease);
       SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote3a = web3.toBigNumber(3012345678);
@@ -1568,7 +1568,7 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle3 voting. Fails and result gets finalized to 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
-      threshold = vote3a.add(vote4a).add(vote5a).add(consensusThresholdIncrement);
+      threshold = vote3a.add(vote4a).add(vote5a).add(thresholdPercentIncrease);
       SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote1b = web3.toBigNumber(5377777777);
