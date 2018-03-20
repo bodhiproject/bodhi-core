@@ -51,6 +51,7 @@ contract('DecentralizedOracle', (accounts) => {
   let centralizedOracle;
   let decentralizedOracle;
   let arbitrationLength;
+  let thresholdPercentIncrease;
 
   before(async () => {
     const baseContracts = await ContractHelper.initBaseContracts(ADMIN, accounts);
@@ -60,6 +61,7 @@ contract('DecentralizedOracle', (accounts) => {
     oracleFactory = baseContracts.oracleFactory;
 
     arbitrationLength = (await addressManager.arbitrationLength.call()).toNumber();
+    thresholdPercentIncrease = (await addressManager.thresholdPercentIncrease.call()).toNumber();
   });
 
   beforeEach(async () => {
@@ -137,8 +139,9 @@ contract('DecentralizedOracle', (accounts) => {
       assert.equal(await decentralizedOracle.lastResultIndex.call(), CENTRALIZED_ORACLE_RESULT);
       assert.equal((await decentralizedOracle.arbitrationEndTime.call()).toNumber(), arbitrationEndTime);
 
-      const threshold = await addressManager.startingOracleThreshold.call();
-      assert.equal((await decentralizedOracle.consensusThreshold.call()).toNumber(), threshold.toNumber());
+      const threshold = Utils.getPercentageIncrease(await addressManager.startingOracleThreshold.call(),
+        thresholdPercentIncrease);
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
     });
 
     it('throws if eventAddress is invalid', async () => {
