@@ -234,6 +234,27 @@ contract('DecentralizedOracle', (accounts) => {
       assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 2);
     });
 
+    it('does not allow voting more than the consensusThreshold', async () => {
+      assert.isBelow(Utils.getCurrentBlockTime(), (await decentralizedOracle.arbitrationEndTime.call()).toNumber());
+
+      assert.isFalse(await decentralizedOracle.finished.call());
+      assert.equal(
+        (await decentralizedOracle.resultIndex.call()).toNumber(),
+        (await decentralizedOracle.INVALID_RESULT_INDEX.call()).toNumber(),
+      );
+
+      const consensusThreshold = await decentralizedOracle.consensusThreshold.call();
+      await ContractHelper.approve(token, USER1, topicEvent.address, consensusThreshold);
+
+      const vote = consensusThreshold.add(1);
+      await decentralizedOracle.voteResult(2, vote, { from: USER1 });
+      SolAssert.assertBNEqual((await decentralizedOracle.getVoteBalances({ from: USER1 }))[2], consensusThreshold);
+      SolAssert.assertBNEqual((await decentralizedOracle.getTotalVotes())[2], consensusThreshold);
+
+      assert.isTrue(await decentralizedOracle.finished.call());
+      assert.equal((await decentralizedOracle.resultIndex.call()).toNumber(), 2);
+    });
+
     it('throws if eventResultIndex is invalid', async () => {
       assert.isBelow(Utils.getCurrentBlockTime(), (await decentralizedOracle.arbitrationEndTime.call()).toNumber());
 
