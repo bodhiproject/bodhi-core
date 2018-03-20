@@ -352,8 +352,10 @@ contract('CentralizedOracle', (accounts) => {
         assert.isTrue(await centralizedOracle.finished.call());
         assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
         SolAssert.assertBNEqual((await centralizedOracle.getTotalVotes())[resultIndex], startingOracleThreshold);
-        SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
-          startingOracleThreshold);
+        SolAssert.assertBNEqual(
+          (await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
+          startingOracleThreshold,
+        );
       });
 
       it('allows anyone to set the result if current time >= resultSettingEndTime', async () => {
@@ -367,8 +369,10 @@ contract('CentralizedOracle', (accounts) => {
         assert.isTrue(await centralizedOracle.finished.call());
         assert.equal(await centralizedOracle.resultIndex.call(), resultIndex);
         SolAssert.assertBNEqual((await centralizedOracle.getTotalVotes())[resultIndex], startingOracleThreshold);
-        SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: USER1 }))[resultIndex],
-          startingOracleThreshold);
+        SolAssert.assertBNEqual(
+          (await centralizedOracle.getVoteBalances({ from: USER1 }))[resultIndex],
+          startingOracleThreshold,
+        );
       });
 
       it('throws if resultIndex is invalid', async () => {
@@ -485,8 +489,10 @@ contract('CentralizedOracle', (accounts) => {
 
       const resultIndex = 2;
       await centralizedOracle.setResult(resultIndex, { from: ORACLE });
-      SolAssert.assertBNEqual((await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
-        startingOracleThreshold);
+      SolAssert.assertBNEqual(
+        (await centralizedOracle.getVoteBalances({ from: ORACLE }))[resultIndex],
+        startingOracleThreshold,
+      );
     });
   });
 

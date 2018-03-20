@@ -112,8 +112,10 @@ contract('EventFactory', (accounts) => {
         topicParams._resultSettingStartTime,
       );
       assert.equal(await centralizedOracle.resultSettingEndTime.call(), topicParams._resultSettingEndTime);
-      SolAssert.assertBNEqual(await centralizedOracle.consensusThreshold.call(),
-        await addressManager.startingOracleThreshold.call());
+      SolAssert.assertBNEqual(
+        await centralizedOracle.consensusThreshold.call(),
+        await addressManager.startingOracleThreshold.call(),
+      );
     });
 
     it('transfers the escrow from the event creator to the AddressManager', async () => {

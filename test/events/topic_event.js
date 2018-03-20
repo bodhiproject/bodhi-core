@@ -111,8 +111,10 @@ contract('TopicEvent', (accounts) => {
       SolAssert.assertBNEqual(await centralizedOracle.bettingEndTime.call(), topicParams._bettingEndTime);
       SolAssert.assertBNEqual(await centralizedOracle.resultSettingStartTime.call(), topicParams._resultSettingStartTime);
       SolAssert.assertBNEqual(await centralizedOracle.resultSettingEndTime.call(), topicParams._resultSettingEndTime);
-      SolAssert.assertBNEqual(await centralizedOracle.consensusThreshold.call(),
-        await addressManager.startingOracleThreshold.call());
+      SolAssert.assertBNEqual(
+        await centralizedOracle.consensusThreshold.call(),
+        await addressManager.startingOracleThreshold.call(),
+      );
     });
 
     it('can handle a long name using all 10 array slots', async () => {
@@ -743,8 +745,10 @@ contract('TopicEvent', (accounts) => {
     it('throws if setting from invalid DecentralizedOracle', async () => {
       const numOfResults = await testTopic.numOfResults.call();
       const arbitrationEndBlock = Utils.getCurrentBlockTime() + await addressManager.arbitrationLength.call();
-      const threshold = getPercentageIncrease(await decentralizedOracle.consensusThreshold.call(),
-        thresholdPercentIncrease);
+      const threshold = getPercentageIncrease(
+        await decentralizedOracle.consensusThreshold.call(),
+        thresholdPercentIncrease,
+      );
       votingOracle2 = await DecentralizedOracle.new(
         0, OWNER, testTopic.address, numOfResults,
         votingOracle1ResultIndex, arbitrationEndBlock, threshold, { from: OWNER },
@@ -826,8 +830,10 @@ contract('TopicEvent', (accounts) => {
       const numOfResults = await testTopic.numOfResults.call();
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call())
         .add(await addressManager.arbitrationLength.call());
-      const threshold = getPercentageIncrease(await decentralizedOracle.consensusThreshold.call(),
-        thresholdPercentIncrease);
+      const threshold = getPercentageIncrease(
+        await decentralizedOracle.consensusThreshold.call(),
+        thresholdPercentIncrease,
+      );
       const votingOracle2 = await DecentralizedOracle.new(
         0, OWNER, testTopic.address, numOfResults,
         centralizedOracleResult, arbitrationEndTime, threshold, { from: OWNER },
@@ -1217,7 +1223,7 @@ contract('TopicEvent', (accounts) => {
         await decentralizedOracle.finalizeResult({ from: USER1 });
         assert.isTrue(await decentralizedOracle.finished.call());
         assert.equal((await testTopic.status.call()).toNumber(), STATUS_COLLECTION);
-      }); 
+      });
 
       it('transfer the escrow to the creator', async () => {
         const balanceBefore = await token.balanceOf(OWNER);
