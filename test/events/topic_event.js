@@ -13,6 +13,7 @@ const TimeMachine = require('../helpers/time_machine');
 const SolAssert = require('../helpers/sol_assert');
 const Utils = require('../helpers/utils');
 const ContractHelper = require('../helpers/contract_helper');
+const { getPercentageIncrease } = require('../helpers/utils');
 
 const ethAsync = bluebird.promisifyAll(web3.eth);
 
@@ -59,6 +60,7 @@ contract('TopicEvent', (accounts) => {
   let centralizedOracle;
   let decentralizedOracle;
   let escrowAmount;
+  let thresholdPercentIncrease;
 
   before(async () => {
     const baseContracts = await ContractHelper.initBaseContracts(ADMIN, accounts);
@@ -66,6 +68,8 @@ contract('TopicEvent', (accounts) => {
     token = baseContracts.bodhiToken;
     eventFactory = baseContracts.eventFactory;
     oracleFactory = baseContracts.oracleFactory;
+
+    thresholdPercentIncrease = (await addressManager.thresholdPercentIncrease.call()).toNumber();
   });
 
   beforeEach(async () => {
@@ -739,8 +743,8 @@ contract('TopicEvent', (accounts) => {
     it('throws if setting from invalid DecentralizedOracle', async () => {
       const numOfResults = await testTopic.numOfResults.call();
       const arbitrationEndBlock = Utils.getCurrentBlockTime() + await addressManager.arbitrationLength.call();
-      const threshold = (await decentralizedOracle.consensusThreshold.call())
-        .add(Utils.getBigNumberWithDecimals(10, BOT_DECIMALS));
+      const threshold = getPercentageIncrease(await decentralizedOracle.consensusThreshold.call(),
+        thresholdPercentIncrease);
       votingOracle2 = await DecentralizedOracle.new(
         0, OWNER, testTopic.address, numOfResults,
         votingOracle1ResultIndex, arbitrationEndBlock, threshold, { from: OWNER },
@@ -822,8 +826,8 @@ contract('TopicEvent', (accounts) => {
       const numOfResults = await testTopic.numOfResults.call();
       const arbitrationEndTime = (await decentralizedOracle.arbitrationEndTime.call())
         .add(await addressManager.arbitrationLength.call());
-      const threshold = (await decentralizedOracle.consensusThreshold.call())
-        .add(await addressManager.thresholdPercentIncrease.call());
+      const threshold = getPercentageIncrease(await decentralizedOracle.consensusThreshold.call(),
+        thresholdPercentIncrease);
       const votingOracle2 = await DecentralizedOracle.new(
         0, OWNER, testTopic.address, numOfResults,
         centralizedOracleResult, arbitrationEndTime, threshold, { from: OWNER },
@@ -1010,6 +1014,8 @@ contract('TopicEvent', (accounts) => {
     });
 
     it('transfers the tokens for a multiple betting/voting rounds', async () => {
+      let consensusThreshold = await decentralizedOracle.consensusThreshold.call();
+
       // DecentralizedOracle1 voting hits consensusThreshold
       const vote1a = web3.toBigNumber(6112345678);
       await ContractHelper.approve(token, USER1, testTopic.address, vote1a);
@@ -1027,8 +1033,8 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle2 voting hits consensusThreshold
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
-      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(),
-        Utils.getBigNumberWithDecimals(110, BOT_DECIMALS));
+      consensusThreshold = getPercentageIncrease(consensusThreshold, thresholdPercentIncrease);
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), consensusThreshold);
 
       const vote3 = web3.toBigNumber(7373737373);
       await ContractHelper.approve(token, USER3, testTopic.address, vote3);
@@ -1047,8 +1053,8 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle3 voting under consensusThreshold
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
-      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(),
-        Utils.getBigNumberWithDecimals(120, BOT_DECIMALS));
+      consensusThreshold = getPercentageIncrease(consensusThreshold, thresholdPercentIncrease);
+      SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), consensusThreshold);
 
       const vote1b = web3.toBigNumber(7135713713);
       await ContractHelper.approve(token, USER1, testTopic.address, vote1b);
@@ -1544,7 +1550,7 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle2 voting. Threshold hits and result becomes 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(2))[0]);
-      threshold = vote1a.add(vote2a).add(thresholdPercentIncrease);
+      threshold = getPercentageIncrease(vote1a.add(vote2a), thresholdPercentIncrease);
       SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote3a = web3.toBigNumber(3012345678);
@@ -1568,7 +1574,7 @@ contract('TopicEvent', (accounts) => {
 
       // DecentralizedOracle3 voting. Fails and result gets finalized to 2.
       decentralizedOracle = await DecentralizedOracle.at((await testTopic.oracles.call(3))[0]);
-      threshold = vote3a.add(vote4a).add(vote5a).add(thresholdPercentIncrease);
+      threshold = getPercentageIncrease(vote3a.add(vote4a).add(vote5a), thresholdPercentIncrease);
       SolAssert.assertBNEqual(await decentralizedOracle.consensusThreshold.call(), threshold);
 
       const vote1b = web3.toBigNumber(5377777777);
