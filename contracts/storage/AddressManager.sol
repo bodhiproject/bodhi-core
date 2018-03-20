@@ -12,7 +12,7 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public eventEscrowAmount = 100 * (10**botDecimals); // Amount of escrow deposit needed to create an event
     uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
     uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
-    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
+    uint256 public consensusThresholdIncrement = 10; // Percentage amount to increase the threshold
     mapping(address => uint16) public eventFactoryAddressToVersion;
     mapping(address => uint16) public oracleFactoryAddressToVersion;
     mapping(address => bool) private whitelistedContracts;
