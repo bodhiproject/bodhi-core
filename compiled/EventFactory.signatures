@@ -1,3 +1,0 @@
-b7b6d822: createTopic(address,bytes32[10],bytes32[10],uint256,uint256,uint256,uint256)
-0f2fbeec: topics(bytes32)
-54fd4d50: version()
