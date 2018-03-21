@@ -1,4 +1,0 @@
-3bb2f963: createCentralizedOracle(address,uint8,address,uint256,uint256,uint256,uint256,uint256)
-7f200f20: createDecentralizedOracle(address,uint8,uint8,uint256,uint256)
-a81a2677: oracles(bytes32)
-54fd4d50: version()

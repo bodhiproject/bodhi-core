@@ -1,8 +1,0 @@
-bb235d67: INVALID_RESULT_INDEX()
-871169b9: getBetBalances()
-a3cb679d: getTotalBets()
-9a0e7d66: getTotalVotes()
-95d3382a: getVoteBalances()
-ca381d2e: numOfResults()
-0d4e8aed: resultIndex()
-54fd4d50: version()

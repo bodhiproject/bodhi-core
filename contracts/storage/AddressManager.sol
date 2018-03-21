@@ -12,7 +12,7 @@ contract AddressManager is IAddressManager, Ownable {
     uint256 public eventEscrowAmount = 100 * (10**botDecimals); // Amount of escrow deposit needed to create an event
     uint256 public arbitrationLength = 86400; // Number of seconds for arbitration period
     uint256 public startingOracleThreshold = 100 * (10**botDecimals); // Consensus threshold for CentralizedOracles
-    uint256 public consensusThresholdIncrement = 10 * (10**botDecimals); // Amount to increment from previous threshold
+    uint256 public thresholdPercentIncrease = 10; // Percentage to increase the Consensus Threshold every round
     mapping(address => uint16) public eventFactoryAddressToVersion;
     mapping(address => uint16) public oracleFactoryAddressToVersion;
     mapping(address => bool) private whitelistedContracts;
@@ -172,14 +172,14 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /*
-    * @dev Sets the consensusThresholdIncrement that DecentralizedOracles will use.
+    * @dev Sets the thresholdPercentIncrease that DecentralizedOracles will use.
     * @param _newIncrement The new increment amount for DecentralizedOracles.
     */
-    function setConsensusThresholdIncrement(uint256 _newIncrement) 
+    function setConsensusThresholdPercentIncrease(uint256 _newPercentage) 
         public
         onlyOwner()
     {   
-        consensusThresholdIncrement = _newIncrement;
+        thresholdPercentIncrease = _newPercentage;
     }
 
     /// @notice Gets the latest index of a deployed EventFactory contract.

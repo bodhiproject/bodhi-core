@@ -1,6 +1,6 @@
 {
   "name": "bodhi-core",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Bodhi Core",
   "main": "truffle.js",
   "directories": {
@@ -19,7 +19,8 @@
   },
   "scripts": {
     "test": "truffle test",
-    "lint:fix": "eslint --fix -- test/."
+    "lint:fix": "eslint --fix -- test/.",
+    "build": "./compile_all.sh"
   },
   "repository": {
     "type": "git",

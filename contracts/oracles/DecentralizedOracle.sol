@@ -54,12 +54,18 @@ contract DecentralizedOracle is Oracle {
         require(block.timestamp < arbitrationEndTime);
         require(_eventResultIndex != lastResultIndex);
 
-        balances[_eventResultIndex].totalVotes = balances[_eventResultIndex].totalVotes.add(_botAmount);
-        balances[_eventResultIndex].votes[msg.sender] = balances[_eventResultIndex].votes[msg.sender]
-            .add(_botAmount);
+        // Only accept the vote amount up to the consensus threshold
+        uint256 adjustedVoteAmount = _botAmount;
+        if (balances[_eventResultIndex].totalVotes.add(_botAmount) > consensusThreshold) {
+            adjustedVoteAmount = consensusThreshold.sub(balances[_eventResultIndex].totalVotes);
+        }
 
-        ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, _botAmount);
-        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, _botAmount);
+        balances[_eventResultIndex].totalVotes = balances[_eventResultIndex].totalVotes.add(adjustedVoteAmount);
+        balances[_eventResultIndex].votes[msg.sender] = balances[_eventResultIndex].votes[msg.sender]
+            .add(adjustedVoteAmount);
+
+        ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, adjustedVoteAmount);
+        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, adjustedVoteAmount);
 
         if (balances[_eventResultIndex].totalVotes >= consensusThreshold) {
             setResult();

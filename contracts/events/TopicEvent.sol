@@ -168,7 +168,9 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         totalBotValue = totalBotValue.add(_consensusThreshold);
 
         token.transferFrom(_oracle, address(this), _consensusThreshold);
-        createDecentralizedOracle(_consensusThreshold);
+
+        uint256 increment = addressManager.thresholdPercentIncrease().mul(_consensusThreshold).div(100);
+        createDecentralizedOracle(_consensusThreshold.add(increment));
     }
 
     /*
@@ -229,7 +231,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         status = Status.OracleVoting;
         resultIndex = _resultIndex;
 
-        return createDecentralizedOracle(_currentConsensusThreshold.add(addressManager.consensusThresholdIncrement()));
+        uint256 increment = addressManager.thresholdPercentIncrease().mul(_currentConsensusThreshold).div(100);
+        return createDecentralizedOracle(_currentConsensusThreshold.add(increment));
     }
 
     /*
