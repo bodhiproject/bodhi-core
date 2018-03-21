@@ -15,6 +15,7 @@ contract EventFactory {
     event TopicCreated(
         uint16 indexed _version,
         address indexed _topicAddress, 
+        address indexed _creatorAddress,
         bytes32[10] _name, 
         bytes32[11] _resultNames,
         uint8 _numOfResults);
@@ -69,7 +70,7 @@ contract EventFactory {
 
         IAddressManager(addressManager).addWhitelistContract(address(topic));
 
-        TopicCreated(version, address(topic), _name, resultNames, numOfResults);
+        TopicCreated(version, address(topic), msg.sender, _name, resultNames, numOfResults);
 
         return topic;
     }
