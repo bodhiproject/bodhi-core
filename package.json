@@ -19,7 +19,8 @@
   },
   "scripts": {
     "test": "truffle test",
-    "lint:fix": "eslint --fix -- test/."
+    "lint:fix": "eslint --fix -- test/.",
+    "build": "./compile_all.sh"
   },
   "repository": {
     "type": "git",
