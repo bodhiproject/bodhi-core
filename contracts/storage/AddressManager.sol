@@ -148,6 +148,17 @@ contract AddressManager is IAddressManager, Ownable {
     }
 
     /*
+    * @dev Sets the eventEscrowAmount that is needed to create an Event.
+    * @param _newEscrowAmount The new escrow amount needed to create an Event.
+    */
+    function setEventEscrowAmount(uint256 _newEscrowAmount) 
+        public
+        onlyOwner()
+    {   
+        eventEscrowAmount = _newEscrowAmount;
+    }
+
+    /*
     * @dev Sets the arbitrationLength that DecentralizedOracles will use.
     * @param _newLength The new length in seconds (unix time) of an arbitration period.
     */

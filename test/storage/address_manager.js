@@ -235,6 +235,28 @@ contract('AdddressManager', (accounts) => {
     });
   });
 
+  describe('setEventEscrowAmount', () => {
+    it('allows the owner to change the eventEscrowAmount', async () => {
+      const eventEscrowAmount = await addressManager.eventEscrowAmount.call();
+
+      await addressManager.setEventEscrowAmount(12345, { from: OWNER });
+      SolAssert.assertBNNotEqual(await addressManager.eventEscrowAmount.call(), eventEscrowAmount);
+    });
+
+    it('throws if a non-owner tries to setEventEscrowAmount', async () => {
+      const eventEscrowAmount = await addressManager.eventEscrowAmount.call();
+
+      try {
+        await addressManager.setEventEscrowAmount(12345, { from: accounts[1] });
+        assert.fail();
+      } catch (e) {
+        SolAssert.assertRevert(e);
+      }
+
+      SolAssert.assertBNEqual(await addressManager.eventEscrowAmount.call(), eventEscrowAmount);
+    });
+  });
+
   describe('Escrow transfer/withdraw', () => {
     let bodhiToken;
     let escrowAmount;
