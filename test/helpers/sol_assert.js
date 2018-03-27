@@ -8,6 +8,9 @@ const SolAssert = {
   assertBNEqual(first, second) {
     assert.equal(first.toString(), second.toString());
   },
+  assertBNNotEqual(first, second) {
+    assert.notEqual(first.toString(), second.toString());
+  },
 };
 
 module.exports = SolAssert;
