@@ -37,17 +37,20 @@ contract AddressManager is IAddressManager, Ownable {
     /*
     * @notice Transfer the escrow amount needed to create an Event.
     * @param _creator The address of the creator.
+    * @return escrowAmount The amount of escrow transferred. 
     */
     function transferEscrow(address _creator)
         external
         isWhitelisted(msg.sender)
+        returns (uint256 escrowAmount)
     {
         ERC20 token = ERC20(bodhiTokenAddress);
         require(token.allowance(_creator, address(this)) >= eventEscrowAmount);
 
         token.transferFrom(_creator, address(this), eventEscrowAmount);
-
         EscrowDeposited(_creator, eventEscrowAmount);
+
+        return eventEscrowAmount;
     }
 
     /*
