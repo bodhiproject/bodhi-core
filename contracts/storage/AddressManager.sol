@@ -37,7 +37,6 @@ contract AddressManager is IAddressManager, Ownable {
     /*
     * @notice Transfer the escrow amount needed to create an Event.
     * @param _creator The address of the creator.
-    * @return escrowAmount The amount of escrow transferred. 
     */
     function transferEscrow(address _creator)
         external
@@ -47,7 +46,7 @@ contract AddressManager is IAddressManager, Ownable {
         require(token.allowance(_creator, address(this)) >= eventEscrowAmount);
 
         token.transferFrom(_creator, address(this), eventEscrowAmount);
-        
+
         EscrowDeposited(_creator, eventEscrowAmount);
     }
 
