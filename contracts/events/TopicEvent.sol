@@ -34,6 +34,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     uint8 public constant QTUM_PERCENTAGE = 1;
 
     Status public status = Status.Betting;
+    bool public escrowWithdrawn;
     bytes32[10] public eventName;
     bytes32[11] public eventResults;
     uint256 public totalQtumValue;
@@ -286,6 +287,10 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         onlyOwner()
         inCollectionStatus()
     {
+        require(!escrowWithdrawn);
+
+        escrowWithdrawn = true;
+
         addressManager.withdrawEscrow(msg.sender, escrowAmount);
     }
 

@@ -1247,6 +1247,27 @@ contract('TopicEvent', (accounts) => {
         SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceBeforeOwner);
         SolAssert.assertBNEqual(await token.balanceOf(USER1), balanceBeforeUser1);
       });
+
+      it('throws if the creator tries to withdraw escrow more than once', async () => {
+        const balanceBefore = await token.balanceOf(OWNER);
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), escrowAmount);
+
+        assert.equal(await testTopic.owner.call(), OWNER);
+        await testTopic.withdrawEscrow({ from: OWNER });
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), 0);
+        const balanceAfter = balanceBefore.add(escrowAmount);
+        SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceAfter);
+
+        try {
+          await testTopic.withdrawEscrow({ from: OWNER });
+          assert.fail();
+        } catch (e) {
+          SolAssert.assertRevert(e);
+        }
+
+        SolAssert.assertBNEqual(await token.balanceOf(addressManager.address), 0);
+        SolAssert.assertBNEqual(await token.balanceOf(OWNER), balanceAfter);
+      });
     });
 
     describe('not in Status:Collection', () => {
