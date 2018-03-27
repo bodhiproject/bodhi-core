@@ -18,7 +18,8 @@ contract EventFactory {
         address indexed _creatorAddress,
         bytes32[10] _name, 
         bytes32[11] _resultNames,
-        uint8 _numOfResults);
+        uint8 _numOfResults,
+        uint256 _escrowAmount);
 
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
@@ -62,7 +63,7 @@ contract EventFactory {
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
-        IAddressManager(addressManager).transferEscrow(msg.sender);
+        uint256 escrowAmount = IAddressManager(addressManager).transferEscrow(msg.sender);
 
         TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
@@ -70,7 +71,7 @@ contract EventFactory {
 
         IAddressManager(addressManager).addWhitelistContract(address(topic));
 
-        TopicCreated(version, address(topic), msg.sender, _name, resultNames, numOfResults);
+        TopicCreated(version, address(topic), msg.sender, _name, resultNames, numOfResults, escrowAmount);
 
         return topic;
     }
