@@ -104,6 +104,7 @@ contract CentralizedOracle is Oracle {
             .add(consensusThreshold);
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
+        OracleResultVoted(version, address(this), msg.sender, _resultIndex, consensusThreshold, BOT);
         OracleResultSet(version, address(this), _resultIndex);
     }
 }
