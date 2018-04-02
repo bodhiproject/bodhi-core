@@ -65,7 +65,7 @@ contract DecentralizedOracle is Oracle {
             .add(adjustedVoteAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, adjustedVoteAmount);
-        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, adjustedVoteAmount);
+        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, adjustedVoteAmount, BOT);
 
         if (balances[_eventResultIndex].totalVotes >= consensusThreshold) {
             setResult();
