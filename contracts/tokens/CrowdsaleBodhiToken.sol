@@ -21,12 +21,23 @@ contract CrowdsaleBodhiToken is BodhiToken {
     /// @param _fundingEndBlock The ending block of crowdsale
     /// @param _initialExchangeRate The exchange rate of Ether to BOT
     /// @param _presaleAmount The amount of BOT that will be available for presale
+    /*@CTK CrowdsaleBodhiToken
+      @pre __reverted == false
+      @pre balances[owner] == 0
+      @pre totalSupply == 0
+      @pre decimals == 8
+      @post __post.fundingStartBlock == _fundingStartBlock
+      @post __post.fundingEndBlock == _fundingEndBlock
+      @post __post.initialExchangeRate == _initialExchangeRate
+      @post __post.balances[owner] == __post.totalSupply
+      @post __post.totalSupply == _presaleAmount * 100000000
+      */
     function CrowdsaleBodhiToken(
         uint256 _fundingStartBlock,
         uint256 _fundingEndBlock,
         uint256 _initialExchangeRate,
-        uint256 _presaleAmount) 
-        public 
+        uint256 _presaleAmount)
+        public
     {
         require(_fundingStartBlock >= block.number);
         require(_fundingEndBlock >= _fundingStartBlock);
@@ -48,9 +59,10 @@ contract CrowdsaleBodhiToken is BodhiToken {
     }
 
     /// @notice Fallback function to purchase tokens
-    function() external payable {
-        buyTokens(msg.sender);
-    }
+    // TODO(CTK-73): Handle fallback functions
+    // function() external payable {
+    //     buyTokens(msg.sender);
+    // }
 
     /// @notice Allows buying tokens from different address than msg.sender
     /// @param _beneficiary Address that will contain the purchased tokens
@@ -68,7 +80,6 @@ contract CrowdsaleBodhiToken is BodhiToken {
 
         mintByPurchaser(_beneficiary, tokenAmount);
         TokenPurchase(msg.sender, _beneficiary, msg.value, tokenAmount);
-
         owner.transfer(msg.value);
     }
 
@@ -79,13 +90,13 @@ contract CrowdsaleBodhiToken is BodhiToken {
     /// @param _decimals Number of decimals of BOT token
     /// @return The amount of BOT that will be received
     function getTokenExchangeAmount(
-        uint256 _weiAmount, 
+        uint256 _weiAmount,
         uint256 _exchangeRate,
-        uint256 _nativeDecimals, 
-        uint256 _decimals) 
+        uint256 _nativeDecimals,
+        uint256 _decimals)
         public
-        pure 
-        returns(uint256) 
+        pure
+        returns(uint256)
     {
         require(_weiAmount > 0);
 
@@ -97,6 +108,11 @@ contract CrowdsaleBodhiToken is BodhiToken {
     /// @param _to Address to mint the tokens to
     /// @param _amount Amount of tokens that will be minted
     /// @return Boolean to signify successful minting
+    /*@CTK mintByPurchaser
+      @pre __reverted == false
+      @post __post.balances[_to] == balances[_to] + _amount
+      @post __post.totalSupply == totalSupply + _amount
+      */
     function mintByPurchaser(address _to, uint256 _amount) private returns (bool) {
         return mint(_to, _amount);
     }

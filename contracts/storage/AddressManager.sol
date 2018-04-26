@@ -67,6 +67,11 @@ contract AddressManager is IAddressManager, Ownable {
     * @dev Adds a whitelisted contract address. Only allowed to be called from previously whitelisted addresses.
     * @param _contractAddress The address of the contract to whitelist.
     */
+    /*@CTK whitelist_success
+      @pre whitelistedContracts[_contractAddress] == true
+      @pre _contractAddress != address(0)
+      @post __post.whitelistedContracts[_contractAddress] == true
+    */
     function addWhitelistContract(address _contractAddress)
         external
         isWhitelisted(msg.sender)
@@ -79,10 +84,16 @@ contract AddressManager is IAddressManager, Ownable {
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
     /// @param _tokenAddress The address of the Bodhi Token contract.
-    function setBodhiTokenAddress(address _tokenAddress) 
-        public 
+    /*@CTK set_bodhi_token_address_success
+      @pre _tokenAddress != address(0)
+      @pre owner == msg.sender
+      @post __post.whitelistedContracts[_tokenAddress] == true
+      @post __post.bodhiTokenAddress == _tokenAddress
+    */
+    function setBodhiTokenAddress(address _tokenAddress)
+        public
         onlyOwner()
-        validAddress(_tokenAddress) 
+        validAddress(_tokenAddress)
     {
         bodhiTokenAddress = _tokenAddress;
         whitelistedContracts[_tokenAddress] = true;
@@ -93,8 +104,16 @@ contract AddressManager is IAddressManager, Ownable {
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
     /// @param _contractAddress The address of the EventFactory contract.
-    function setEventFactoryAddress(address _contractAddress) 
-        public 
+    /*@CTK set_event_factory_address_success
+      @pre owner == msg.sender
+      @pre _contractAddress != address(0)
+      @post __post.whitelistedContracts[_contractAddress] == true
+      @post __post.eventFactoryVersionToAddress[currentEventFactoryIndex] == _contractAddress
+      @post __post.eventFactoryAddressToVersion[_contractAddress] == currentEventFactoryIndex
+      @post __post.currentEventFactoryIndex == currentEventFactoryIndex + 1
+    */
+    function setEventFactoryAddress(address _contractAddress)
+        public
         onlyOwner()
         validAddress(_contractAddress)
     {
@@ -109,7 +128,7 @@ contract AddressManager is IAddressManager, Ownable {
         ContractWhitelisted(_contractAddress);
     }
 
-    /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets 
+    /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets
     ///   upgraded, we need to be able to continue where the last version was.
     /// @param _newIndex The index of where the next EventFactory version should start.
     function setCurrentEventFactoryIndex(uint16 _newIndex)
@@ -121,10 +140,18 @@ contract AddressManager is IAddressManager, Ownable {
 
     /// @dev Allows the owner to set the address of an OracleFactory contract.
     /// @param _contractAddress The address of the OracleFactory contract.
-    function setOracleFactoryAddress(address _contractAddress) 
-        public 
+    /*@CTK set_oracle_factory_address_success
+      @pre owner == msg.sender
+      @pre _contractAddress != address(0)
+      @post __post.whitelistedContracts[_contractAddress] == true
+      @post __post.oracleFactoryVersionToAddress[currentOracleFactoryIndex] == _contractAddress
+      @post __post.oracleFactoryAddressToVersion[_contractAddress] == currentOracleFactoryIndex
+      @post __post.currentOracleFactoryIndex == currentOracleFactoryIndex + 1
+    */
+    function setOracleFactoryAddress(address _contractAddress)
+        public
         onlyOwner()
-        validAddress(_contractAddress) 
+        validAddress(_contractAddress)
     {
         uint16 index = currentOracleFactoryIndex;
         oracleFactoryVersionToAddress[index] = _contractAddress;
@@ -137,9 +164,13 @@ contract AddressManager is IAddressManager, Ownable {
         ContractWhitelisted(_contractAddress);
     }
 
-    /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets 
+    /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets
     ///   upgraded, we need to be able to continue where the last version was.
     /// @param _newIndex The index of where the next OracleFactory version should start.
+    /*@CTK set_current_oracle_factory_index_success
+      @pre owner == msg.sender
+      @post __post.currentOracleFactoryIndex == _newIndex
+    */
     function setCurrentOracleFactoryIndex(uint16 _newIndex)
       public
       onlyOwner()
@@ -151,10 +182,14 @@ contract AddressManager is IAddressManager, Ownable {
     * @dev Sets the eventEscrowAmount that is needed to create an Event.
     * @param _newEscrowAmount The new escrow amount needed to create an Event.
     */
-    function setEventEscrowAmount(uint256 _newEscrowAmount) 
+    /*@CTK set_event_escrow_amount
+      @pre owner == msg.sender
+      @post __post.eventEscrowAmount == _newEscrowAmount
+    */
+    function setEventEscrowAmount(uint256 _newEscrowAmount)
         public
         onlyOwner()
-    {   
+    {
         eventEscrowAmount = _newEscrowAmount;
     }
 
@@ -162,10 +197,15 @@ contract AddressManager is IAddressManager, Ownable {
     * @dev Sets the arbitrationLength that DecentralizedOracles will use.
     * @param _newLength The new length in seconds (unix time) of an arbitration period.
     */
-    function setArbitrationLength(uint256 _newLength) 
+    /*@CTK set_arbitration_length
+      @tag assume_completion
+      @pre owner == msg.sender
+      @post __post.arbitrationLength == _newLength
+    */
+    function setArbitrationLength(uint256 _newLength)
         public
         onlyOwner()
-    {   
+    {
         require(_newLength > 0);
 
         arbitrationLength = _newLength;
@@ -175,10 +215,14 @@ contract AddressManager is IAddressManager, Ownable {
     * @dev Sets the startingOracleThreshold that CentralizedOracles will use.
     * @param _newThreshold The new consensusThreshold for CentralizedOracles.
     */
-    function setStartingOracleThreshold(uint256 _newThreshold) 
+    /*@CTK set_starting_oracle_threshold
+      @pre owner == msg.sender
+      @post __post.startingOracleThreshold == _newThreshold
+    */
+    function setStartingOracleThreshold(uint256 _newThreshold)
         public
         onlyOwner()
-    {   
+    {
         startingOracleThreshold = _newThreshold;
     }
 
@@ -186,19 +230,23 @@ contract AddressManager is IAddressManager, Ownable {
     * @dev Sets the thresholdPercentIncrease that DecentralizedOracles will use.
     * @param _newIncrement The new increment amount for DecentralizedOracles.
     */
-    function setConsensusThresholdPercentIncrease(uint256 _newPercentage) 
+    /*@CTK set_consensus_threshold_percent_increase
+      @pre owner == msg.sender
+      @post __post.thresholdPercentIncrease == _newPercentage
+    */
+    function setConsensusThresholdPercentIncrease(uint256 _newPercentage)
         public
         onlyOwner()
-    {   
+    {
         thresholdPercentIncrease = _newPercentage;
     }
 
     /// @notice Gets the latest index of a deployed EventFactory contract.
     /// @return The index of the latest deployed EventFactory contract.
-    function getLastEventFactoryIndex() 
-        public 
-        view 
-        returns (uint16 lastEventFactoryIndex) 
+    function getLastEventFactoryIndex()
+        public
+        view
+        returns (uint16 lastEventFactoryIndex)
     {
         if (currentEventFactoryIndex == 0) {
             return 0;
@@ -209,10 +257,10 @@ contract AddressManager is IAddressManager, Ownable {
 
     /// @notice Gets the latest index of a deployed OracleFactory contract.
     /// @return The index of the latest deployed OracleFactory contract.
-    function getLastOracleFactoryIndex() 
-        public 
-        view 
-        returns (uint16 lastOracleFactoryIndex) 
+    function getLastOracleFactoryIndex()
+        public
+        view
+        returns (uint16 lastOracleFactoryIndex)
     {
         if (currentOracleFactoryIndex == 0) {
             return 0;

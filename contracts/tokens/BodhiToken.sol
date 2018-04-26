@@ -22,6 +22,14 @@ contract BodhiToken is StandardToken, Ownable {
     /// @param _to Address to mint the tokens to
     /// @param _amount Amount of tokens that will be minted
     /// @return Boolean to signify successful minting
+    /*@CTK mintByOwner_check
+      @post msg.sender != owner -> __reverted == true
+    */
+    /*@CTK mintByOwner
+      @tag assume_completion
+      @post __post.balances[_to] == balances[_to] + _amount
+      @post __post.totalSupply == totalSupply + _amount
+    */
     function mintByOwner(address _to, uint256 _amount) public onlyOwner returns (bool) {
         return mint(_to, _amount);
     }
@@ -30,6 +38,13 @@ contract BodhiToken is StandardToken, Ownable {
     /// @param _to Address to mint the tokens to
     /// @param _amount Amount of tokens that will be minted
     /// @return Boolean to signify successful minting
+    /*@CTK mintCheck
+      @tag assume_completion
+      @post __has_overflow == false
+      @post __post.balances[_to] == balances[_to] + _amount
+      @post __post.totalSupply == totalSupply + _amount
+      @post __return == true
+    */
     function mint(address _to, uint256 _amount) internal returns (bool) {
         uint256 checkedSupply = totalSupply.add(_amount);
         require(checkedSupply <= tokenTotalSupply);

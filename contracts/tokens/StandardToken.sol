@@ -19,9 +19,17 @@ contract StandardToken is ERC20, BasicToken {
    * @param _to address The address which you want to transfer to
    * @param _value uint256 the amount of tokens to be transferred
    */
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+  /*@CTK transferFrom
+    @tag assume_completion
+    @pre _from != _to
+    @post __return == true
+    @post __post.balances[_to] == balances[_to] + _value
+    @post __post.balances[_from] == balances[_from] - _value
+    @post __has_overflow == false
+  */
+  function transferFrom(address _from, address _to,
+			uint256 _value) public returns (bool) {
     require(_to != address(0));
-
     var _allowance = allowed[_from][msg.sender];
 
     // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
@@ -39,6 +47,14 @@ contract StandardToken is ERC20, BasicToken {
    * @param _spender The address which will spend the funds.
    * @param _value The amount of tokens to be spent.
    */
+  /*@CTK approve_success
+    @post _value == 0 -> __reverted == false
+    @post allowed[msg.sender][_spender] == 0 -> __reverted == false
+  */
+  /*@CTK approve
+    @tag assume_completion
+    @post __post.allowed[msg.sender][_spender] == _value
+  */
   function approve(address _spender, uint256 _value) public returns (bool) {
     // To change the approve amount you first have to reduce the addresses`
     //  allowance to zero by calling `approve(_spender, 0)` if it is not
@@ -57,6 +73,11 @@ contract StandardToken is ERC20, BasicToken {
    * @param _spender address The address which will spend the funds.
    * @return A uint256 specifying the amount of tokens still available for the spender.
    */
+  /*@CTK get_allowance
+    @post __reverted == false
+    @post remaining == allowed[_owner][_spender]
+    @post this == __post
+  */
   function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
     return allowed[_owner][_spender];
   }
