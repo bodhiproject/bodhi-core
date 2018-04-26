@@ -14,35 +14,40 @@ contract EventFactory {
     // Events
     event TopicCreated(
         uint16 indexed _version,
-        address indexed _topicAddress, 
+        address indexed _topicAddress,
         address indexed _creatorAddress,
-        bytes32[10] _name, 
+        bytes32[10] _name,
         bytes32[11] _resultNames,
         uint8 _numOfResults,
         uint256 _escrowAmount);
 
+    /*CTK init_success_condition
+      @tag assume_complement
+      @post _addressManager != address(0)
+      @post __post.addressManager == _addressManager
+    */
     function EventFactory(address _addressManager) public {
         require(_addressManager != address(0));
 
         addressManager = _addressManager;
         version = IAddressManager(addressManager).currentEventFactoryIndex();
     }
-    
+
     function createTopic(
-        address _oracle, 
-        bytes32[10] _name, 
-        bytes32[10] _resultNames, 
+        address _oracle,
+        bytes32[10] _name,
+        bytes32[10] _resultNames,
         uint256 _bettingStartTime,
         uint256 _bettingEndTime,
         uint256 _resultSettingStartTime,
         uint256 _resultSettingEndTime)
         public
-        returns (TopicEvent topicEvent) 
+        returns (TopicEvent topicEvent)
     {
         require(!_name[0].isEmpty());
         require(!_resultNames[0].isEmpty());
         require(!_resultNames[1].isEmpty());
-        
+
         bytes32[11] memory resultNames;
         uint8 numOfResults;
 
@@ -58,14 +63,14 @@ contract EventFactory {
             }
         }
 
-        bytes32 topicHash = getTopicHash(_name, resultNames, numOfResults, _bettingStartTime, _bettingEndTime, 
+        bytes32 topicHash = getTopicHash(_name, resultNames, numOfResults, _bettingStartTime, _bettingEndTime,
             _resultSettingStartTime, _resultSettingEndTime);
         // Topic should not exist yet
         require(address(topics[topicHash]) == 0);
 
         IAddressManager(addressManager).transferEscrow(msg.sender);
 
-        TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults, 
+        TopicEvent topic = new TopicEvent(version, msg.sender, _oracle, _name, resultNames, numOfResults,
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, addressManager);
         topics[topicHash] = topic;
 
@@ -78,18 +83,18 @@ contract EventFactory {
     }
 
     function getTopicHash(
-        bytes32[10] _name, 
-        bytes32[11] _resultNames, 
+        bytes32[10] _name,
+        bytes32[11] _resultNames,
         uint8 _numOfResults,
         uint256 _bettingStartTime,
         uint256 _bettingEndTime,
         uint256 _resultSettingStartTime,
         uint256 _resultSettingEndTime)
         internal
-        pure    
+        pure
         returns (bytes32)
     {
-        return keccak256(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime, 
+        return keccak256(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime,
             _resultSettingStartTime, _resultSettingEndTime);
     }
 }

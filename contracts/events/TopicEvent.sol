@@ -19,6 +19,14 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     *   Arbitration: Vote with BOT during this phase.
     *   Collection: Winners collect their winnings during this phase.
     */
+    /*@CTK "What happened if this function succeeds"
+      @tag assume_completion
+      @post _resultIndex < numOfResults
+      @post oracles[0].oracleAddress == msg.sender
+      @post oralces[0].didSetResult == false
+      @post __post.balances[_resultIndex].totalVotes == balances[_resultIndex].totalVotes + _consensusThreshold
+      @post __post.balances[_resultIndex].votes[_oracle] == balances[_resultIndex].votes[_oracle] + _consensusThreshold
+     */
     enum Status {
         Betting,
         OracleVoting,
@@ -46,13 +54,13 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
     // Events
     event FinalResultSet(
-        uint16 indexed _version, 
-        address indexed _eventAddress, 
+        uint16 indexed _version,
+        address indexed _eventAddress,
         uint8 _finalResultIndex);
     event WinningsWithdrawn(
-        uint16 indexed _version, 
-        address indexed _winner, 
-        uint256 _qtumTokenWon, 
+        uint16 indexed _version,
+        address indexed _winner,
+        uint256 _qtumTokenWon,
         uint256 _botTokenWon);
 
     // Modifiers
@@ -79,6 +87,25 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _resultSettingEndTime The unix time when anyone can set the result.
     * @param _escrowAmount The amount of BOT deposited to create the Event.
     * @param _addressManager The address of the AddressManager.
+    */
+    /*@CTK "TopicEvent constructor"
+      @tag assume_completion
+      @post __post.version == _version
+      @post __post.owner == _owner
+      @post __post.eventName == _name
+      @post __post.numOfResults == _numOfResults
+    */
+    /*@CTK "Construct fail if invalid input: bet end_time <= bet start_time"
+      @pre _bettingEndTime <= _bettingStartTime
+      @post __reverted == true
+    */
+    /*@CTK "Construct fail if invalid input: result set end_time < bet end_time"
+      @pre _resultSettingStartTime < _bettingEndTime
+      @post __reverted == true
+    */
+    /*@CTK "Construct fail if invalid input: result set end_time <= result set start_time"
+      @pre _resultSettingEndTime <= _resultSettingStartTime
+      @post __reverted == true
     */
     function TopicEvent(
         uint16 _version,
@@ -126,8 +153,22 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _better The address that is placing the bet.
     * @param _resultIndex The index of result to bet on.
     */
-    function betFromOracle(address _better, uint8 _resultIndex) 
-        external 
+    /*@CTK Betting
+      @tag assume_completion
+      @pre numOfResults > 0
+      @post _better != address(0)
+      @post _resultIndex < numOfResults
+      @post msg.value > 0
+      @post __post.balances[_resultIndex].totalBets == balances[_resultIndex].totalBets + msg.value
+      @post __post.balances[_resultIndex].bets[_better] == balances[_resultIndex].bets[_better] + msg.value
+      @post __post.totalQtumValue == totalQtumValue + msg.value
+    */
+    /*@CTK "Bet from invalid msg will be rejected"
+      @pre msg.value <= 0
+      @post __reverted == true
+    */
+    function betFromOracle(address _better, uint8 _resultIndex)
+        external
         payable
         validAddress(_better)
         validResultIndex(_resultIndex)
@@ -140,17 +181,25 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         totalQtumValue = totalQtumValue.add(msg.value);
     }
 
-    /* 
+    /*
     * @dev CentralizedOracle contract can call this method to set the result.
     * @param _oracle The address of the CentralizedOracle.
     * @param _resultIndex The index of the result to set.
     * @param _consensusThreshold The BOT threshold that the CentralizedOracle has to contribute to validate the result.
     */
+    /*CTK "What happened if this function succeeds"
+      @tag assume_completion
+      @post _resultIndex < numOfResults
+      @post oracles[0].oracleAddress == msg.sender
+      @post oralces[0].didSetResult == false
+      @post __post.balances[_resultIndex].totalVotes == balances[_resultIndex].totalVotes + _consensusThreshold
+      @post __post.balances[_resultIndex].votes[_oracle] == balances[_resultIndex].votes[_oracle] + _consensusThreshold
+     */
     function centralizedOracleSetResult(
-        address _oracle, 
-        uint8 _resultIndex, 
+        address _oracle,
+        uint8 _resultIndex,
         uint256 _consensusThreshold)
-        external 
+        external
         validResultIndex(_resultIndex)
         fromCentralizedOracle()
     {
@@ -175,7 +224,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     }
 
     /*
-    * @dev DecentralizedOracle contract can call this method to vote for a user. Voter must BOT approve() with the 
+    * @dev DecentralizedOracle contract can call this method to vote for a user. Voter must BOT approve() with the
     *   amount to TopicEvent address before voting.
     * @param _resultIndex The index of result to vote on.
     * @param _sender The address of the person voting on a result.
@@ -188,6 +237,12 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         returns (bool)
     {
         bool isValidOracle = false;
+        /*@CTK ValidateSenderAddress
+          @var bool isValidOracle
+          @var uint8 i
+          @inv exists j: uint. (j >= 0 /\ j < i /\ msg.sender == oracles[j].oracleAddress) -> isValidOracle == true
+          @post i < oracles.length -> isValidOracle == true
+        */
         for (uint8 i = 1; i < oracles.length; i++) {
             if (msg.sender == oracles[i].oracleAddress) {
                 isValidOracle = true;
@@ -207,18 +262,33 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         return token.transferFrom(_sender, address(this), _amount);
     }
 
-    /* 
+    /*
     * @dev DecentralizedOracle contract can call this to set the result after vote passes consensus threshold.
     * @param _resultIndex The index of the result to set.
     * @param _currentConsensusThreshold The current consensus threshold for the Oracle.
     */
     function decentralizedOracleSetResult(uint8 _resultIndex, uint256 _currentConsensusThreshold)
-        external 
+        external
         validResultIndex(_resultIndex)
         returns (bool)
     {
         bool isValidOracle = false;
         uint8 oracleIndex;
+        /*@CTK loop_invariant_get_valid_oracle
+          @var uint8 i
+          @var TopicEvent this
+          @var bool isValidOracle
+          @var uint8 oracleIndex
+          @inv isValidOracle == true -> (oracleIndex >= 1 /\ oracleIndex <= i /\ msg.sender == this.oracles[oracleIndex].oracleAddress /\ this.oracles[oracleIndex].didSetResult == false)
+          @inv isValidOracle == true -> forall j: uint. (j >= 1 /\ j < oracleIndex) -> ~(msg.sender == oracles[j].oracleAddress /\ oracles[j].didSetResult == false)
+          @inv isValidOracle == false -> forall j: uint. (j >= 1 /\ j < i) -> ~(msg.sender == oracles[j].oracleAddress /\ oracles[j].didSetResult == false)
+          @inv i >= 1
+          @inv isValidOracle == true -> i < oracles.length
+          @inv isValidOracle == true -> i == oracleIndex
+          @inv this.oracles == this__pre.oracles
+          @post isValidOracle == true -> (oracleIndex >= 1 /\ oracleIndex < oracles.length /\ msg.sender == oracles[oracleIndex].oracleAddress /\ oracles[oracleIndex].didSetResult == false)
+          @post isValidOracle == false -> forall j: uint. (j >= 1 /\ j < oracles.length) -> ~(msg.sender == oracles[j].oracleAddress /\ oracles[j].didSetResult == false)
+          */
         for (uint8 i = 1; i < oracles.length; i++) {
             if (msg.sender == oracles[i].oracleAddress && !oracles[i].didSetResult) {
                 isValidOracle = true;
@@ -240,15 +310,15 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @dev The last DecentralizedOracle contract can call this method to change status to Collection.
     * @return Flag to indicate success of finalizing the result.
     */
-    function decentralizedOracleFinalizeResult() 
-        external 
+    function decentralizedOracleFinalizeResult()
+        external
         returns (bool)
     {
         require(msg.sender == oracles[oracles.length - 1].oracleAddress);
         require(status == Status.OracleVoting);
 
         status = Status.Collection;
- 
+
         FinalResultSet(version, address(this), resultIndex);
 
         return true;
@@ -257,8 +327,8 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     /*
     * @notice Allows winners of the Event to withdraw their QTUM and BOT winnings after the final result is set.
     */
-    function withdrawWinnings() 
-        external 
+    function withdrawWinnings()
+        external
         inCollectionStatus()
     {
         require(!didWithdraw[msg.sender]);
@@ -298,23 +368,23 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @notice Gets the final result index and flag indicating if the result is final.
     * @return The result index and finalized bool.
     */
-    function getFinalResult() 
-        public 
+    function getFinalResult()
+        public
         view
-        returns (uint8, bool) 
+        returns (uint8, bool)
     {
         return (resultIndex, status == Status.Collection);
     }
 
-    /* 
+    /*
     * @notice Calculates the BOT and QTUM tokens won based on the sender's contributions.
     * @return The amount of BOT and QTUM tokens won.
     */
     function calculateWinnings()
-        public 
+        public
         view
         inCollectionStatus()
-        returns (uint256, uint256)  
+        returns (uint256, uint256)
     {
         uint256 votes = balances[resultIndex].votes[msg.sender];
         uint256 bets = balances[resultIndex].bets[msg.sender];
@@ -356,7 +426,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     }
 
     function createCentralizedOracle(
-        address _centralizedOracle, 
+        address _centralizedOracle,
         uint256 _bettingStartTime,
         uint256 _bettingEndTime,
         uint256 _resultSettingStartTime,
@@ -364,10 +434,10 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
         private
     {
         address oracleFactory = addressManager.oracleFactoryVersionToAddress(version);
-        address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(address(this), 
-            numOfResults, _centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime, 
+        address newOracle = IOracleFactory(oracleFactory).createCentralizedOracle(address(this),
+            numOfResults, _centralizedOracle, _bettingStartTime, _bettingEndTime, _resultSettingStartTime,
             _resultSettingEndTime, addressManager.startingOracleThreshold());
-        
+
         assert(newOracle != address(0));
         oracles.push(Oracle({
             oracleAddress: newOracle,
@@ -375,15 +445,15 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
             }));
     }
 
-    function createDecentralizedOracle(uint256 _consensusThreshold) 
-        private 
+    function createDecentralizedOracle(uint256 _consensusThreshold)
+        private
         returns (bool)
     {
         address oracleFactory = addressManager.oracleFactoryVersionToAddress(version);
         uint256 arbitrationLength = addressManager.arbitrationLength();
-        address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults, 
+        address newOracle = IOracleFactory(oracleFactory).createDecentralizedOracle(address(this), numOfResults,
             resultIndex, block.timestamp.add(arbitrationLength), _consensusThreshold);
-        
+
         assert(newOracle != address(0));
         oracles.push(Oracle({
             oracleAddress: newOracle,

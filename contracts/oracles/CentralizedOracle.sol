@@ -22,6 +22,21 @@ contract CentralizedOracle is Oracle {
     * @param _resultSettingEndTime The unix time when anyone can set the result.
     * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
+    /*@CTK "CentralizedOracle constructor"
+      @tag assume_completion
+      @post __post.eventAddress == _eventAddress
+      @post __post.numOfResults == _numOfResults
+      @post __post.oracle == _oracle
+      @post __post.bettingStartTime == _bettingStartTime
+      @post __post.bettingEndTime == _bettingEndTime
+      @post __post.resultSettingStartTime == _resultSettingStartTime
+      @post __post.resultSettingEndTime == _resultSettingEndTime
+      @post __post.consensusThreshold == _consensusThreshold
+    */
+    /*@CTK "contruct failed with invalid input"
+      @pre _numOfResults == 0 \/ _consensusThreshold == 0
+      @post __reverted == true
+    */
     function CentralizedOracle(
         uint16 _version,
         address _owner,
@@ -64,8 +79,15 @@ contract CentralizedOracle is Oracle {
     * @notice Allows betting on a result using the blockchain token.
     * @param _resultIndex The index of result to bet on.
     */
-    function bet(uint8 _resultIndex) 
-        external 
+    /*@CTK "Bodhi bet against certain index"
+      @tag assume_completion
+      @pre numOfResults > 0
+      @post __post.balances[_resultIndex].totalBets == balances[_resultIndex].totalBets + msg.value
+      @post __post.balances[_resultIndex].bets[msg.sender] == balances[_resultIndex].bets[msg.sender] + msg.value
+      @post __has_overflow == false
+    */
+    function bet(uint8 _resultIndex)
+        external
         payable
         validResultIndex(_resultIndex)
         isNotFinished()
@@ -81,13 +103,20 @@ contract CentralizedOracle is Oracle {
         OracleResultVoted(version, address(this), msg.sender, _resultIndex, msg.value, QTUM);
     }
 
-    /* 
-    * @notice CentralizedOracle should call this to set the result. Requires the Oracle to approve() BOT in the amount 
+    /*
+    * @notice CentralizedOracle should call this to set the result. Requires the Oracle to approve() BOT in the amount
     *   of the consensus threshold.
     * @param _resultIndex The index of the result to set.
     */
+    /*@CTK"Set index result"
+      @tag assume_completion
+      @pre numOfResults > 0
+      @post __post.balances[_resultIndex].totalVotes == balances[_resultIndex].totalVotes + this.consensusThreshold
+      @post __post.balances[_resultIndex].votes[msg.sender] == balances[_resultIndex].votes[msg.sender] + this.consensusThreshold
+      @post __has_overflow == false
+    */
     function setResult(uint8 _resultIndex)
-        external 
+        external
         validResultIndex(_resultIndex)
         isNotFinished()
     {

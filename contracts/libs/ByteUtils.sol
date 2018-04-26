@@ -1,6 +1,11 @@
 pragma solidity ^0.4.18;
 
 library ByteUtils {
+    /*@CTK isEmpty
+      @post __reverted == false
+      @post (_source == 0) -> (__return == true)
+      @post (_source != 0) -> (__return == false)
+      */
     function isEmpty(bytes32 _source) internal pure returns (bool) {
         return _source == 0x0;
     }
