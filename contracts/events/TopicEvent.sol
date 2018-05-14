@@ -80,7 +80,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
     * @param _escrowAmount The amount of BOT deposited to create the Event.
     * @param _addressManager The address of the AddressManager.
     */
-    function TopicEvent(
+    constructor(
         uint16 _version,
         address _owner,
         address _centralizedOracle,
@@ -249,7 +249,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
 
         status = Status.Collection;
  
-        FinalResultSet(version, address(this), resultIndex);
+        emit FinalResultSet(version, address(this), resultIndex);
 
         return true;
     }
@@ -276,7 +276,7 @@ contract TopicEvent is ITopicEvent, BaseContract, Ownable {
             ERC20(addressManager.bodhiTokenAddress()).transfer(msg.sender, botWon);
         }
 
-        WinningsWithdrawn(version, msg.sender, qtumWon, botWon);
+        emit WinningsWithdrawn(version, msg.sender, qtumWon, botWon);
     }
 
     /*

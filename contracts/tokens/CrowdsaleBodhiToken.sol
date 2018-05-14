@@ -21,7 +21,7 @@ contract CrowdsaleBodhiToken is BodhiToken {
     /// @param _fundingEndBlock The ending block of crowdsale
     /// @param _initialExchangeRate The exchange rate of Ether to BOT
     /// @param _presaleAmount The amount of BOT that will be available for presale
-    function CrowdsaleBodhiToken(
+    constructor(
         uint256 _fundingStartBlock,
         uint256 _fundingEndBlock,
         uint256 _initialExchangeRate,
@@ -67,7 +67,7 @@ contract CrowdsaleBodhiToken is BodhiToken {
         assert(checkedSupply <= saleAmount);
 
         mintByPurchaser(_beneficiary, tokenAmount);
-        TokenPurchase(msg.sender, _beneficiary, msg.value, tokenAmount);
+        emit TokenPurchase(msg.sender, _beneficiary, msg.value, tokenAmount);
 
         owner.transfer(msg.value);
     }
