@@ -106,8 +106,8 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _oracle, _bettingStartTime, _bettingEndTime, 
-            _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
+        return keccak256(abi.encodePacked(_eventAddress, _numOfResults, _oracle, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold));
     }
 
     function getDecentralizedOracleHash(
@@ -120,6 +120,7 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime, _consensusThreshold);
+        return keccak256(abi.encodePacked(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime,
+            _consensusThreshold));
     }
 }
