@@ -16,7 +16,7 @@ contract DecentralizedOracle is Oracle {
     * @param _arbitrationEndTime The unix time when the voting period ends.
     * @param _consensusThreshold The BOT amount that needs to be reached for this DecentralizedOracle to be valid.
     */
-    function DecentralizedOracle(
+    constructor(
         uint16 _version,
         address _owner,
         address _eventAddress,
@@ -65,7 +65,7 @@ contract DecentralizedOracle is Oracle {
             .add(adjustedVoteAmount);
 
         ITopicEvent(eventAddress).voteFromOracle(_eventResultIndex, msg.sender, adjustedVoteAmount);
-        OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, adjustedVoteAmount, BOT);
+        emit OracleResultVoted(version, address(this), msg.sender, _eventResultIndex, adjustedVoteAmount, BOT);
 
         if (balances[_eventResultIndex].totalVotes >= consensusThreshold) {
             setResult();
@@ -108,6 +108,6 @@ contract DecentralizedOracle is Oracle {
         }
 
         ITopicEvent(eventAddress).decentralizedOracleSetResult(resultIndex, winningVoteBalance);
-        OracleResultSet(version, address(this), resultIndex);
+        emit OracleResultSet(version, address(this), resultIndex);
     }
 }

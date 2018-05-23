@@ -35,7 +35,7 @@ contract OracleFactory is IOracleFactory {
     * @notice Creates new OracleFactory contract.
     * @param _addressManager The address of the AddressManager contract.
     */
-    function OracleFactory(address _addressManager) public {
+    constructor(address _addressManager) public {
         require(_addressManager != address(0));
 
         addressManager = _addressManager;
@@ -63,7 +63,7 @@ contract OracleFactory is IOracleFactory {
             _bettingStartTime, _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
         oracles[hash] = address(cOracle);
 
-        CentralizedOracleCreated(version, address(cOracle), _eventAddress, _numOfResults, _oracle, _bettingStartTime, 
+        emit CentralizedOracleCreated(version, address(cOracle), _eventAddress, _numOfResults, _oracle, _bettingStartTime, 
             _bettingEndTime, _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
 
         return address(cOracle);
@@ -87,7 +87,7 @@ contract OracleFactory is IOracleFactory {
             _lastResultIndex, _arbitrationEndTime, _consensusThreshold);
         oracles[hash] = address(dOracle);
 
-        DecentralizedOracleCreated(version, address(dOracle), _eventAddress, _numOfResults, _lastResultIndex, 
+        emit DecentralizedOracleCreated(version, address(dOracle), _eventAddress, _numOfResults, _lastResultIndex, 
             _arbitrationEndTime, _consensusThreshold);
 
         return address(dOracle);
@@ -106,8 +106,8 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _oracle, _bettingStartTime, _bettingEndTime, 
-            _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold);
+        return keccak256(abi.encodePacked(_eventAddress, _numOfResults, _oracle, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime, _consensusThreshold));
     }
 
     function getDecentralizedOracleHash(
@@ -120,6 +120,7 @@ contract OracleFactory is IOracleFactory {
         pure
         returns (bytes32)
     {
-        return keccak256(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime, _consensusThreshold);
+        return keccak256(abi.encodePacked(_eventAddress, _numOfResults, _lastResultIndex, _arbitrationEndTime,
+            _consensusThreshold));
     }
 }

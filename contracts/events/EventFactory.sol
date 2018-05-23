@@ -21,7 +21,7 @@ contract EventFactory {
         uint8 _numOfResults,
         uint256 _escrowAmount);
 
-    function EventFactory(address _addressManager) public {
+    constructor(address _addressManager) public {
         require(_addressManager != address(0));
 
         addressManager = _addressManager;
@@ -71,7 +71,7 @@ contract EventFactory {
 
         IAddressManager(addressManager).addWhitelistContract(address(topic));
 
-        TopicCreated(version, address(topic), msg.sender, _name, resultNames, numOfResults,
+        emit TopicCreated(version, address(topic), msg.sender, _name, resultNames, numOfResults,
             IAddressManager(addressManager).eventEscrowAmount());
 
         return topic;
@@ -89,7 +89,7 @@ contract EventFactory {
         pure    
         returns (bytes32)
     {
-        return keccak256(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime, 
-            _resultSettingStartTime, _resultSettingEndTime);
+        return keccak256(abi.encodePacked(_name, _resultNames, _numOfResults, _bettingStartTime, _bettingEndTime, 
+            _resultSettingStartTime, _resultSettingEndTime));
     }
 }

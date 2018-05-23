@@ -22,7 +22,7 @@ contract CentralizedOracle is Oracle {
     * @param _resultSettingEndTime The unix time when anyone can set the result.
     * @param _consensusThreshold The BOT amount that needs to be paid by the Oracle for their result to be valid.
     */
-    function CentralizedOracle(
+    constructor(
         uint16 _version,
         address _owner,
         address _eventAddress,
@@ -78,7 +78,7 @@ contract CentralizedOracle is Oracle {
         balances[_resultIndex].bets[msg.sender] = balances[_resultIndex].bets[msg.sender].add(msg.value);
 
         ITopicEvent(eventAddress).betFromOracle.value(msg.value)(msg.sender, _resultIndex);
-        OracleResultVoted(version, address(this), msg.sender, _resultIndex, msg.value, QTUM);
+        emit OracleResultVoted(version, address(this), msg.sender, _resultIndex, msg.value, QTUM);
     }
 
     /* 
@@ -104,7 +104,7 @@ contract CentralizedOracle is Oracle {
             .add(consensusThreshold);
 
         ITopicEvent(eventAddress).centralizedOracleSetResult(msg.sender, _resultIndex, consensusThreshold);
-        OracleResultVoted(version, address(this), msg.sender, _resultIndex, consensusThreshold, BOT);
-        OracleResultSet(version, address(this), _resultIndex);
+        emit OracleResultVoted(version, address(this), msg.sender, _resultIndex, consensusThreshold, BOT);
+        emit OracleResultSet(version, address(this), _resultIndex);
     }
 }

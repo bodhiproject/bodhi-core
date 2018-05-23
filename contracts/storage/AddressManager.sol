@@ -31,7 +31,7 @@ contract AddressManager is IAddressManager, Ownable {
         _;
     }
 
-    function AddressManager() Ownable(msg.sender) public {
+    constructor() Ownable(msg.sender) public {
     }
 
     /*
@@ -47,7 +47,7 @@ contract AddressManager is IAddressManager, Ownable {
 
         token.transferFrom(_creator, address(this), eventEscrowAmount);
 
-        EscrowDeposited(_creator, eventEscrowAmount);
+        emit EscrowDeposited(_creator, eventEscrowAmount);
     }
 
     /*
@@ -60,7 +60,7 @@ contract AddressManager is IAddressManager, Ownable {
     {
         ERC20(bodhiTokenAddress).transfer(_creator, _escrowAmount);
 
-        EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
+        emit EscrowWithdrawn(msg.sender, _creator, _escrowAmount);
     }
 
     /*
@@ -74,7 +74,7 @@ contract AddressManager is IAddressManager, Ownable {
     {
         whitelistedContracts[_contractAddress] = true;
 
-        ContractWhitelisted(_contractAddress);
+        emit ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the address of the Bodhi Token contract.
@@ -87,8 +87,8 @@ contract AddressManager is IAddressManager, Ownable {
         bodhiTokenAddress = _tokenAddress;
         whitelistedContracts[_tokenAddress] = true;
 
-        BodhiTokenAddressChanged(bodhiTokenAddress);
-        ContractWhitelisted(_tokenAddress);
+        emit BodhiTokenAddressChanged(bodhiTokenAddress);
+        emit ContractWhitelisted(_tokenAddress);
     }
 
     /// @dev Allows the owner to set the address of an EventFactory contract.
@@ -105,8 +105,8 @@ contract AddressManager is IAddressManager, Ownable {
 
         whitelistedContracts[_contractAddress] = true;
 
-        EventFactoryAddressAdded(index, _contractAddress);
-        ContractWhitelisted(_contractAddress);
+        emit EventFactoryAddressAdded(index, _contractAddress);
+        emit ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the version of the next EventFactory. In case AddressManager ever gets 
@@ -133,8 +133,8 @@ contract AddressManager is IAddressManager, Ownable {
 
         whitelistedContracts[_contractAddress] = true;
 
-        OracleFactoryAddressAdded(index, _contractAddress);
-        ContractWhitelisted(_contractAddress);
+        emit OracleFactoryAddressAdded(index, _contractAddress);
+        emit ContractWhitelisted(_contractAddress);
     }
 
     /// @dev Allows the owner to set the version of the next OracleFactory. In case AddressManager ever gets 
